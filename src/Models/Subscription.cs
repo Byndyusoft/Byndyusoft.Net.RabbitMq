@@ -1,6 +1,6 @@
-﻿using Byndyusoft.AspNetCore.RabbitMq.Abstractions;
+﻿using Byndyusoft.Net.RabbitMq.Abstractions;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Models
+namespace Byndyusoft.Net.RabbitMq.Models
 {
     public interface ISubscription
     {

@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using Byndyusoft.AspNetCore.RabbitMq.Models;
+using Byndyusoft.Net.RabbitMq.Models;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Abstractions
+namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     public interface IProducer
     {

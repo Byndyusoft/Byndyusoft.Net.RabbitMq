@@ -2,15 +2,15 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
-using Byndyusoft.AspNetCore.RabbitMq.Abstractions;
-using Byndyusoft.AspNetCore.RabbitMq.Models;
+using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using OpenTracing;
 using OpenTracing.Propagation;
 using RabbitMQ.Client;
 
-namespace Byndyusoft.AspNetCore.RabbitMq
+namespace Byndyusoft.Net.RabbitMq
 {
     public class RabbitMqProducer : IProducer
     {

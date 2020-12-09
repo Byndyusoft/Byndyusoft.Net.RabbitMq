@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Abstractions
+namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     public class MessageHandlerMediator
     {

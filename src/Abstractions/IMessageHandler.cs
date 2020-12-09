@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Abstractions
+namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     public interface IMessageHandler
     {

@@ -1,4 +1,4 @@
-﻿namespace Byndyusoft.AspNetCore.RabbitMq
+﻿namespace Byndyusoft.Net.RabbitMq
 {
     public class RabbitSettings
     {

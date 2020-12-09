@@ -1,7 +1,7 @@
 ﻿using System;
-using Byndyusoft.AspNetCore.RabbitMq.Models;
+using Byndyusoft.Net.RabbitMq.Models;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Abstractions
+namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     public interface IConsumer : IDisposable
     {

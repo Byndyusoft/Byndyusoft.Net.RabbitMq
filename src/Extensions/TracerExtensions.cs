@@ -4,7 +4,7 @@ using System.Text;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Extensions
+namespace Byndyusoft.Net.RabbitMq.Extensions
 {
     public static class TracerExtensions
     {

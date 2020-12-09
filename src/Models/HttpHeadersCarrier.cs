@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.AspNetCore.RabbitMq.Models
+namespace Byndyusoft.Net.RabbitMq.Models
 {
     public class HttpHeadersCarrier : ITextMap
     {

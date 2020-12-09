@@ -13,6 +13,8 @@
     <RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.AspNetCore.RabbitMq.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <AssemblyName>Byndyusoft.Net.RabbitMq</AssemblyName>
+    <RootNamespace>Byndyusoft.Net.RabbitMq</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

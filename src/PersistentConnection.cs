@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace Byndyusoft.AspNetCore.RabbitMq
+namespace Byndyusoft.Net.RabbitMq
 {
     public class PersistentConnection : IDisposable
     {
