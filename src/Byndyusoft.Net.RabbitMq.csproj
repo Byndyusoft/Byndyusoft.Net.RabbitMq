@@ -19,11 +19,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="easynetq" Version="6.3.1" />
+    <PackageReference Include="fluentassertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+    <PackageReference Include="moq" Version="4.16.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="OpenTracing" Version="0.12.1" />
     <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
+    <PackageReference Include="xunit" Version="2.4.1" />
   </ItemGroup>
 
 </Project>
