@@ -9,7 +9,7 @@ using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Services
+namespace Byndyusoft.Net.RabbitMq.Services.Wrappers
 {
     public sealed class TracerConsumeWrapper<TMessage> : IConsumeWrapper<TMessage> where TMessage : class
     {

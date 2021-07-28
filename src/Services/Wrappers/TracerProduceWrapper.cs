@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Services
+namespace Byndyusoft.Net.RabbitMq.Services.Wrappers
 {
     public sealed class TracerProduceWrapper<TMessage> : IProduceWrapper<TMessage> where TMessage : class
     {

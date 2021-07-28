@@ -3,7 +3,7 @@ using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Services
 {
-    internal sealed class BusService : IBusService
+    internal sealed class BusFactory : IBusFactory
     {
         public IBus CreateBus(string connectionString)
         {

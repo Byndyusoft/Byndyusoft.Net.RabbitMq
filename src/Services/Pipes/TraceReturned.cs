@@ -3,13 +3,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace Byndyusoft.Net.RabbitMq.Services
+namespace Byndyusoft.Net.RabbitMq.Services.Pipes
 {
     public sealed class TraceReturned<TMessage> : IReturnedPipe<TMessage> where TMessage : class
     {

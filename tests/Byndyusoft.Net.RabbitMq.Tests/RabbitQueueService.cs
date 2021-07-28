@@ -26,7 +26,7 @@
 //        private readonly ILogger<RabbitQueueService> _logger;
 //        private readonly RabbitSettings _settings;
 //        private readonly ITracer _tracer;
-//        private readonly IBusService _busService;
+//        private readonly IBusFactory _busService;
 //        private IBus? _bus;
 //        private IExchange? _exchange;
 //        private bool _isInitialized;
@@ -37,7 +37,7 @@
 //        public RabbitQueueService(ILogger<RabbitQueueService> logger,
 //                                  IOptions<RabbitSettings> options,
 //                                  ITracer tracer,
-//                                  IBusService busService)
+//                                  IBusFactory busService)
 //        {
 //            _logger = logger;
 //            _tracer = tracer;

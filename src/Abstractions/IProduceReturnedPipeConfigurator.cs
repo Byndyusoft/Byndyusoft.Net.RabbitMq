@@ -11,6 +11,6 @@
         /// </summary>
         /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
         /// <typeparam name="TReturnedPipe">Тип обработчика вернувшегося исходящего</typeparam>
-        IProduceReturnedPipeConfigurator<TMessage> PipeError<TReturnedPipe>() where TReturnedPipe : IReturnedPipe<TMessage>;
+        IProduceReturnedPipeConfigurator<TMessage> PipeReturned<TReturnedPipe>() where TReturnedPipe : IReturnedPipe<TMessage>;
     }
 }

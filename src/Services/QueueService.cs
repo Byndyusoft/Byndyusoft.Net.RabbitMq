@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Services
@@ -9,6 +10,17 @@ namespace Byndyusoft.Net.RabbitMq.Services
     /// <inheritdoc cref="IQueueService" />
     public sealed class QueueService : IQueueService
     {
+        private readonly IBusFactory _busFactory;
+        private readonly RabbitMqConfiguration _configuration;
+        private readonly IServiceProvider _serviceProvider;
+
+        public QueueService(IBusFactory busFactory, RabbitMqConfiguration configuration, IServiceProvider serviceProvider)
+        {
+            _busFactory = busFactory ?? throw new ArgumentNullException(nameof(busFactory));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+        }
+
         /// <inheritdoc />
         public Task Initialize()
         {

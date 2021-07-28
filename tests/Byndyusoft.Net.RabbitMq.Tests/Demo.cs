@@ -1,6 +1,8 @@
 ﻿using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions;
 using Byndyusoft.Net.RabbitMq.Services;
+using Byndyusoft.Net.RabbitMq.Services.Pipes;
+using Byndyusoft.Net.RabbitMq.Services.Wrappers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Byndyusoft.Net.RabbitMq.Tests
@@ -18,16 +20,11 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                         {
                             exchangeConfigurator.Consume<RawDocument>("raw_documents", "raw")
                                 .Wrap<TracerConsumeWrapper<RawDocument>>()
-                                .Pipe<ReceivedCounter<RawDocument>>()
-                                .Consume()
-                                .Pipe<HandledCounter<RawDocument>>()
                                 .PipeError<PushToErrorQueue<RawDocument>>();
 
 
-                            exchangeConfigurator.Produce<EnrichedDocument>("raw_documents", "enriched")
+                            exchangeConfigurator.Produce<EnrichedDocument>("enriched_documents", "enriched")
                                 .Wrap<TracerProduceWrapper<EnrichedDocument>>()
-                                .Pipe<SentCounter<EnrichedDocument>>()
-                                .Produce()
                                 .PipeReturned<TraceReturned<EnrichedDocument>>();
                         })).BuildServiceProvider();
 

@@ -1,9 +1,9 @@
 ﻿using System;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
-using Microsoft.Extensions.DependencyInjection;
+using Byndyusoft.Net.RabbitMq.Services.Configuration;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions
+namespace Microsoft.Extensions.DependencyInjection
 {
 
     /// <summary>
