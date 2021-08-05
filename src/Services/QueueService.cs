@@ -2,19 +2,32 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
 using EasyNetQ.Topology;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Byndyusoft.Net.RabbitMq.Services
 {
     /// <inheritdoc cref="IQueueService" />
     public sealed class QueueService : IQueueService
     {
+        /// <summary>
+        ///     Rabbit connections factory
+        /// </summary>
         private readonly IBusFactory _busFactory;
+
+        /// <summary>
+        ///     Full rabbit connection and topology configuration
+        /// </summary>
         private readonly RabbitMqConfiguration _configuration;
+
+        /// <summary>
+        ///     IoC service locator for getting wrappers and pipes
+        /// </summary>
         private readonly IServiceProvider _serviceProvider;
 
         /// <summary>
@@ -27,15 +40,33 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// </summary>
         private bool _isInitialized;
 
+        /// <summary>
+        ///     Pipelines for consuming incoming messages
+        /// </summary>
+        private IDictionary<Type, QueuePipeline> _consumingPipelines { get; }
+
+        /// <summary>
+        ///     Pipelines for producing outgoing messages
+        /// </summary>
+        private IDictionary<Type, QueuePipeline> _producingPipelines { get; }
+
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="busFactory">Rabbit connections factory</param>
+        /// <param name="configuration">Full rabbit connection and topology configuration</param>
+        /// <param name="serviceProvider">IoC service locator for getting wrappers and pipes</param>
         public QueueService(IBusFactory busFactory, RabbitMqConfiguration configuration, IServiceProvider serviceProvider)
         {
             _busFactory = busFactory ?? throw new ArgumentNullException(nameof(busFactory));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _consumingPipelines = new Dictionary<Type, QueuePipeline>();
+            _producingPipelines = new Dictionary<Type, QueuePipeline>();
         }
 
         /// <inheritdoc />
-        public async Task Initialize()
+        public async Task Initialize(CancellationToken cancellationToken = default)
         {
             if (_isInitialized)
             {
@@ -48,25 +79,58 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             _bus.Advanced.MessageReturned += OnMessageReturned;
 
+            foreach (var exchangeCfg in _configuration.ExchangeConfigurations.Values)
+            {
+                var exchange = await _bus.Advanced.ExchangeDeclareAsync(exchangeCfg.ExchangeName, ExchangeType.Direct)
+                    .ConfigureAwait(false);
 
-            //_exchange = await _bus.Advanced.ExchangeDeclareAsync(_settings.ExchangeName, ExchangeType.Direct).ConfigureAwait(false);
+                foreach (var queueCfg in exchangeCfg.ConsumeQueueConfigurations)
+                {
+                    var queuePipeline = await BuildPipeline(exchangeCfg, queueCfg, exchange);
+                    _consumingPipelines.Add(queueCfg.MessageType, queuePipeline);
+                }
 
-            //if (string.IsNullOrEmpty(_settings.ErrorRoutingKey) == false)
-            //    await InitializeQueue(_bus, _exchange, new QueueSettings { RoutingKey = _settings.ErrorRoutingKey }).ConfigureAwait(false);
+                foreach (var queueCfg in exchangeCfg.ProduceQueueConfigurations)
+                {
+                    var queuePipeline = await BuildPipeline(exchangeCfg, queueCfg, exchange);
+                    _producingPipelines.Add(queueCfg.MessageType, queuePipeline);
+                }
 
-            //if (string.IsNullOrEmpty(_settings.IncomingQueue) == false)
-            //    await _bus.Advanced.QueueDeclareAsync(_settings.IncomingQueue).ConfigureAwait(false);
-
-            //foreach (var routingKey in _incomingRoutingKeysDictionary.Values)
-            //    if (string.IsNullOrEmpty(routingKey) == false)
-            //        await InitializeQueue(_bus, _exchange, _queueSettingsDictionary[routingKey]).ConfigureAwait(false);
-
-            //foreach (var routingKey in _outgoingRoutingKeysDictionary.Values)
-            //    if (string.IsNullOrEmpty(routingKey) == false)
-            //        await InitializeQueue(_bus, _exchange, _queueSettingsDictionary[routingKey]).ConfigureAwait(false);
+            }
 
             _isInitialized = true;
         }
+
+        /// <summary>
+        ///     Builds and return message pipeline via queue
+        /// </summary>
+        /// <param name="exchangeCfg">Exchange configuration TODO: can be removed using exchange.Name ?</param>
+        /// <param name="queueCfg">Queue configuration</param>
+        /// <param name="exchange">Exchange</param>
+        private async Task<QueuePipeline> BuildPipeline(ExchangeConfiguration exchangeCfg, QueueConfiguration queueCfg, IExchange exchange)
+        {
+            var queue = await _bus.Advanced.QueueDeclareAsync($"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}")
+                .ConfigureAwait(false);
+
+            var queuePipeline = new QueuePipeline(queueCfg.RoutingKey, queue, exchange);
+
+            foreach (var produceWrapper in queueCfg.Wrapers)
+            {
+                var wrapper = _serviceProvider.GetRequiredService(produceWrapper);
+                queuePipeline.ProcessWrappers.Add(wrapper);
+            }
+
+            foreach (var returnPipe in queueCfg.Pipes)
+            {
+                var pipe = _serviceProvider.GetRequiredService(returnPipe);
+                queuePipeline.FailurePipes.Add(pipe);
+            }
+
+            return queuePipeline;
+        }
+
+
+        #region Validation
 
         /// <summary>
         ///     Validates topology, throws exception on incorrect settings
@@ -131,14 +195,41 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 errors.AppendLine("Exchange contains neither consuming pipelines, not producing pipelines");
             }
 
-            foreach (var queue in exchangeCfg.ConsumeQueueConfigurations)
+            if (exchangeCfg.ConsumeQueueConfigurations != null)
             {
-                ValidateConfig(queue, errors);
+                foreach (var queue in exchangeCfg.ConsumeQueueConfigurations)
+                {
+                    ValidateConfig(queue, errors);
+
+                    if (exchangeCfg.ProduceQueueConfigurations != null)
+                    {
+                        if (exchangeCfg.ProduceQueueConfigurations.Any(cfg =>
+                            string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
+                                StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            errors.AppendLine(
+                                $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
+                        }
+                    }
+                }
             }
 
-            foreach (var queue in exchangeCfg.ProduceQueueConfigurations)
+            if (exchangeCfg.ProduceQueueConfigurations != null)
             {
-                ValidateConfig(queue, errors);
+                foreach (var queue in exchangeCfg.ProduceQueueConfigurations)
+                {
+                    ValidateConfig(queue, errors);
+                    if (exchangeCfg.ConsumeQueueConfigurations != null)
+                    {
+                        if (exchangeCfg.ConsumeQueueConfigurations.Any(cfg =>
+                            string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
+                                StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            errors.AppendLine(
+                                $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
+                        }
+                    }
+                }
             }
         }
 
@@ -170,10 +261,15 @@ namespace Byndyusoft.Net.RabbitMq.Services
             }
         }
 
+        /// <summary>
+        ///     Return true whether name contains unsupported chacaracters
+        /// </summary>
         private static bool ContainsUnsupportedCharacters(string name)
         {
             return name.ToCharArray().Where(x => x != '_' && x != '.').All(char.IsLetterOrDigit) == false;
         }
+
+        #endregion
 
         private void OnMessageReturned(object sender, MessageReturnedEventArgs e)
         {
@@ -181,7 +277,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public Task Publish<TMessage>(TMessage message, Dictionary<string, string>? headers = null, Action<MessageReturnedEventArgs>? returnedHandled = null) where TMessage : class
+        public Task Publish<TMessage>(TMessage message, Dictionary<string, string>? headers = null,
+                                      Action<MessageReturnedEventArgs>? returnedHandled = null,
+                                      CancellationToken cancellationToken = default) where TMessage : class
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
@@ -190,7 +288,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage)
+        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage,
+                                             CancellationToken cancellationToken = default)
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
@@ -199,7 +298,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public Task ResendErrorMessages()
+        public Task ResendErrorMessages(CancellationToken cancellationToken = default)
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
@@ -208,7 +307,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public Task ResendErrorMessages(string routingKey)
+        public Task ResendErrorMessages(string routingKey, CancellationToken cancellationToken = default)
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
@@ -226,6 +325,52 @@ namespace Byndyusoft.Net.RabbitMq.Services
             }
 
             _isInitialized = false;
+        }
+    }
+
+    /// <summary>
+    ///     Consuming or producing message pipeline
+    /// </summary>
+    public class QueuePipeline
+    {
+        /// <summary>
+        ///     Queue routing key
+        /// </summary>
+        public string RoutingKey { get; }
+
+        /// <summary>
+        ///     Target queue
+        /// </summary>
+        public IQueue Queue { get; }
+
+        /// <summary>
+        ///     Target exchange
+        /// </summary>
+        public IExchange Exchange { get; }
+
+        /// <summary>
+        ///     Message processing wrappers
+        /// </summary>
+        public IList<object> ProcessWrappers { get; }
+
+        /// <summary>
+        ///     Failure pipes for handling errors on message consuming or returned produced messages
+        /// </summary>
+        public IList<object> FailurePipes { get; }
+
+        /// <summary>
+        /// Ctor
+        /// </summary>
+        /// <param name="routingKey">Queue routing key</param>
+        /// <param name="queue">Target queue</param>
+        /// <param name="exchange">Target exchange</param>
+        public QueuePipeline(string routingKey, IQueue queue, IExchange exchange)
+        {
+            RoutingKey = routingKey;
+            Queue = queue;
+            Exchange = exchange;
+            ProcessWrappers = new List<object>();
+            FailurePipes = new List<object>();
         }
     }
 }

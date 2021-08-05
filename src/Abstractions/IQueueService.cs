@@ -1,47 +1,54 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///     Служба работы с оцередями
+    ///     RabbitMq messaging service
     /// </summary>
     public interface IQueueService : IDisposable
     {
         /// <summary>
-        ///     Инциализирует топологию очередй
+        ///     Initializes topology of queues
         /// </summary>
-        Task Initialize();
-        
+        Task Initialize(CancellationToken cancellationToken = default);
+
         /// <summary>
-        ///     Публикует исходящее сообщение в шину
+        ///     Publishes new outgoing message into bus
         /// </summary>
-        /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
-        /// <param name="message">Исходящее сообщение</param>
-        /// <param name="headers">Заголовки сообщения - необязательный параметр</param>
-        /// <param name="returnedHandled">Обработчик вернувшихся сообщений - необязательный параметр</param>
+        /// <typeparam name="TMessage">Outgoing message type</typeparam>
+        /// <param name="message">Message itself</param>
+        /// <param name="headers">Additional message headers</param>
+        /// <param name="returnedHandled">Returned messages handler</param>
+        /// <param name="cancellationToken">Token for cancelling operation</param>
         Task Publish<TMessage>(
             TMessage message,
             Dictionary<string, string>? headers = null,
-            Action<MessageReturnedEventArgs>? returnedHandled = null) where TMessage : class;
+            Action<MessageReturnedEventArgs>? returnedHandled = null,
+            CancellationToken cancellationToken = default) where TMessage : class;
 
         /// <summary>
-        ///     Подписывается на вхожящие сообщения из шины
+        ///     Subscribes on incoming messages from bus
         /// </summary>
-        /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
-        /// <param name="processMessage">Обработчик входящего сообщения</param>
-        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage);
-        
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
+        /// <param name="processMessage">Incoming message handler</param>
+        /// <param name="cancellationToken">Token for cancelling operation</param>
+        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage, CancellationToken cancellationToken = default);
+
         /// <summary>
-        ///     Переотправляет входящие сообщения из всех очередей с ошибками
+        ///     Resends messages from all errors queues
         /// </summary>
-        Task ResendErrorMessages();
-        
+        /// <param name="cancellationToken">Token for cancelling operation</param>
+        Task ResendErrorMessages(CancellationToken cancellationToken = default);
+
         /// <summary>
-        ///     Переотправляет входящие сообщения из очереди с ошибками
+        ///     Resends messages from particular error queue
         /// </summary>
-        Task ResendErrorMessages(string routingKey);
+        /// <param name="routingKey">Routing key of incoming queue</param>
+        /// <param name="cancellationToken">Token for cancelling operation</param>
+        Task ResendErrorMessages(string routingKey, CancellationToken cancellationToken = default);
     }
 }
