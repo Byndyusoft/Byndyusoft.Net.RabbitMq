@@ -1,4 +1,6 @@
-﻿using Byndyusoft.Net.RabbitMq.Abstractions;
+﻿using System.Text;
+using System.Threading.Tasks;
+using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Pipes;
@@ -7,15 +9,22 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Byndyusoft.Net.RabbitMq.Tests
 {
-    public class Demo
+    public class Program
     {
-        public void Main()
+        public static async Task Main()
         {
             var serviceCollection = new ServiceCollection();
+            serviceCollection.AddSingleton<TracerConsumeWrapper<RawDocument>>()
+                             .AddSingleton<PushToErrorQueue<RawDocument>>()
+                             .AddSingleton<TracerProduceWrapper<EnrichedDocument>>()
+                             .AddSingleton<TraceReturned<EnrichedDocument>>()
+                             .AddSingleton<IQueueService, QueueService>()
+                             .AddSingleton<IBusFactory, BusFactory>();
+
             var serviceProvider =
             serviceCollection.AddRabbitMq(
-                configurator => configurator.Connection("localhost")
-                    .Exchange("incoming-documents",
+                configurator => configurator.Connection("host=localhost")
+                    .Exchange("incoming_documents",
                         exchangeConfigurator =>
                         {
                             exchangeConfigurator.Consume<RawDocument>("raw_documents", "raw")
@@ -31,6 +40,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
 
 
             var queueService = serviceProvider.GetRequiredService<IQueueService>();
+            await queueService.Initialize().ConfigureAwait(false);
             queueService.SubscribeAsync<RawDocument>(async raw =>
             {
                 var enriched = new EnrichedDocument

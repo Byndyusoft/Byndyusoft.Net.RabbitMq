@@ -3,14 +3,14 @@
 namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///     Фабрика подключений к шине RabbitMq
+    ///     Rabbit connections factory
     /// </summary>
     public interface IBusFactory
     {
         /// <summary>
-        ///     Возвращает новое подключение к шине
+        ///     Returns new connection to Rabbit
         /// </summary>
-        /// <param name="connectionString">Строка подключения</param>
+        /// <param name="connectionString">Connection string (for example 'host=localhost')</param>
         IBus CreateBus(string connectionString);
     }
 }

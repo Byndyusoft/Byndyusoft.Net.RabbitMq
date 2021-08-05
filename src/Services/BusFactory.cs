@@ -3,7 +3,8 @@ using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Services
 {
-    internal sealed class BusFactory : IBusFactory
+    /// <inheritdoc cref="IBusFactory"/>
+    public sealed class BusFactory : IBusFactory
     {
         public IBus CreateBus(string connectionString)
         {
