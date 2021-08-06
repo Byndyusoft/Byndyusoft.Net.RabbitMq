@@ -10,14 +10,14 @@ using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Pipes
+namespace Byndyusoft.Net.RabbitMq.Extensions.Pipes
 {
     public sealed class TraceReturned<TMessage> : IReturnedPipe<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
-        private readonly ILogger _logger;
+        private readonly ILogger<TraceReturned<TMessage>> _logger;
 
-        public TraceReturned(ITracer tracer, ILogger logger)
+        public TraceReturned(ITracer tracer, ILogger<TraceReturned<TMessage>> logger)
         {
             _tracer = tracer;
             _logger = logger;

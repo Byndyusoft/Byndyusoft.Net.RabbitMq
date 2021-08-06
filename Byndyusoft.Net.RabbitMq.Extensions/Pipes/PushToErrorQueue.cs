@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Pipes
+namespace Byndyusoft.Net.RabbitMq.Extensions.Pipes
 {
     public sealed class PushToErrorQueue<TMessage> : IConsumeErrorPipe<TMessage> where TMessage : class
     {

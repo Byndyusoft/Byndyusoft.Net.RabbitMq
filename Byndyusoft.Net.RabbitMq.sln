@@ -5,7 +5,9 @@ VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq", "src\Byndyusoft.Net.RabbitMq.csproj", "{086D1008-A52F-4456-9F89-9E94ECBD7EAD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Net.RabbitMq.Tests", "tests\Byndyusoft.Net.RabbitMq.Tests\Byndyusoft.Net.RabbitMq.Tests.csproj", "{F838F33E-C801-4FCD-9DB6-18A710F264E4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Tests", "tests\Byndyusoft.Net.RabbitMq.Tests\Byndyusoft.Net.RabbitMq.Tests.csproj", "{F838F33E-C801-4FCD-9DB6-18A710F264E4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Net.RabbitMq.Extensions", "Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{F838F33E-C801-4FCD-9DB6-18A710F264E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F838F33E-C801-4FCD-9DB6-18A710F264E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F838F33E-C801-4FCD-9DB6-18A710F264E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

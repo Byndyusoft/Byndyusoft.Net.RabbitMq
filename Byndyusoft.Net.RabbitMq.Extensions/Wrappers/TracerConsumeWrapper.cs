@@ -4,19 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Services;
 using EasyNetQ;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Wrappers
+namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
 {
     public sealed class TracerConsumeWrapper<TMessage> : IConsumeWrapper<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
-        private readonly ILogger _logger;
+        private readonly ILogger<TracerConsumeWrapper<TMessage>> _logger;
 
-        public TracerConsumeWrapper(ITracer tracer, ILogger logger)
+        public TracerConsumeWrapper(ITracer tracer, ILogger<TracerConsumeWrapper<TMessage>> logger)
         {
             _tracer = tracer;
             _logger = logger;

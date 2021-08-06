@@ -1,11 +1,12 @@
-﻿using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
-using Byndyusoft.Net.RabbitMq.Extensions;
+using Byndyusoft.Net.RabbitMq.Extensions.Pipes;
+using Byndyusoft.Net.RabbitMq.Extensions.Wrappers;
 using Byndyusoft.Net.RabbitMq.Services;
-using Byndyusoft.Net.RabbitMq.Services.Pipes;
-using Byndyusoft.Net.RabbitMq.Services.Wrappers;
+using Jaeger;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using OpenTracing;
 
 namespace Byndyusoft.Net.RabbitMq.Tests
 {
@@ -14,7 +15,10 @@ namespace Byndyusoft.Net.RabbitMq.Tests
         public static async Task Main()
         {
             var serviceCollection = new ServiceCollection();
-            serviceCollection.AddSingleton<TracerConsumeWrapper<RawDocument>>()
+            var tracer = new Tracer.Builder("Demo").Build();
+            serviceCollection.AddSingleton<ITracer>(tracer)
+                             .AddLogging(builder => builder.AddConsole())
+                             .AddSingleton<TracerConsumeWrapper<RawDocument>>()
                              .AddSingleton<PushToErrorQueue<RawDocument>>()
                              .AddSingleton<TracerProduceWrapper<EnrichedDocument>>()
                              .AddSingleton<TraceReturned<EnrichedDocument>>()
