@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Models;
 using Byndyusoft.Net.RabbitMq.Services;
 using EasyNetQ;
 using Microsoft.Extensions.Logging;

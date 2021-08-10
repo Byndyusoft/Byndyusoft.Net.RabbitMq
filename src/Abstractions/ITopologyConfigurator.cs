@@ -3,15 +3,15 @@
 namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///     Конфигуратор топологии 
+    ///     Api for building topology configuration
     /// </summary>
     public interface ITopologyConfigurator
     {
         /// <summary>
-        ///     Добавляет обменник в топологию
+        ///     Add another exchange to topology
         /// </summary>
-        /// <param name="exchangeName">Имя обменник</param>
-        /// <param name="setupExchange">Делегат для настройки обменника</param>
+        /// <param name="exchangeName">Exchange name</param>
+        /// <param name="setupExchange">Exchange set up delegate</param>
         ITopologyConfigurator Exchange(string exchangeName, Action<IExchangeConfigurator> setupExchange);
     }
 }

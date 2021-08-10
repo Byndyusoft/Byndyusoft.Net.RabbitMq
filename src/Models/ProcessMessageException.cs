@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Byndyusoft.Net.RabbitMq.Services
+namespace Byndyusoft.Net.RabbitMq.Models
 {
     public class ProcessMessageException : Exception
     {

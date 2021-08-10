@@ -1,13 +1,16 @@
 ﻿namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///     Конфигуратор подключения к шине RabbitMq
+    ///     Api for building Rabbit connection and topology configuration
     /// </summary>
     public interface IConnectionConfigurator
     {
         /// <summary>
-        ///     Устанавливает строку подключения к шине
+        ///     Sets up conections string to Rabbit
         /// </summary>
+        /// <returns>
+        ///     Returns topology configuration api
+        /// </returns>
         ITopologyConfigurator Connection(string connectionString);
     }
 }

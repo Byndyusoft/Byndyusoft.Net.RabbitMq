@@ -8,7 +8,7 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
     internal sealed class ConnectionConfigurator : IConnectionConfigurator
     {
         /// <summary>
-        ///     Конфигурация очередей
+        ///     Full rabbit connection and topology configuration
         /// </summary>
         private readonly RabbitMqConfiguration _configuration;
 
@@ -21,7 +21,7 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         }
 
         /// <summary>
-        ///     Возвращает конфигурации очередей
+        ///     Returns full configuration
         /// </summary>
         public RabbitMqConfiguration Build()
         {

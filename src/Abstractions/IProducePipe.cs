@@ -6,8 +6,20 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
     /// <summary>
     ///     Шаг пайплайна отправки исходящего сообщения
     /// </summary>
+    public interface IProducePipe
+    {
+        /// <summary>
+        ///     Обрабатывает входящее сообщение и передаёт его дальше
+        /// </summary>
+        /// <param name="message">Соообщение</param>
+        Task<IMessage> Pipe(IMessage message);
+    }
+
+    /// <summary>
+    ///     Шаг пайплайна отправки исходящего сообщения
+    /// </summary>
     /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
-    public interface IProducePipe<TMessage> where TMessage : class
+    public interface IProducePipe<TMessage> : IProducePipe where TMessage : class
     {
         /// <summary>
         ///     Обрабатывает входящее сообщение и передаёт его дальше

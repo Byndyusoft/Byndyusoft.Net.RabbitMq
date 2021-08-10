@@ -16,6 +16,11 @@ namespace Byndyusoft.Net.RabbitMq.Services
     public sealed class QueueService : IQueueService
     {
         /// <summary>
+        ///     TODO
+        /// </summary>
+        private const string MessageKeyHeader = "MessageKey";
+
+        /// <summary>
         ///     Rabbit connections factory
         /// </summary>
         private readonly IBusFactory _busFactory;
@@ -43,12 +48,12 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <summary>
         ///     Pipelines for consuming incoming messages
         /// </summary>
-        private IDictionary<Type, QueuePipeline> _consumingPipelines { get; }
+        private IDictionary<Type, ConsumingQueuePipeline> _consumingPipelines { get; }
 
         /// <summary>
         ///     Pipelines for producing outgoing messages
         /// </summary>
-        private IDictionary<Type, QueuePipeline> _producingPipelines { get; }
+        private IDictionary<Type, ProducingQueuePipeline> _producingPipelines { get; }
 
         /// <summary>
         ///     Ctor
@@ -56,13 +61,14 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="busFactory">Rabbit connections factory</param>
         /// <param name="configuration">Full rabbit connection and topology configuration</param>
         /// <param name="serviceProvider">IoC service locator for getting wrappers and pipes</param>
-        public QueueService(IBusFactory busFactory, RabbitMqConfiguration configuration, IServiceProvider serviceProvider)
+        public QueueService(IBusFactory busFactory, RabbitMqConfiguration configuration,
+            IServiceProvider serviceProvider)
         {
             _busFactory = busFactory ?? throw new ArgumentNullException(nameof(busFactory));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _consumingPipelines = new Dictionary<Type, QueuePipeline>();
-            _producingPipelines = new Dictionary<Type, QueuePipeline>();
+            _consumingPipelines = new Dictionary<Type, ConsumingQueuePipeline>();
+            _producingPipelines = new Dictionary<Type, ProducingQueuePipeline>();
         }
 
         /// <inheritdoc />
@@ -86,13 +92,13 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
                 foreach (var queueCfg in exchangeCfg.ConsumeQueueConfigurations)
                 {
-                    var queuePipeline = await BuildPipeline(exchangeCfg, queueCfg, exchange);
+                    var queuePipeline = await BuildConsumingPipeline(exchangeCfg, queueCfg, exchange);
                     _consumingPipelines.Add(queueCfg.MessageType, queuePipeline);
                 }
 
                 foreach (var queueCfg in exchangeCfg.ProduceQueueConfigurations)
                 {
-                    var queuePipeline = await BuildPipeline(exchangeCfg, queueCfg, exchange);
+                    var queuePipeline = await BuildProducingPipeline(exchangeCfg, queueCfg, exchange);
                     _producingPipelines.Add(queueCfg.MessageType, queuePipeline);
                 }
 
@@ -102,28 +108,57 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <summary>
-        ///     Builds and return message pipeline via queue
+        ///     Builds and return consuming message pipeline via queue
         /// </summary>
         /// <param name="exchangeCfg">Exchange configuration TODO: can be removed using exchange.Name ?</param>
         /// <param name="queueCfg">Queue configuration</param>
         /// <param name="exchange">Exchange</param>
-        private async Task<QueuePipeline> BuildPipeline(ExchangeConfiguration exchangeCfg, QueueConfiguration queueCfg, IExchange exchange)
+        private async Task<ConsumingQueuePipeline> BuildConsumingPipeline(ExchangeConfiguration exchangeCfg, QueueConfiguration queueCfg, IExchange exchange)
         {
             var queue = await _bus.Advanced.QueueDeclareAsync($"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}")
                 .ConfigureAwait(false);
 
-            var queuePipeline = new QueuePipeline(queueCfg.RoutingKey, queue, exchange);
+            var queuePipeline = new ConsumingQueuePipeline(queueCfg.RoutingKey, queue, exchange);
 
             foreach (var produceWrapper in queueCfg.Wrapers)
             {
                 var wrapper = _serviceProvider.GetRequiredService(produceWrapper);
-                queuePipeline.ProcessWrappers.Add(wrapper);
+                queuePipeline.ProcessWrappers.Add((IConsumeWrapper)wrapper);
             }
 
             foreach (var returnPipe in queueCfg.Pipes)
             {
                 var pipe = _serviceProvider.GetRequiredService(returnPipe);
-                queuePipeline.FailurePipes.Add(pipe);
+                queuePipeline.FailurePipes.Add((IConsumePipe)pipe);
+            }
+
+            return queuePipeline;
+        }
+
+
+        /// <summary>
+        ///     Builds and return producing message pipeline via queue
+        /// </summary>
+        /// <param name="exchangeCfg">Exchange configuration TODO: can be removed using exchange.Name ?</param>
+        /// <param name="queueCfg">Queue configuration</param>
+        /// <param name="exchange">Exchange</param>
+        private async Task<ProducingQueuePipeline> BuildProducingPipeline(ExchangeConfiguration exchangeCfg, QueueConfiguration queueCfg, IExchange exchange)
+        {
+            var queue = await _bus.Advanced.QueueDeclareAsync($"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}")
+                .ConfigureAwait(false);
+
+            var queuePipeline = new ProducingQueuePipeline(queueCfg.RoutingKey, queue, exchange);
+
+            foreach (var produceWrapper in queueCfg.Wrapers)
+            {
+                var wrapper = _serviceProvider.GetRequiredService(produceWrapper);
+                queuePipeline.ProcessWrappers.Add((IProduceWrapper)wrapper);
+            }
+
+            foreach (var returnPipe in queueCfg.Pipes)
+            {
+                var pipe = _serviceProvider.GetRequiredService(returnPipe);
+                queuePipeline.FailurePipes.Add((IProducePipe)pipe);
             }
 
             return queuePipeline;
@@ -277,14 +312,69 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public Task Publish<TMessage>(TMessage message, Dictionary<string, string>? headers = null,
-                                      Action<MessageReturnedEventArgs>? returnedHandled = null,
-                                      CancellationToken cancellationToken = default) where TMessage : class
+        public async Task Publish<TMessage>(TMessage message, 
+                                            string key, 
+                                            Dictionary<string, string>? headers = null,
+                                            Action<MessageReturnedEventArgs>? returnedHandled = null,
+                                            CancellationToken cancellationToken = default) where TMessage : class
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
 
-            throw new NotImplementedException();
+
+            if (_producingPipelines.TryGetValue(typeof(TMessage), out var pipeline) == false)
+                throw new InvalidOperationException($"Type {typeof(TMessage)} was not registered for producing");
+
+            if(pipeline == null)
+                throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
+            
+            var properties = GetMessageProperties();
+            properties.Headers.Add(MessageKeyHeader, key);
+            if (headers != null)
+                foreach (var header in headers)
+                    properties.Headers.Add(header.Key, header.Value);
+
+            var wrappers = _serviceProvider.GetServices<IProduceWrapper<TMessage>>();
+            var producePipeline = BuildPublish(pipeline, wrappers.GetEnumerator());
+
+            await producePipeline(new Message<TMessage>(message)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        ///     Returns publish message delegate, that will chain all middlewares
+        /// </summary>
+        /// <typeparam name="TMessage">Publishing message type</typeparam>
+        /// <param name="pipeline">Producing pipeline</param>
+        /// <param name="wrappersEnumerator">Middlewares enumerator</param>
+        /// <returns></returns>
+        private Func<IMessage<TMessage>, Task> BuildPublish<TMessage>(
+            ProducingQueuePipeline pipeline,
+            IEnumerator<IProduceWrapper<TMessage>> wrappersEnumerator) where TMessage : class
+        {
+            if (wrappersEnumerator.MoveNext() && wrappersEnumerator.Current != null)
+            {
+                return async message => await wrappersEnumerator.Current
+                                                                .WrapPipe(message, BuildPublish(pipeline, wrappersEnumerator))
+                                                                                        .ConfigureAwait(false);
+            }
+
+            return async message =>
+
+                //TODO включить паблиш конфермс
+                await _bus.Advanced
+                    .PublishAsync(pipeline.Exchange, pipeline.RoutingKey, true, message)
+                    .ConfigureAwait(false);
+        }
+
+        private static MessageProperties GetMessageProperties()
+        {
+            return new MessageProperties
+            {
+                //TODO: Вернуть, когда перейдем на netcore или netstandard2.1 
+                //ContentType = MediaTypeNames.Application.Json,
+                ContentType = "application/json",
+                DeliveryMode = 2
+            };
         }
 
         /// <inheritdoc />
@@ -325,52 +415,6 @@ namespace Byndyusoft.Net.RabbitMq.Services
             }
 
             _isInitialized = false;
-        }
-    }
-
-    /// <summary>
-    ///     Consuming or producing message pipeline
-    /// </summary>
-    public class QueuePipeline
-    {
-        /// <summary>
-        ///     Queue routing key
-        /// </summary>
-        public string RoutingKey { get; }
-
-        /// <summary>
-        ///     Target queue
-        /// </summary>
-        public IQueue Queue { get; }
-
-        /// <summary>
-        ///     Target exchange
-        /// </summary>
-        public IExchange Exchange { get; }
-
-        /// <summary>
-        ///     Message processing wrappers
-        /// </summary>
-        public IList<object> ProcessWrappers { get; }
-
-        /// <summary>
-        ///     Failure pipes for handling errors on message consuming or returned produced messages
-        /// </summary>
-        public IList<object> FailurePipes { get; }
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="routingKey">Queue routing key</param>
-        /// <param name="queue">Target queue</param>
-        /// <param name="exchange">Target exchange</param>
-        public QueuePipeline(string routingKey, IQueue queue, IExchange exchange)
-        {
-            RoutingKey = routingKey;
-            Queue = queue;
-            Exchange = exchange;
-            ProcessWrappers = new List<object>();
-            FailurePipes = new List<object>();
         }
     }
 }

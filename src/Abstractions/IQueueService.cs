@@ -21,11 +21,13 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// </summary>
         /// <typeparam name="TMessage">Outgoing message type</typeparam>
         /// <param name="message">Message itself</param>
+        /// <param name="key">Message unique key</param>
         /// <param name="headers">Additional message headers</param>
         /// <param name="returnedHandled">Returned messages handler</param>
         /// <param name="cancellationToken">Token for cancelling operation</param>
         Task Publish<TMessage>(
             TMessage message,
+            string key,
             Dictionary<string, string>? headers = null,
             Action<MessageReturnedEventArgs>? returnedHandled = null,
             CancellationToken cancellationToken = default) where TMessage : class;
