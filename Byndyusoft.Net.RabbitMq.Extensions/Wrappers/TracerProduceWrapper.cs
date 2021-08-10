@@ -18,7 +18,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
             _tracer = tracer;
         }
 
-        public async Task WrapPipe(IMessage<TMessage> message, IProducePipe<TMessage> pipe)
+        public async Task WrapPipe(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             if (_tracer.ActiveSpan == null)
                 throw new InvalidOperationException("No active tracing span. Push to queue will broken service chain");
@@ -31,7 +31,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
 
             _tracer.Inject(_tracer.ActiveSpan.Context, BuiltinFormats.HttpHeaders, carrier);
 
-            await pipe.Pipe(message);
+            await next(message);
 
             span.Finish();
         }

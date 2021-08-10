@@ -5,7 +5,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Models;
-using Byndyusoft.Net.RabbitMq.Services;
 using EasyNetQ;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
@@ -24,7 +23,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
             _logger = logger;
         }
 
-        public async Task WrapPipe(IMessage<TMessage> message, IConsumePipe<TMessage> pipe)
+        public async Task WrapPipe(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             var stringDictionary = message.Properties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
@@ -39,7 +38,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
                 while (true)
                     try
                     {
-                        await pipe.Pipe(message.Body).ConfigureAwait(false);
+                        await next(message).ConfigureAwait(false);
                         break;
                     }
                     catch (ProcessMessageException)

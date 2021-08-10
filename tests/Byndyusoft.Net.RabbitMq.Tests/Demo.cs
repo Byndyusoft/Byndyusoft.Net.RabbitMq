@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions.Pipes;
 using Byndyusoft.Net.RabbitMq.Extensions.Wrappers;
@@ -52,7 +53,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                     RawDocument = raw
                 };
 
-                await queueService.Publish(enriched);
+                await queueService.Publish(enriched, Guid.NewGuid().ToString());
             });
         }
     }
