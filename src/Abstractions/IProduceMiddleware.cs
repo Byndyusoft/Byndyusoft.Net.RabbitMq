@@ -13,7 +13,6 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// <summary>
         ///     Wraps message producing chain
         /// </summary>
-        /// <typeparam name="TMessage">Producing message type</typeparam>
         /// <param name="message">Message</param>
         /// <param name="next">Next middleware in a chain</param>
         Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next);

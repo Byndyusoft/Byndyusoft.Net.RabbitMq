@@ -8,19 +8,20 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
     internal sealed class TopologyConfigurator : ITopologyConfigurator
     {
         /// <summary>
-        ///     Конфигурация очередей
+        ///     Connection and topology configuration
         /// </summary>
         private readonly RabbitMqConfiguration _configuration;
 
         /// <summary>
         ///     Ctor
         /// </summary>
-        /// <param name="configuration">Настройки топологии </param>
+        /// <param name="configuration">Connection and topology configuration</param>
         public TopologyConfigurator(RabbitMqConfiguration configuration)
         {
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         }
 
+        /// <inheritdoc />
         public ITopologyConfigurator Exchange(string exchangeName, Action<IExchangeConfigurator> setupExchange)
         {
             if (setupExchange == null) throw new ArgumentNullException(nameof(setupExchange));

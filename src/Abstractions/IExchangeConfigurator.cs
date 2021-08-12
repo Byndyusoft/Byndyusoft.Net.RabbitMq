@@ -25,12 +25,12 @@
         /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="queueName">Queue name</param>
         /// <param name="routingKey">Queue routing key</param>
-        IProduceWrapConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey) where TMessage : class;
+        IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey) where TMessage : class;
 
         /// <summary>
         ///     Adds pipeline for producing message
         /// </summary>
         /// <typeparam name="TMessage">Incoming message type</typeparam>
-        IProduceWrapConfigurator<TMessage> Produce<TMessage>() where TMessage : class;
+        IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>() where TMessage : class;
     }
 }

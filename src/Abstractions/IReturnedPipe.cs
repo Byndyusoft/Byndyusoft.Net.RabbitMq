@@ -12,7 +12,6 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// <summary>
         ///     Обрабатывает вернувшееся вхоядщее сообщение и передаёт его дальше
         /// </summary>
-        /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
         /// <param name="args">Вернувшееся сообщение</param>
         Task<MessageReturnedEventArgs> Pipe(MessageReturnedEventArgs args);
     }
