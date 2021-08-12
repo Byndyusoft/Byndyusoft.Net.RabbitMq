@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
+using EasyNetQ.SystemMessages;
 using EasyNetQ.Topology;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -472,25 +473,53 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         /// <inheritdoc />
-        public Task ResendErrorMessages(CancellationToken cancellationToken = default)
+        public async Task ResendErrorMessages<TMessage>(CancellationToken cancellationToken = default)
         {
-            if (_isInitialized == false)
-                throw new InvalidOperationException("Initialize bus before use");
+            if (_consumingPipelines.TryGetValue(typeof(TMessage), out var pipeline) == false)
+                throw new InvalidOperationException($"Type {typeof(TMessage)} was not registered for consuming");
 
-            throw new NotImplementedException();
+            if (pipeline == null)
+                throw new InvalidOperationException($"Consuming pipeline is not found for type {typeof(TMessage)}");
+
+            var queue = await _bus.Advanced
+                                  .QueueDeclareAsync($"{pipeline.Exchange.Name}.{pipeline.RoutingKey}.error")
+                                  .ConfigureAwait(false);
+
+            var messageCount = _bus.Advanced.MessageCount(queue);
+            var jsonSerializer = new JsonSerializer();
+
+            while (messageCount > 0)
+            {
+                var getResult = _bus.Advanced.Get<Error>(queue);
+
+                if (getResult.MessageAvailable)
+                {
+                    var error = getResult.Message.Body;
+                    var headers = error.BasicProperties.Headers.ToDictionary(x => x.Key, x => x.Value.ToString());
+
+                    var properties = GetMessageProperties();
+
+                    foreach (var header in headers)
+                        properties.Headers.Add(header.Key, header.Value);
+                    
+                    var newMessage = (Message<TMessage>)jsonSerializer.BytesToMessage(typeof(Message<TMessage>), Encoding.UTF8.GetBytes(error.Message));
+
+                    //TODO включить паблиш конфермс
+                    await _bus.Advanced
+                              .PublishAsync(pipeline.Exchange, error.RoutingKey, true, newMessage)
+                              .ConfigureAwait(false);
+                }
+
+                messageCount--;
+            }
         }
 
-        /// <inheritdoc />
-        public Task ResendErrorMessages(string routingKey, CancellationToken cancellationToken = default)
-        {
-            if (_isInitialized == false)
-                throw new InvalidOperationException("Initialize bus before use");
 
-            throw new NotImplementedException();
-        }      
 
         #endregion
-        
+
+
+
 
         /// <inheritdoc />
         public void Dispose()

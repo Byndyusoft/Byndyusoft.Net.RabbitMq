@@ -41,16 +41,10 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage, CancellationToken cancellationToken = default) where TMessage : class;
 
         /// <summary>
-        ///     Resends messages from all errors queues
+        ///     Resends messages from particular error queue by message type
         /// </summary>
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="cancellationToken">Token for cancelling operation</param>
-        Task ResendErrorMessages(CancellationToken cancellationToken = default);
-
-        /// <summary>
-        ///     Resends messages from particular error queue
-        /// </summary>
-        /// <param name="routingKey">Routing key of incoming queue</param>
-        /// <param name="cancellationToken">Token for cancelling operation</param>
-        Task ResendErrorMessages(string routingKey, CancellationToken cancellationToken = default);
+        Task ResendErrorMessages<TMessage>(CancellationToken cancellationToken = default);
     }
 }
