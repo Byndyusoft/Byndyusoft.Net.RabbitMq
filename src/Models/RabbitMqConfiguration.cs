@@ -1,21 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
-using Byndyusoft.Net.RabbitMq.Services;
 
 namespace Byndyusoft.Net.RabbitMq.Models
 {
     /// <summary>
-    ///     Конфигурация очередей
+    ///     Connection and topology configuration for RabbintMq
     /// </summary>
     public sealed class RabbitMqConfiguration
     {
         /// <summary>
-        ///     Строка подключения к RabbitMq
+        ///     Connection string to RabbitMq
         /// </summary>
         public string  ConnectionString { get; set; }
 
         /// <summary>
-        ///     Настройки обменников
+        ///     Configuration of exchanges of binded queues
         /// </summary>
         public Dictionary<string, ExchangeConfiguration> ExchangeConfigurations { get; }
 
@@ -28,7 +27,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
         }
 
         /// <summary>
-        ///      Добавляет настройки обменника
+        ///      Add exchange configuration
         /// </summary>
         /// <param name="exchangeName"></param>
         public void AddExchange(string exchangeName)
@@ -42,42 +41,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
             }
 
             ExchangeConfigurations.Add(exchangeName, new ExchangeConfiguration(exchangeName));
-        }
-    }
-
-    /// <summary>
-    ///     Конфигурация обменника
-    /// </summary>
-    public sealed class ExchangeConfiguration
-    {
-        /// <summary>
-        ///     Имя обменника
-        /// </summary>
-        public string ExchangeName { get; }
-
-        /// <summary>
-        ///     Настройки входящих очередей
-        /// </summary>
-        public HashSet<QueueConfiguration> ConsumeQueueConfigurations { get; }
-
-        /// <summary>
-        ///     Настройки исходящих очередей
-        /// </summary>
-        public HashSet<QueueConfiguration> ProduceQueueConfigurations { get; }
-
-
-        /// <summary>
-        ///     Ctor
-        /// </summary>
-        /// <param name="exchangeName">Имя обменника</param>
-        public ExchangeConfiguration(string exchangeName)
-        {
-            if (string.IsNullOrWhiteSpace(exchangeName))
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(exchangeName));
-
-            ExchangeName = exchangeName;
-            ConsumeQueueConfigurations = new HashSet<QueueConfiguration>();
-            ProduceQueueConfigurations = new HashSet<QueueConfiguration>();
         }
     }
 }

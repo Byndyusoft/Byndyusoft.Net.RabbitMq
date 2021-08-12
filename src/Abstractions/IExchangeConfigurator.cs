@@ -1,36 +1,36 @@
 ﻿namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///     Конфигуратор обменника 
+    ///     Api for building Exchange configuration
     /// </summary>
     public interface IExchangeConfigurator
     {
         /// <summary>
-        ///     Добавляет пайплайн на обработку входящего сообщения
+        ///     Adds pipeline for consuming message
         /// </summary>
-        /// <typeparam name="TMessage">Тип сообщения из очереди</typeparam>
-        /// <param name="queueName">Имя очереди</param>
-        /// <param name="routingKey">Ключ очереди</param>
-        IConsumeWrapConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey) where TMessage : class;
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
+        /// <param name="queueName">Queue name</param>
+        /// <param name="routingKey">Queue routing key</param>
+        IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey) where TMessage : class;
 
         /// <summary>
-        ///     Добавляет пайплайн на обработку входящего сообщения
+        ///     Adds pipeline for consuming message
         /// </summary>
-        /// <typeparam name="TMessage">Тип сообщения из очереди</typeparam>
-        IConsumeWrapConfigurator<TMessage> Consume<TMessage>() where TMessage : class;
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
+        IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>() where TMessage : class;
 
         /// <summary>
-        ///     Добавляет пайплайн на отправку исходящего сообщения
+        ///     Adds pipeline for producing message
         /// </summary>
-        /// <typeparam name="TMessage">Тип сообщения в очередь</typeparam>
-        /// <param name="queueName">Имя очереди</param>
-        /// <param name="routingKey">Ключ очереди</param>
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
+        /// <param name="queueName">Queue name</param>
+        /// <param name="routingKey">Queue routing key</param>
         IProduceWrapConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey) where TMessage : class;
 
         /// <summary>
-        ///     Добавляет пайплайн на отправку исходящего сообщения
+        ///     Adds pipeline for producing message
         /// </summary>
-        /// <typeparam name="TMessage">Тип сообщения в очередь</typeparam>
+        /// <typeparam name="TMessage">Incoming message type</typeparam>
         IProduceWrapConfigurator<TMessage> Produce<TMessage>() where TMessage : class;
     }
 }

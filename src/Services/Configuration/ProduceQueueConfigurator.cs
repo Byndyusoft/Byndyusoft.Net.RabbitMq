@@ -14,9 +14,9 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
-        public IProduceWrapConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IProduceWrapper<TMessage>
+        public IProduceWrapConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IProduceMiddleware<TMessage>
         {
-            _queue.Wrapers.Add(typeof(TWrapper));
+            _queue.Middlewares.Add(typeof(TWrapper));
             return this;
         }
 

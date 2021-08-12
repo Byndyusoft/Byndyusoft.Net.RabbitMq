@@ -4,41 +4,41 @@ using System.Collections.Generic;
 namespace Byndyusoft.Net.RabbitMq.Models
 {
     /// <summary>
-    ///     Настройки очереди
+    ///     Queue configuration
     /// </summary>
     public sealed  class QueueConfiguration
     {
         /// <summary>
-        ///     Тип сообщений
+        ///     Type of messages in queue
         /// </summary>
         public Type MessageType { get; }
 
         /// <summary>
-        ///     Имя очереди
+        ///     Queue name
         /// </summary>
         public string QueueName { get; }
 
         /// <summary>
-        ///     Ключ маршрутизации
+        ///     Routing key for binding with exchange
         /// </summary>
         public string RoutingKey { get; }
 
         /// <summary>
-        ///     Типы врапперов\миддлвар для обработки сообщения
+        ///     Types of middleware for producing or consuming messages from queue
         /// </summary>
-        public List<Type> Wrapers { get; }
+        public List<Type> Middlewares { get; }
 
         /// <summary>
-        ///     Типы пайпов для обработки ошибок
+        ///     Types of middleware for handling errors during consuming or handling returned messaged after producing
         /// </summary>
         public List<Type> Pipes { get; }
 
         /// <summary>
         ///     Ctor
         /// </summary>
-        /// <param name="queueName">Имя очереди</param>
-        /// <param name="routingKey">Ключ маршрутизации</param>
-        /// <param name="messageType">Тип сообщений</param>
+        /// <param name="queueName">Queue name</param>
+        /// <param name="routingKey">Routing key for binding with exchange</param>
+        /// <param name="messageType">Type of messages in queue</param>
         public QueueConfiguration(string queueName, string routingKey, Type messageType)
         {
             if (string.IsNullOrWhiteSpace(queueName))
@@ -49,7 +49,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
             QueueName = queueName;
             RoutingKey = routingKey;
             MessageType = messageType ?? throw new ArgumentNullException(nameof(messageType));
-            Wrapers = new List<Type>();
+            Middlewares = new List<Type>();
             Pipes = new List<Type>();
         }
 

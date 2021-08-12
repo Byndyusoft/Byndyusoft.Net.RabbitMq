@@ -5,7 +5,7 @@ using Byndyusoft.Net.RabbitMq.Models;
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
     /// <inheritdoc/>
-    internal sealed class ConsumeQueueConfigurator<TMessage> : IConsumeWrapConfigurator<TMessage> where TMessage : class
+    internal sealed class ConsumeQueueConfigurator<TMessage> : IConsumeMiddlewareConfigurator<TMessage> where TMessage : class
     {
         private readonly QueueConfiguration _queue;
 
@@ -14,9 +14,9 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _queue = queue ?? throw new ArgumentNullException(nameof(queue));
         }
 
-        public IConsumeWrapConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IConsumeWrapper<TMessage>
+        public IConsumeMiddlewareConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IConsumeMiddleware<TMessage>
         {
-            _queue.Wrapers.Add(typeof(TWrapper));
+            _queue.Middlewares.Add(typeof(TWrapper));
             return this;
         }
 

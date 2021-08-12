@@ -9,6 +9,6 @@
         ///     Добавляет обёртку для отправки исходящего
         /// </summary>
         /// <typeparam name="TWrapper">Тип обёртки-обработчика</typeparam>
-        IProduceWrapConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IProduceWrapper<TMessage>;
+        IProduceWrapConfigurator<TMessage> Wrap<TWrapper>() where TWrapper : IProduceMiddleware<TMessage>;
     }
 }

@@ -3,18 +3,18 @@
 namespace Byndyusoft.Net.RabbitMq.Models
 {
     /// <summary>
-    ///     Error during message producing\consuming
+    ///     Error in pipeline configuration
     /// </summary>
-    public class ProcessMessageException : Exception
+    public class PipelineConfigurationException : Exception
     {
         /// <summary>
         ///     Ctor
         /// </summary>
         /// <param name="message">Error description</param>
-        public ProcessMessageException(string message)
+        public PipelineConfigurationException(string message)
             : base(message)
         {
-
+            
         }
     }
 }

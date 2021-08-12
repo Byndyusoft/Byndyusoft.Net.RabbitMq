@@ -4,6 +4,8 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>8</LangVersion>
+	<IncludeSymbols>true</IncludeSymbols>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup>

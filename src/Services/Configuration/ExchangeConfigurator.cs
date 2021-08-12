@@ -21,14 +21,14 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _exchangeConfiguration = exchangeConfiguration ?? throw new ArgumentNullException(nameof(exchangeConfiguration));
         }
 
-        public IConsumeWrapConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey)
+        public IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey)
             where TMessage : class
         {
             var queue = new QueueConfiguration(queueName, routingKey, typeof(TMessage));
             _exchangeConfiguration.ConsumeQueueConfigurations.Add(queue);
             return new ConsumeQueueConfigurator<TMessage>(queue);
         }
-        public IConsumeWrapConfigurator<TMessage> Consume<TMessage>() where TMessage : class
+        public IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>() where TMessage : class
         {
             var typeName = typeof(TMessage).FullName;
             return Consume<TMessage>(typeName, typeName);

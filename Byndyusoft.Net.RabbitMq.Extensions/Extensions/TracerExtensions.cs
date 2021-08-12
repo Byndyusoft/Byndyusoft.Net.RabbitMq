@@ -4,11 +4,11 @@ using System.Text;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions
+namespace Byndyusoft.Net.RabbitMq.Extensions.Extensions
 {
     public static class TracerExtensions
     {
-        public static ISpanContext? CreateSpanContextFromHeaders(this ITracer tracer,
+        public static ISpanContext CreateSpanContextFromHeaders(this ITracer tracer,
             IDictionary<string, object> headers)
         {
             if (headers == null)

@@ -7,15 +7,15 @@ namespace Microsoft.Extensions.DependencyInjection
 {
 
     /// <summary>
-    ///     Расширения для внедерния RabbitMq
+    ///     Dependency injection of package types
     /// </summary>
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        ///     Добавляет инфраструктуру работы с очередями RabbitMq в зависимости
+        ///     Adds RabbitMq infrastructure to DI
         /// </summary>
-        /// <param name="services">Коллекция зависимостей</param>
-        /// <param name="setup">Делегат для конфигации очередей</param>
+        /// <param name="services">DI service collection</param>
+        /// <param name="setup">Rabbit connection and pipelines configuration</param>
         public static IServiceCollection AddRabbitMq(
             this IServiceCollection services,
             Action<IConnectionConfigurator> setup)

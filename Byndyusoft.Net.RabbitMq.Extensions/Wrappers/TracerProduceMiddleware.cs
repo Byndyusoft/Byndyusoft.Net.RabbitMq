@@ -9,21 +9,21 @@ using OpenTracing.Propagation;
 
 namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
 {
-    public sealed class TracerProduceWrapper<TMessage> : IProduceWrapper<TMessage> where TMessage : class
+    public sealed class TracerProduceMiddleware<TMessage> : IProduceMiddleware<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
 
-        public TracerProduceWrapper(ITracer tracer)
+        public TracerProduceMiddleware(ITracer tracer)
         {
             _tracer = tracer;
         }
 
-        public async Task WrapPipe(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
+        public async Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             if (_tracer.ActiveSpan == null)
                 throw new InvalidOperationException("No active tracing span. Push to queue will broken service chain");
 
-            var span = _tracer.BuildSpan(nameof(WrapPipe)).Start();
+            var span = _tracer.BuildSpan(nameof(Handle)).Start();
 
             span.SetTag(nameof(message), JsonConvert.SerializeObject(message));
 

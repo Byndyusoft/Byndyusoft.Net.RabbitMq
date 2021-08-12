@@ -19,9 +19,9 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             var tracer = new Tracer.Builder("Demo").Build();
             serviceCollection.AddSingleton<ITracer>(tracer)
                              .AddLogging(builder => builder.AddConsole())
-                             .AddSingleton<TracerConsumeWrapper<RawDocument>>()
+                             .AddSingleton<TracerConsumeMiddleware<RawDocument>>()
                              .AddSingleton<PushToErrorQueue<RawDocument>>()
-                             .AddSingleton<TracerProduceWrapper<EnrichedDocument>>()
+                             .AddSingleton<TracerProduceMiddleware<EnrichedDocument>>()
                              .AddSingleton<TraceReturned<EnrichedDocument>>()
                              .AddSingleton<IQueueService, QueueService>()
                              .AddSingleton<IBusFactory, BusFactory>();
@@ -33,12 +33,12 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                         exchangeConfigurator =>
                         {
                             exchangeConfigurator.Consume<RawDocument>("raw_documents", "raw")
-                                .Wrap<TracerConsumeWrapper<RawDocument>>()
+                                .Wrap<TracerConsumeMiddleware<RawDocument>>()
                                 .PipeError<PushToErrorQueue<RawDocument>>();
 
 
                             exchangeConfigurator.Produce<EnrichedDocument>("enriched_documents", "enriched")
-                                .Wrap<TracerProduceWrapper<EnrichedDocument>>()
+                                .Wrap<TracerProduceMiddleware<EnrichedDocument>>()
                                 .PipeReturned<TraceReturned<EnrichedDocument>>();
                         })).BuildServiceProvider();
 

@@ -12,24 +12,24 @@ using OpenTracing.Propagation;
 
 namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
 {
-    public sealed class TracerConsumeWrapper<TMessage> : IConsumeWrapper<TMessage> where TMessage : class
+    public sealed class TracerConsumeMiddleware<TMessage> : IConsumeMiddleware<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
-        private readonly ILogger<TracerConsumeWrapper<TMessage>> _logger;
+        private readonly ILogger<TracerConsumeMiddleware<TMessage>> _logger;
 
-        public TracerConsumeWrapper(ITracer tracer, ILogger<TracerConsumeWrapper<TMessage>> logger)
+        public TracerConsumeMiddleware(ITracer tracer, ILogger<TracerConsumeMiddleware<TMessage>> logger)
         {
             _tracer = tracer;
             _logger = logger;
         }
 
-        public async Task WrapPipe(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
+        public async Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             var stringDictionary = message.Properties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
             var spanContext = _tracer.Extract(BuiltinFormats.HttpHeaders, textMapExtractAdapter);
 
-            using (_tracer.BuildSpan(nameof(WrapPipe)).AddReference(References.FollowsFrom, spanContext).StartActive(true))
+            using (_tracer.BuildSpan(nameof(Handle)).AddReference(References.FollowsFrom, spanContext).StartActive(true))
             using (_logger.BeginScope(new[] { new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId), _tracer.ActiveSpan.Context.TraceId) }))
             {
                 var tryCount = 0;
