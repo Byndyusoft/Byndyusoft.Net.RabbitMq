@@ -157,7 +157,7 @@
 
 //            var carrier = new HttpHeadersCarrier(properties.Headers);
 
-//            _tracer.Inject(_tracer.ActiveSpan.Context, BuiltinFormats.HttpHeaders, carrier);
+//            _tracer.InjectServices(_tracer.ActiveSpan.Context, BuiltinFormats.HttpHeaders, carrier);
 
 //            properties.Headers.Add(MessageKeyHeader, key);
 
@@ -188,7 +188,7 @@
 
 //            var carrier = new HttpHeadersCarrier(properties.Headers);
 
-//            _tracer.Inject(_tracer.ActiveSpan.Context, BuiltinFormats.HttpHeaders, carrier);
+//            _tracer.InjectServices(_tracer.ActiveSpan.Context, BuiltinFormats.HttpHeaders, carrier);
 
 //            properties.Headers.Add(MessageKeyHeader, key);
 

@@ -79,7 +79,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             ValidateConfig(_configuration);
 
-            _bus = _busFactory.CreateBus(_configuration.ConnectionString);
+            _bus = _busFactory.CreateBus(_configuration);
 
             _bus.Advanced.MessageReturned += OnMessageReturned;
 
@@ -115,6 +115,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
         {
             var queue = await _bus.Advanced.QueueDeclareAsync($"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}")
                 .ConfigureAwait(false);
+
+            await _bus.Advanced.BindAsync(exchange, queue, queueCfg.RoutingKey).ConfigureAwait(false);
 
             var queuePipeline = new QueuePipeline(queueCfg.RoutingKey, queue, exchange);
 
@@ -156,10 +158,10 @@ namespace Byndyusoft.Net.RabbitMq.Services
             }
 
             return queuePipeline;
-        }        
+        }
 
         #endregion
-        
+
 
         #region Validation
 
@@ -305,7 +307,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
         #region Publish
 
-        private void OnMessageReturned(object sender, MessageReturnedEventArgs e)
+        private void OnMessageReturned(object sender, MessageReturnedEventArgs args)
         {
             throw new NotImplementedException();
         }
@@ -354,7 +356,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 if (mws.Length == 0)
                     throw new PipelineConfigurationException($"Producing middleware {middlewareType.Name} is not registered");
 
-                if(mws.Length > 1)
+                if (mws.Length > 1)
                     throw new PipelineConfigurationException($"Producing middleware {middlewareType.Name} is registered twice");
 
                 result.Add(mws[0]);
@@ -422,7 +424,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
             var consumingMiddlewares = GetConsumingMiddlewares<TMessage>(pipeline.ProcessWrappers);
             var consumePipeline = BuildConsume<TMessage>(pipeline, processMessage, consumingMiddlewares.GetEnumerator());
 
-            _bus.Advanced.Consume<TMessage>(new Queue(pipeline.RoutingKey, false), (message, messageInfo) => consumePipeline(message));
+            _bus.Advanced.Consume<TMessage>(pipeline.Queue, (message, messageInfo) => consumePipeline(message));
         }
 
         /// <summary>
@@ -501,7 +503,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
                     foreach (var header in headers)
                         properties.Headers.Add(header.Key, header.Value);
-                    
+
                     var newMessage = (Message<TMessage>)jsonSerializer.BytesToMessage(typeof(Message<TMessage>), Encoding.UTF8.GetBytes(error.Message));
 
                     //TODO включить паблиш конфермс
@@ -517,8 +519,6 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
 
         #endregion
-
-
 
 
         /// <inheritdoc />

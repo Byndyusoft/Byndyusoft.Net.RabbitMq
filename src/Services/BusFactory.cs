@@ -1,4 +1,5 @@
 ﻿using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Services
@@ -7,9 +8,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
     public sealed class BusFactory : IBusFactory
     {
         /// <inheritdoc />
-        public IBus CreateBus(string connectionString)
+        public IBus CreateBus(RabbitMqConfiguration configuration)
         {
-            return RabbitHutch.CreateBus(connectionString);
+            return RabbitHutch.CreateBus(configuration.ConnectionString, configuration.Register);
         }
     }
 }

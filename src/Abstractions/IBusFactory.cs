@@ -1,4 +1,5 @@
-﻿using EasyNetQ;
+﻿using Byndyusoft.Net.RabbitMq.Models;
+using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
@@ -10,7 +11,7 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// <summary>
         ///     Returns new connection to Rabbit
         /// </summary>
-        /// <param name="connectionString">Connection string (for example 'host=localhost')</param>
-        IBus CreateBus(string connectionString);
+        /// <param name="configuration">Configuration of Bus</param>
+        IBus CreateBus(RabbitMqConfiguration configuration);
     }
 }

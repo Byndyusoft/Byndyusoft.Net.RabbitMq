@@ -27,12 +27,5 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _queue.Middlewares.Add(typeof(TWrapper));
             return this;
         }
-
-        /// <inheritdoc />
-        public IConsumeErrorPipeConfigurator<TMessage> PipeError<TErrorPipe>() where TErrorPipe : IConsumeErrorPipe<TMessage>
-        {
-            _queue.Pipes.Add(typeof(TErrorPipe));
-            return this;
-        }
     }
 }

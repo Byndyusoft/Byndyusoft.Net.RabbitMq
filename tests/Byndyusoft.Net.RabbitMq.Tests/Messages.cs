@@ -10,7 +10,7 @@
 
     public class RawDocument : IMessage
     {
-
+        public int Int { get; set; }
     }
 
     public class PoorDocument : IMessage

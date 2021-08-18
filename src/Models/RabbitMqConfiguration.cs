@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using EasyNetQ.DI;
 
 namespace Byndyusoft.Net.RabbitMq.Models
 {
@@ -9,7 +10,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
     public sealed class RabbitMqConfiguration
     {
         /// <summary>
-        ///     Connection string to RabbitMq
+        ///     Connection string (for example 'host=localhost')
         /// </summary>
         public string  ConnectionString { get; set; }
 
@@ -17,6 +18,11 @@ namespace Byndyusoft.Net.RabbitMq.Models
         ///     Configuration of exchanges of binded queues
         /// </summary>
         public Dictionary<string, ExchangeConfiguration> ExchangeConfigurations { get; }
+
+        /// <summary>
+        ///     TODO
+        /// </summary>
+        public Action<IServiceRegister> Register { get; set; }
 
         /// <summary>
         ///     Ctor

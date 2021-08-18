@@ -11,6 +11,6 @@
         /// <returns>
         ///     Returns topology configuration api
         /// </returns>
-        ITopologyConfigurator Connection(string connectionString);
+        IInjectionConfigurator Connection(string connectionString);
     }
 }
