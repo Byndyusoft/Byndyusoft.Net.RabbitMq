@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -125,7 +126,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 queuePipeline.ProcessWrappers.Add(produceWrapper);
             }
 
-            foreach (var returnPipe in queueCfg.Pipes)
+            foreach (var returnPipe in queueCfg.ReturnedMiddlewares)
             {
                 queuePipeline.FailurePipes.Add(returnPipe);
             }
@@ -152,7 +153,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 queuePipeline.ProcessWrappers.Add(produceWrapper);
             }
 
-            foreach (var returnPipe in queueCfg.Pipes)
+            foreach (var returnPipe in queueCfg.ReturnedMiddlewares)
             {
                 queuePipeline.FailurePipes.Add(returnPipe);
             }
@@ -307,11 +308,6 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
         #region Publish
 
-        private void OnMessageReturned(object sender, MessageReturnedEventArgs args)
-        {
-            throw new NotImplementedException();
-        }
-
         /// <inheritdoc />
         public async Task Publish<TMessage>(TMessage message,
             string key,
@@ -389,6 +385,79 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 await _bus.Advanced
                     .PublishAsync(pipeline.Exchange, pipeline.RoutingKey, true, message)
                     .ConfigureAwait(false);
+        }
+
+        /// <summary>
+        ///     Handles returned message
+        /// </summary>
+        private async void OnMessageReturned(object sender, MessageReturnedEventArgs args)
+        {
+            var messageType = Type.GetType(args.MessageProperties.Type);
+            MethodInfo method = typeof(QueueService).GetMethod(nameof(GetReturnedPipeline), BindingFlags.NonPublic);
+            MethodInfo generic = method.MakeGenericMethod(messageType);
+            var pipeline = (Func<MessageReturnedEventArgs, Task>)generic.Invoke(this, null);
+            await pipeline(args).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        ///     Returns pipeline for handling returned message
+        /// </summary>
+        /// <typeparam name="TMessage">Publishing message type</typeparam>
+        private Func<MessageReturnedEventArgs, Task> GetReturnedPipeline<TMessage>() where TMessage : class
+        {
+            if (_producingPipelines.TryGetValue(typeof(TMessage), out var pipeline) == false)
+                throw new InvalidOperationException($"Type {typeof(TMessage)} was not registered for producing");
+
+            if (pipeline == null)
+                throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
+
+            var returnedMiddlewares = GetReturnedMiddlewares<TMessage>(pipeline.ProcessWrappers);
+            var returnedPipeline = BuildReturnedHandling<TMessage>(pipeline, returnedMiddlewares.GetEnumerator());
+            return returnedPipeline;
+        }
+
+
+        /// <summary>
+        ///     Returns ordered list of  middlewares for handling returned message
+        /// </summary>
+        /// <param name="middlewareCfg">List of returned middleware types</param>
+        private List<IReturnedMiddleware<TMessage>> GetReturnedMiddlewares<TMessage>(IList<Type> middlewareCfg) where TMessage : class
+        {
+            var middlewares = _serviceProvider.GetServices<IReturnedMiddleware<TMessage>>();
+            var result = new List<IReturnedMiddleware<TMessage>>();
+            foreach (var middlewareType in middlewareCfg)
+            {
+                var mws = middlewares.Where(mw => mw.GetType() == middlewareType).ToArray();
+                if (mws.Length == 0)
+                    throw new PipelineConfigurationException($"Producing middleware {middlewareType.Name} is not registered");
+
+                if (mws.Length > 1)
+                    throw new PipelineConfigurationException($"Producing middleware {middlewareType.Name} is registered twice");
+
+                result.Add(mws[0]);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        ///     Returns returned message delegate, that will chain all middlewares
+        /// </summary>
+        /// <typeparam name="TMessage">Publishing message type</typeparam>
+        /// <param name="pipeline">Returned  pipeline</param>
+        /// <param name="wrappersEnumerator">Middlewares enumerator</param>
+        private Func<MessageReturnedEventArgs, Task> BuildReturnedHandling<TMessage>(
+            QueuePipeline pipeline,
+            IEnumerator<IReturnedMiddleware<TMessage>> wrappersEnumerator) where TMessage : class
+        {
+            if (wrappersEnumerator.MoveNext() && wrappersEnumerator.Current != null)
+            {
+                return async message => await wrappersEnumerator.Current
+                    .Wrap(message, BuildReturnedHandling(pipeline, wrappersEnumerator))
+                    .ConfigureAwait(false);
+            }
+
+            return message => Task.CompletedTask;
         }
 
         private static MessageProperties GetMessageProperties()

@@ -15,6 +15,6 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// </summary>
         /// <param name="args">Message</param>
         /// <param name="next">Next middleware in a chain</param>
-        Task Wrap(MessageReturnedEventArgs args, Func<IMessage<TMessage>, Task> next);
+        Task Wrap(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next);
     }
 }

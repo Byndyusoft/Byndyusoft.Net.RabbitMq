@@ -29,9 +29,9 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         }
 
         /// <inheritdoc />
-        public IProduceReturnedPipeConfigurator<TMessage> WrapReturned<TReturnedPipe>() where TReturnedPipe : IReturnedMiddleware<TMessage>
+        public IProduceReturnedMiddlewareConfigurator<TMessage> WrapReturned<TReturnedPipe>() where TReturnedPipe : IReturnedMiddleware<TMessage>
         {
-            _queue.Pipes.Add(typeof(TReturnedPipe));
+            _queue.ReturnedMiddlewares.Add(typeof(TReturnedPipe));
             return this;
         }
     }

@@ -29,9 +29,9 @@ namespace Byndyusoft.Net.RabbitMq.Models
         public List<Type> Middlewares { get; }
 
         /// <summary>
-        ///     Types of middleware for handling errors during consuming or handling returned messaged after producing
+        ///     Types of middleware for handling returned messaged after producing
         /// </summary>
-        public List<Type> Pipes { get; }
+        public List<Type> ReturnedMiddlewares { get; }
 
         /// <summary>
         ///     Ctor
@@ -50,7 +50,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
             RoutingKey = routingKey;
             MessageType = messageType ?? throw new ArgumentNullException(nameof(messageType));
             Middlewares = new List<Type>();
-            Pipes = new List<Type>();
+            ReturnedMiddlewares = new List<Type>();
         }
 
         protected bool Equals(QueueConfiguration other)

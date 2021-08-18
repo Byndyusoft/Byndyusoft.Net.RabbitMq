@@ -1,10 +1,10 @@
 ﻿namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///    Api for builing pipeline for producing message
+    ///    Api for building pipeline for producing message
     /// </summary>
-    /// <typeparam name="TMessage">Incoming message type</typeparam>
-    public interface IProduceMiddlewareConfigurator<TMessage> : IProduceReturnedPipeConfigurator<TMessage> where TMessage : class
+    /// <typeparam name="TMessage">Outgoing message type</typeparam>
+    public interface IProduceMiddlewareConfigurator<TMessage> : IProduceReturnedMiddlewareConfigurator<TMessage> where TMessage : class
     {
         /// <summary>
         ///     Adds middleware to producing pipeline

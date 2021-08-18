@@ -93,7 +93,8 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                         .Exchange("incoming_documents",
                             exchangeConfigurator =>
                             {
-                                exchangeConfigurator.Produce<RawDocument>("raw_documents", "raw");
+                                exchangeConfigurator.Produce<RawDocument>("raw_documents", "raw")
+                                                    .WrapReturned<TraceReturned<RawDocument>>();
 
                                 exchangeConfigurator.Consume<EnrichedDocument>("enriched_documents", "enriched");
 

@@ -24,7 +24,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Pipes
             _logger = logger;
         }
 
-        public async Task Wrap(MessageReturnedEventArgs args, Func<IMessage<TMessage>, Task> next)
+        public async Task Wrap(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next)
         {
             var stringDictionary = args.MessageProperties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
@@ -45,7 +45,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Pipes
                         args.MessageReturnedInfo.ReturnReason,
                         key);
 
-                    await next(null).ConfigureAwait(false);
+                    await next(args).ConfigureAwait(false);
                 }
                 else
                 {
