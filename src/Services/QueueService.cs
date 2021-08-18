@@ -83,6 +83,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
             _bus = _busFactory.CreateBus(_configuration);
 
             _bus.Advanced.MessageReturned += OnMessageReturned;
+            _bus.Advanced.Conventions.ErrorQueueNamingConvention = info => $"{info.Exchange}.{info.RoutingKey}.error";
+            _bus.Advanced.Conventions.ErrorExchangeNamingConvention = info => $"{info.Exchange}.error";
 
             foreach (var exchangeCfg in _configuration.ExchangeConfigurations.Values)
             {
