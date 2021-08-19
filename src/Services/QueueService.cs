@@ -53,6 +53,17 @@ namespace Byndyusoft.Net.RabbitMq.Services
         private readonly IDictionary<Type, QueuePipeline> _producingPipelines;
 
         /// <summary>
+        ///     Pipelines for producing outgoing messages
+        /// </summary>
+        private readonly IDictionary<Type, Delegate> _producingActions;
+
+        /// <summary>
+        ///     Pipelines for returned outgoing messages
+        /// </summary>
+        private readonly IDictionary<Type, Func<MessageReturnedEventArgs, Task>> _returnedActions;
+
+
+        /// <summary>
         ///     Ctor
         /// </summary>
         /// <param name="busFactory">Rabbit connections factory</param>
@@ -66,6 +77,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
             _consumingPipelines = new Dictionary<Type, QueuePipeline>();
             _producingPipelines = new Dictionary<Type, QueuePipeline>();
+            _returnedActions = new Dictionary<Type, Func<MessageReturnedEventArgs, Task>>();
+            _producingActions = new Dictionary<Type, Delegate>();
         }
 
         #region Initialize
@@ -101,11 +114,46 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 {
                     var queuePipeline = await BuildProducingPipeline(exchangeCfg, queueCfg, exchange);
                     _producingPipelines.Add(queueCfg.MessageType, queuePipeline);
+
+                    PrepareProducePipeline(queueCfg);
+                    PrepareReturnedPipeline(queueCfg);
                 }
 
             }
 
             _isInitialized = true;
+        }
+
+        /// <summary>
+        ///     Prepares pipeline for producing messages and save it to internal collections
+        /// </summary>
+        /// <param name="queueCfg">Queue to produce messages</param>
+        private void PrepareProducePipeline(QueueConfiguration queueCfg)
+        {
+            var method =
+                typeof(QueueService).GetMethod(nameof(GetPublishPipeline), BindingFlags.NonPublic | BindingFlags.Instance);
+            if (method == null)
+                throw new PipelineConfigurationException("Failed to prepare produce pipeline");
+
+            var generic = method.MakeGenericMethod(queueCfg.MessageType);
+            var pipeline = (Delegate) generic.Invoke(this, null);
+            _producingActions.Add(queueCfg.MessageType, pipeline);
+        }
+
+        /// <summary>
+        ///     Prepares pipeline for producing messages and save it to internal collections
+        /// </summary>
+        /// <param name="queueCfg">Queue to produce messages</param>
+        private void PrepareReturnedPipeline(QueueConfiguration queueCfg)
+        {
+            var method = 
+                typeof(QueueService).GetMethod(nameof(GetReturnedPipeline), BindingFlags.NonPublic | BindingFlags.Instance);
+            if (method == null)
+                throw new PipelineConfigurationException("");
+
+            var generic = method.MakeGenericMethod(queueCfg.MessageType);
+            var pipeline = (Func<MessageReturnedEventArgs, Task>)generic.Invoke(this, null);
+            _returnedActions.Add(queueCfg.MessageType, pipeline);
         }
 
         /// <summary>
@@ -123,14 +171,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             var queuePipeline = new QueuePipeline(queueCfg.RoutingKey, queue, exchange);
 
-            foreach (var produceWrapper in queueCfg.Middlewares)
+            foreach (var middleware in queueCfg.Middlewares)
             {
-                queuePipeline.ProcessWrappers.Add(produceWrapper);
-            }
-
-            foreach (var returnPipe in queueCfg.ReturnedMiddlewares)
-            {
-                queuePipeline.FailurePipes.Add(returnPipe);
+                queuePipeline.ProcessMiddlewares.Add(middleware);
             }
 
             return queuePipeline;
@@ -150,14 +193,14 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             var queuePipeline = new QueuePipeline(queueCfg.RoutingKey, queue, exchange);
 
-            foreach (var produceWrapper in queueCfg.Middlewares)
+            foreach (var middleware in queueCfg.Middlewares)
             {
-                queuePipeline.ProcessWrappers.Add(produceWrapper);
+                queuePipeline.ProcessMiddlewares.Add(middleware);
             }
 
-            foreach (var returnPipe in queueCfg.ReturnedMiddlewares)
+            foreach (var middleware in queueCfg.ReturnedMiddlewares)
             {
-                queuePipeline.FailurePipes.Add(returnPipe);
+                queuePipeline.ReturnedMiddlewares.Add(middleware);
             }
 
             return queuePipeline;
@@ -321,22 +364,34 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new InvalidOperationException("Initialize bus before use");
 
 
-            if (_producingPipelines.TryGetValue(typeof(TMessage), out var pipeline) == false)
-                throw new InvalidOperationException($"Type {typeof(TMessage)} was not registered for producing");
+            //var publishPipeline = GetPublishPipeline<TMessage>();
+            var publishPipeline = (Func<IMessage<TMessage>, Task>)_producingActions[typeof(TMessage)];
 
-            if (pipeline == null)
-                throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
-
+            // TODO: where shoud go this properties
             var properties = GetMessageProperties();
             properties.Headers.Add(Consts.MessageKeyHeader, key);
             if (headers != null)
                 foreach (var header in headers)
                     properties.Headers.Add(header.Key, header.Value);
 
-            var producingMiddlewares = GetProducingMiddlewares<TMessage>(pipeline.ProcessWrappers);
-            var publishPipeline = BuildPublish<TMessage>(pipeline, producingMiddlewares.GetEnumerator());
-
             await publishPipeline(new Message<TMessage>(message)).ConfigureAwait(false);
+        }
+
+        /// <summary>
+        ///     Returns pipeline for producing message
+        /// </summary>
+        /// <typeparam name="TMessage">Publishing message type</typeparam>
+        private Func<IMessage<TMessage>, Task> GetPublishPipeline<TMessage>() where TMessage : class
+        {
+            if (_producingPipelines.TryGetValue(typeof(TMessage), out var pipeline) == false)
+                throw new InvalidOperationException($"Type {typeof(TMessage)} was not registered for producing");
+
+            if (pipeline == null)
+                throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
+
+            var producingMiddlewares = GetProducingMiddlewares<TMessage>(pipeline.ProcessMiddlewares);
+            var publishPipeline = BuildPublish<TMessage>(pipeline, producingMiddlewares.GetEnumerator());
+            return publishPipeline;
         }
 
         /// <summary>
@@ -346,7 +401,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="middlewareCfg">List of producing middleware types</param>
         private List<IProduceMiddleware<TMessage>> GetProducingMiddlewares<TMessage>(IList<Type> middlewareCfg) where TMessage : class
         {
-            var middlewares = _serviceProvider.GetServices<IProduceMiddleware<TMessage>>();
+            var middlewares = _serviceProvider.GetServices<IProduceMiddleware<TMessage>>().ToArray();
             var result = new List<IProduceMiddleware<TMessage>>();
             foreach (var middlewareType in middlewareCfg)
             {
@@ -376,7 +431,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
         {
             if (wrappersEnumerator.MoveNext() && wrappersEnumerator.Current != null)
             {
-                return async message => await wrappersEnumerator.Current
+                var current = wrappersEnumerator.Current;
+                return async message => await current
                     .Handle(message, BuildPublish(pipeline, wrappersEnumerator))
                     .ConfigureAwait(false);
             }
@@ -395,9 +451,12 @@ namespace Byndyusoft.Net.RabbitMq.Services
         private async void OnMessageReturned(object sender, MessageReturnedEventArgs args)
         {
             var messageType = Type.GetType(args.MessageProperties.Type);
-            MethodInfo method = typeof(QueueService).GetMethod(nameof(GetReturnedPipeline), BindingFlags.NonPublic);
-            MethodInfo generic = method.MakeGenericMethod(messageType);
-            var pipeline = (Func<MessageReturnedEventArgs, Task>)generic.Invoke(this, null);
+            if (_returnedActions.TryGetValue(messageType, out var pipeline) == false)
+                throw new InvalidOperationException($"Type {args.MessageProperties.Type} was not registered for handling returned messages");
+
+            if (pipeline == null)
+                throw new InvalidOperationException($"Pipeline for handling returned messages is not found for type {args.MessageProperties.Type}");
+            
             await pipeline(args).ConfigureAwait(false);
         }
 
@@ -413,8 +472,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
             if (pipeline == null)
                 throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
 
-            var returnedMiddlewares = GetReturnedMiddlewares<TMessage>(pipeline.ProcessWrappers);
-            var returnedPipeline = BuildReturnedHandling<TMessage>(pipeline, returnedMiddlewares.GetEnumerator());
+            var returnedMiddlewares = GetReturnedMiddlewares<TMessage>(pipeline.ReturnedMiddlewares);
+            var returnedPipeline = BuildReturnedHandling<TMessage>(returnedMiddlewares.GetEnumerator());
             return returnedPipeline;
         }
 
@@ -425,7 +484,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="middlewareCfg">List of returned middleware types</param>
         private List<IReturnedMiddleware<TMessage>> GetReturnedMiddlewares<TMessage>(IList<Type> middlewareCfg) where TMessage : class
         {
-            var middlewares = _serviceProvider.GetServices<IReturnedMiddleware<TMessage>>();
+            var middlewares = _serviceProvider.GetServices<IReturnedMiddleware<TMessage>>().ToArray();
             var result = new List<IReturnedMiddleware<TMessage>>();
             foreach (var middlewareType in middlewareCfg)
             {
@@ -446,16 +505,15 @@ namespace Byndyusoft.Net.RabbitMq.Services
         ///     Returns returned message delegate, that will chain all middlewares
         /// </summary>
         /// <typeparam name="TMessage">Publishing message type</typeparam>
-        /// <param name="pipeline">Returned  pipeline</param>
         /// <param name="wrappersEnumerator">Middlewares enumerator</param>
         private Func<MessageReturnedEventArgs, Task> BuildReturnedHandling<TMessage>(
-            QueuePipeline pipeline,
             IEnumerator<IReturnedMiddleware<TMessage>> wrappersEnumerator) where TMessage : class
         {
             if (wrappersEnumerator.MoveNext() && wrappersEnumerator.Current != null)
             {
-                return async message => await wrappersEnumerator.Current
-                    .Wrap(message, BuildReturnedHandling(pipeline, wrappersEnumerator))
+                var current = wrappersEnumerator.Current;
+                return async message => await current
+                    .Wrap(message, BuildReturnedHandling(wrappersEnumerator))
                     .ConfigureAwait(false);
             }
 
@@ -492,7 +550,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new InvalidOperationException($"Consuming pipeline is not found for type {typeof(TMessage)}");
 
 
-            var consumingMiddlewares = GetConsumingMiddlewares<TMessage>(pipeline.ProcessWrappers);
+            var consumingMiddlewares = GetConsumingMiddlewares<TMessage>(pipeline.ProcessMiddlewares);
             var consumePipeline = BuildConsume<TMessage>(pipeline, processMessage, consumingMiddlewares.GetEnumerator());
 
             _bus.Advanced.Consume<TMessage>(pipeline.Queue, (message, messageInfo) => consumePipeline(message));
@@ -537,7 +595,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
         {
             if (wrappersEnumerator.MoveNext() && wrappersEnumerator.Current != null)
             {
-                return async message => await wrappersEnumerator.Current
+                var current = wrappersEnumerator.Current;
+                return async message => await current
                     .Handle(message, BuildConsume(pipeline, processMessage, wrappersEnumerator))
                     .ConfigureAwait(false);
             }

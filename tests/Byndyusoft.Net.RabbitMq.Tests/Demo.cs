@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions.Pipes;
@@ -52,6 +53,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
 
             Console.WriteLine("press any key...");
             Console.ReadKey();
+            Console.WriteLine("Bye");
         }
 
         private static async Task<IServiceProvider> InitFirstQueueService()
@@ -117,7 +119,8 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                 .AddSingleton<IProduceMiddleware<RawDocument>, TracerProduceMiddleware<RawDocument>>()
                 .AddSingleton<IConsumeMiddleware<EnrichedDocument>, TracerConsumeMiddleware<EnrichedDocument>>()
                 .AddSingleton<IProduceMiddleware<EnrichedDocument>, TracerProduceMiddleware<EnrichedDocument>>()
-                .AddSingleton<TraceReturned<EnrichedDocument>>()
+                .AddSingleton<IReturnedMiddleware<EnrichedDocument>, TraceReturned<EnrichedDocument>>()
+                .AddSingleton<IReturnedMiddleware<RawDocument>, TraceReturned<RawDocument>>()
                 .AddSingleton<IQueueService, QueueService>()
                 .AddSingleton<IBusFactory, BusFactory>();
             return serviceCollection;

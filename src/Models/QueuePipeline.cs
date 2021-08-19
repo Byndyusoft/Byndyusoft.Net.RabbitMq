@@ -26,14 +26,14 @@ namespace Byndyusoft.Net.RabbitMq.Models
         public IExchange Exchange { get; }
 
         /// <summary>
-        ///     Message processing wrappers
+        ///     Message producing or consuming middlewares
         /// </summary>
-        public IList<Type> ProcessWrappers { get; }
+        public IList<Type> ProcessMiddlewares { get; }
 
         /// <summary>
         ///     Failure pipes for handling errors on message consuming or returned produced messages
         /// </summary>
-        public IList<Type> FailurePipes { get; }
+        public IList<Type> ReturnedMiddlewares { get; }
 
         /// <summary>
         /// Ctor
@@ -46,8 +46,8 @@ namespace Byndyusoft.Net.RabbitMq.Models
             RoutingKey = routingKey;
             Queue = queue;
             Exchange = exchange;
-            ProcessWrappers = new List<Type>();
-            FailurePipes = new List<Type>();
+            ProcessMiddlewares = new List<Type>();
+            ReturnedMiddlewares = new List<Type>();
         }
     }
 
