@@ -13,8 +13,8 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// <summary>
         ///     Wraps returned message consuming chain
         /// </summary>
-        /// <param name="args">Message</param>
+        /// <param name="args">Info regarding returned message</param>
         /// <param name="next">Next middleware in a chain</param>
-        Task Wrap(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next);
+        Task Handle(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next);
     }
 }

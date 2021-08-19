@@ -10,19 +10,33 @@ using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
+namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
 {
+    /// <summary>
+    ///     Middleware for tracing of consuming messages
+    /// </summary>
+    /// <typeparam name="TMessage">Consuming message type</typeparam>
     public sealed class TracerConsumeMiddleware<TMessage> : IConsumeMiddleware<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
         private readonly ILogger<TracerConsumeMiddleware<TMessage>> _logger;
 
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="tracer">Tracer</param>
+        /// <param name="logger">Logger</param>
         public TracerConsumeMiddleware(ITracer tracer, ILogger<TracerConsumeMiddleware<TMessage>> logger)
         {
             _tracer = tracer;
             _logger = logger;
         }
 
+        /// <summary>
+        ///     Adds tracing around message consuming
+        /// </summary>
+        /// <param name="message">Consuming message</param>
+        /// <param name="next">Next middleware in a chain</param>
         public async Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             var stringDictionary = message.Properties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));

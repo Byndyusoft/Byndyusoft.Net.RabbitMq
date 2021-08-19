@@ -11,26 +11,40 @@ using OpenTracing;
 using OpenTracing.Propagation;
 using OpenTracing.Tag;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions.Pipes
+namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
 {
-    public sealed class TraceReturned<TMessage> : IReturnedMiddleware<TMessage> where TMessage : class
+    /// <summary>
+    ///     Middleware for tracing of returned messages
+    /// </summary>
+    /// <typeparam name="TMessage">Returned message type</typeparam>
+    public sealed class TraceReturnedMiddleware<TMessage> : IReturnedMiddleware<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
-        private readonly ILogger<TraceReturned<TMessage>> _logger;
+        private readonly ILogger<TraceReturnedMiddleware<TMessage>> _logger;
 
-        public TraceReturned(ITracer tracer, ILogger<TraceReturned<TMessage>> logger)
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="tracer">Tracer</param>
+        /// <param name="logger">Logger</param>
+        public TraceReturnedMiddleware(ITracer tracer, ILogger<TraceReturnedMiddleware<TMessage>> logger)
         {
             _tracer = tracer;
             _logger = logger;
         }
 
-        public async Task Wrap(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next)
+        /// <summary>
+        ///     Adds tracing around returned message handling
+        /// </summary>
+        /// <param name="args">Info regarding returned message</param>
+        /// <param name="next">Next middleware in a chain</param>
+        public async Task Handle(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next)
         {
             var stringDictionary = args.MessageProperties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
             var spanContext = _tracer.Extract(BuiltinFormats.HttpHeaders, textMapExtractAdapter);
 
-            using (_tracer.BuildSpan(nameof(Wrap)).AddReference(References.ChildOf, spanContext).StartActive(true))
+            using (_tracer.BuildSpan(nameof(Handle)).AddReference(References.ChildOf, spanContext).StartActive(true))
             using (_logger.BeginScope(new[] { new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId), _tracer.ActiveSpan.Context.TraceId) }))
             {
                 _tracer.ActiveSpan.SetTag(Tags.Error, true);

@@ -7,17 +7,30 @@ using Newtonsoft.Json;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions.Wrappers
-{
+namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
+{ 
+    /// <summary>
+    ///     Middleware for tracing of producing messages
+    /// </summary>
+    /// <typeparam name="TMessage">Producing message type</typeparam>
     public sealed class TracerProduceMiddleware<TMessage> : IProduceMiddleware<TMessage> where TMessage : class
     {
         private readonly ITracer _tracer;
 
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="tracer">Tracer</param>
         public TracerProduceMiddleware(ITracer tracer)
         {
             _tracer = tracer;
         }
 
+        /// <summary>
+        ///     Adds tracing around message producing
+        /// </summary>
+        /// <param name="message">Producing message</param>
+        /// <param name="next">Next middleware in a chain</param>
         public async Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
             if (_tracer.ActiveSpan == null)

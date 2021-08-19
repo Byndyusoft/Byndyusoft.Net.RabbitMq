@@ -513,7 +513,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
             {
                 var current = wrappersEnumerator.Current;
                 return async message => await current
-                    .Wrap(message, BuildReturnedHandling(wrappersEnumerator))
+                    .Handle(message, BuildReturnedHandling(wrappersEnumerator))
                     .ConfigureAwait(false);
             }
 

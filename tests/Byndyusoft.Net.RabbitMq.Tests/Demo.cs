@@ -2,8 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
-using Byndyusoft.Net.RabbitMq.Extensions.Pipes;
-using Byndyusoft.Net.RabbitMq.Extensions.Wrappers;
+using Byndyusoft.Net.RabbitMq.Extensions.Middlewares;
 using Byndyusoft.Net.RabbitMq.Services;
 using Jaeger;
 using Microsoft.Extensions.DependencyInjection;
@@ -73,7 +72,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
 
                                 exchangeConfigurator.Produce<EnrichedDocument>("enriched_documents", "enriched")
                                     .Wrap<TracerProduceMiddleware<EnrichedDocument>>()
-                                    .WrapReturned<TraceReturned<EnrichedDocument>>();
+                                    .WrapReturned<TraceReturnedMiddleware<EnrichedDocument>>();
 
                             })).BuildServiceProvider();
 
@@ -96,7 +95,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                             exchangeConfigurator =>
                             {
                                 exchangeConfigurator.Produce<RawDocument>("raw_documents", "raw")
-                                                    .WrapReturned<TraceReturned<RawDocument>>();
+                                                    .WrapReturned<TraceReturnedMiddleware<RawDocument>>();
 
                                 exchangeConfigurator.Consume<EnrichedDocument>("enriched_documents", "enriched");
 
@@ -119,8 +118,8 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                 .AddSingleton<IProduceMiddleware<RawDocument>, TracerProduceMiddleware<RawDocument>>()
                 .AddSingleton<IConsumeMiddleware<EnrichedDocument>, TracerConsumeMiddleware<EnrichedDocument>>()
                 .AddSingleton<IProduceMiddleware<EnrichedDocument>, TracerProduceMiddleware<EnrichedDocument>>()
-                .AddSingleton<IReturnedMiddleware<EnrichedDocument>, TraceReturned<EnrichedDocument>>()
-                .AddSingleton<IReturnedMiddleware<RawDocument>, TraceReturned<RawDocument>>()
+                .AddSingleton<IReturnedMiddleware<EnrichedDocument>, TraceReturnedMiddleware<EnrichedDocument>>()
+                .AddSingleton<IReturnedMiddleware<RawDocument>, TraceReturnedMiddleware<RawDocument>>()
                 .AddSingleton<IQueueService, QueueService>()
                 .AddSingleton<IBusFactory, BusFactory>();
             return serviceCollection;
