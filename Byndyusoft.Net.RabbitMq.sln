@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30717.126
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq", "src\Byndyusoft.Net.RabbitMq.csproj", "{086D1008-A52F-4456-9F89-9E94ECBD7EAD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq", "src\Byndyusoft.Net.RabbitMq\Byndyusoft.Net.RabbitMq.csproj", "{086D1008-A52F-4456-9F89-9E94ECBD7EAD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Tests", "tests\Byndyusoft.Net.RabbitMq.Tests\Byndyusoft.Net.RabbitMq.Tests.csproj", "{F838F33E-C801-4FCD-9DB6-18A710F264E4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Extensions", "Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Extensions", "src\Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
