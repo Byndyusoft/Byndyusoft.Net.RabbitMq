@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Tests", "tests\Byndyusoft.Net.RabbitMq.Tests\Byndyusoft.Net.RabbitMq.Tests.csproj", "{F838F33E-C801-4FCD-9DB6-18A710F264E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Net.RabbitMq.Extensions", "Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Extensions", "Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

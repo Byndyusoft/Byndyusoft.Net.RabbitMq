@@ -2,6 +2,7 @@
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Configuration;
+using Byndyusoft.Net.RabbitMq.Services.Imitation;
 
 namespace Microsoft.Extensions.DependencyInjection
 {
@@ -25,6 +26,20 @@ namespace Microsoft.Extensions.DependencyInjection
             var configuration = configurator.Build();
             services.AddSingleton(configuration);
             services.AddSingleton<IQueueService, QueueService>();
+            services.AddSingleton<IBusFactory, BusFactory>();
+            return services;
+        }
+
+        /// <summary>
+        ///     Adds RabbitMq test infrastructure to DI
+        /// </summary>
+        /// <param name="services">DI service collection</param>
+        public static IServiceCollection AddRabbitMqMockLayer(
+            this IServiceCollection services)
+        {
+            var mockLayer = new QueueMockLayer();
+            services.AddSingleton<IQueueMockLayer>(mockLayer);
+            services.AddSingleton(mockLayer.BusFactory);
             return services;
         }
     }
