@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Imitation
+namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
 {
     /// <summary>
     ///     Mock for imitating incoming messages

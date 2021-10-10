@@ -9,7 +9,7 @@ using Moq;
 using RabbitMQ.Client;
 using BasicGetResult = RabbitMQ.Client.BasicGetResult;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Imitation
+namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
 {
     /// <summary>
     ///     Mock for imitating incoming messages

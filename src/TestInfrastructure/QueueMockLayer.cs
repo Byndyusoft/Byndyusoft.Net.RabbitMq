@@ -13,7 +13,7 @@ using Moq;
 using Newtonsoft.Json;
 using RabbitMQ.Client;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Imitation
+namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
 {
     using IConnectionFactory = EasyNetQ.IConnectionFactory;
 

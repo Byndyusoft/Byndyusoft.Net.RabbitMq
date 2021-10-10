@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions.Middlewares;
@@ -39,9 +38,10 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                 await firstQueueService.Publish(enriched, Guid.NewGuid().ToString());
             });
 
-            secondQueueService.SubscribeAsync<EnrichedDocument>(async raw =>
+            secondQueueService.SubscribeAsync<EnrichedDocument>(raw =>
             {
                 Console.WriteLine("Consume enriched");
+                return Task.CompletedTask;
             });
 
             Console.WriteLine("Push enriched");

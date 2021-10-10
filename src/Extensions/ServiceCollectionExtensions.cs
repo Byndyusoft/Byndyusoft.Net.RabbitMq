@@ -2,7 +2,7 @@
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Configuration;
-using Byndyusoft.Net.RabbitMq.Services.Imitation;
+using Byndyusoft.Net.RabbitMq.TestInfrastructure;
 
 namespace Microsoft.Extensions.DependencyInjection
 {

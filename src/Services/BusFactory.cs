@@ -10,7 +10,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <inheritdoc />
         public IBus CreateBus(RabbitMqConfiguration configuration)
         {
-            return RabbitHutch.CreateBus(configuration.ConnectionString, configuration.Register);
+            return RabbitHutch.CreateBus(configuration.ConnectionString, configuration.RegisterServices);
         }
     }
 }

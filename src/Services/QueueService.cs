@@ -136,7 +136,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new PipelineConfigurationException("Failed to prepare produce pipeline");
 
             var generic = method.MakeGenericMethod(queueCfg.MessageType);
-            var pipeline = (Delegate) generic.Invoke(this, null);
+            var pipeline = (Delegate)generic.Invoke(this, null);
             _producingActions.Add(queueCfg.MessageType, pipeline);
         }
 
@@ -146,7 +146,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="queueCfg">Queue to produce messages</param>
         private void PrepareReturnedPipeline(QueueConfiguration queueCfg)
         {
-            var method = 
+            var method =
                 typeof(QueueService).GetMethod(nameof(GetReturnedPipeline), BindingFlags.NonPublic | BindingFlags.Instance);
             if (method == null)
                 throw new PipelineConfigurationException("");
@@ -218,10 +218,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
         private void ValidateConfig(RabbitMqConfiguration configuration)
         {
             var errors = new StringBuilder();
-            if (configuration.ExchangeConfigurations == null ||
-                configuration.ExchangeConfigurations.Any() == false)
+            if (configuration.ExchangeConfigurations.Any() == false)
             {
-                errors.AppendLine("Empty exchages configuration");
+                errors.AppendLine("Empty exchanges configuration");
             }
             else
             {
@@ -247,12 +246,6 @@ namespace Byndyusoft.Net.RabbitMq.Services
             if (string.IsNullOrWhiteSpace(exchangeName))
                 errors.AppendLine("Empty exchange key");
 
-            if (exchangeCfg == null)
-            {
-                errors.AppendLine("Empty exchange configuration");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(exchangeCfg.ExchangeName))
                 errors.AppendLine("Empty exchange name");
 
@@ -266,50 +259,41 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 errors.AppendLine($"Exchange name {exchangeCfg.ExchangeName} contains unsupported symbols");
             }
 
-            if ((exchangeCfg.ConsumeQueueConfigurations == null ||
-                 exchangeCfg.ConsumeQueueConfigurations.Any() == false) &&
-                (exchangeCfg.ProduceQueueConfigurations == null ||
-                 exchangeCfg.ProduceQueueConfigurations.Any() == false))
+            if (exchangeCfg.ConsumeQueueConfigurations.Any() == false &&
+                exchangeCfg.ProduceQueueConfigurations.Any() == false)
             {
                 errors.AppendLine("Exchange contains neither consuming pipelines, not producing pipelines");
             }
 
-            if (exchangeCfg.ConsumeQueueConfigurations != null)
-            {
-                foreach (var queue in exchangeCfg.ConsumeQueueConfigurations)
-                {
-                    ValidateConfig(queue, errors);
 
-                    if (exchangeCfg.ProduceQueueConfigurations != null)
-                    {
-                        if (exchangeCfg.ProduceQueueConfigurations.Any(cfg =>
-                            string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
-                                StringComparison.InvariantCultureIgnoreCase)))
-                        {
-                            errors.AppendLine(
-                                $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
-                        }
-                    }
+            foreach (var queue in exchangeCfg.ConsumeQueueConfigurations)
+            {
+                ValidateConfig(queue, errors);
+
+                if (exchangeCfg.ProduceQueueConfigurations.Any(cfg =>
+                    string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
+                        StringComparison.InvariantCultureIgnoreCase)))
+                {
+                    errors.AppendLine(
+                        $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
                 }
             }
 
-            if (exchangeCfg.ProduceQueueConfigurations != null)
+
+
+            foreach (var queue in exchangeCfg.ProduceQueueConfigurations)
             {
-                foreach (var queue in exchangeCfg.ProduceQueueConfigurations)
+                ValidateConfig(queue, errors);
+
+                if (exchangeCfg.ConsumeQueueConfigurations.Any(cfg =>
+                    string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
+                        StringComparison.InvariantCultureIgnoreCase)))
                 {
-                    ValidateConfig(queue, errors);
-                    if (exchangeCfg.ConsumeQueueConfigurations != null)
-                    {
-                        if (exchangeCfg.ConsumeQueueConfigurations.Any(cfg =>
-                            string.Equals(cfg.RoutingKey.Trim(), queue.RoutingKey.Trim(),
-                                StringComparison.InvariantCultureIgnoreCase)))
-                        {
-                            errors.AppendLine(
-                                $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
-                        }
-                    }
+                    errors.AppendLine(
+                        $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
                 }
             }
+
         }
 
         /// <summary>
@@ -317,12 +301,6 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// </summary>
         private void ValidateConfig(QueueConfiguration queueCfg, StringBuilder errors)
         {
-            if (queueCfg == null)
-            {
-                errors.AppendLine("Empty queue configuration");
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(queueCfg.QueueName))
                 errors.AppendLine("Empty queue name");
 
@@ -363,11 +341,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
 
-
-            //var publishPipeline = GetPublishPipeline<TMessage>();
             var publishPipeline = (Func<IMessage<TMessage>, Task>)_producingActions[typeof(TMessage)];
 
-            // TODO: where shoud go this properties
+            // TODO: where should go this properties
             var properties = GetMessageProperties();
             properties.Headers.Add(Consts.MessageKeyHeader, key);
             if (headers != null)
@@ -390,7 +366,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
 
             var producingMiddlewares = GetProducingMiddlewares<TMessage>(pipeline.ProcessMiddlewares);
-            var publishPipeline = BuildPublish<TMessage>(pipeline, producingMiddlewares.GetEnumerator());
+            var publishPipeline = BuildPublish(pipeline, producingMiddlewares.GetEnumerator());
             return publishPipeline;
         }
 
@@ -439,7 +415,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             return async message =>
 
-                //TODO включить паблиш конфермс
+                //TODO enable publishConfirms
                 await _bus.Advanced
                     .PublishAsync(pipeline.Exchange, pipeline.RoutingKey, true, message)
                     .ConfigureAwait(false);
@@ -456,7 +432,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
             if (pipeline == null)
                 throw new InvalidOperationException($"Pipeline for handling returned messages is not found for type {args.MessageProperties.Type}");
-            
+
             await pipeline(args).ConfigureAwait(false);
         }
 
@@ -473,7 +449,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new InvalidOperationException($"Producing pipeline is not found for type {typeof(TMessage)}");
 
             var returnedMiddlewares = GetReturnedMiddlewares<TMessage>(pipeline.ReturnedMiddlewares);
-            var returnedPipeline = BuildReturnedHandling<TMessage>(returnedMiddlewares.GetEnumerator());
+            var returnedPipeline = BuildReturnedHandling(returnedMiddlewares.GetEnumerator());
             return returnedPipeline;
         }
 
@@ -524,7 +500,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
         {
             return new MessageProperties
             {
-                //TODO: Вернуть, когда перейдем на netcore или netstandard2.1 
+                //TODO: return when  Вернуть, когда перейдем на netcore или netstandard2.1 
                 //ContentType = MediaTypeNames.Application.Json,
                 ContentType = "application/json",
                 DeliveryMode = 2
@@ -551,7 +527,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
 
             var consumingMiddlewares = GetConsumingMiddlewares<TMessage>(pipeline.ProcessMiddlewares);
-            var consumePipeline = BuildConsume<TMessage>(pipeline, processMessage, consumingMiddlewares.GetEnumerator());
+            var consumePipeline = BuildConsume(processMessage, consumingMiddlewares.GetEnumerator());
 
             _bus.Advanced.Consume<TMessage>(pipeline.Queue, (message, messageInfo) => consumePipeline(message));
         }
@@ -563,7 +539,12 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="middlewareCfg">List of consuming middleware types</param>
         private List<IConsumeMiddleware<TMessage>> GetConsumingMiddlewares<TMessage>(IList<Type> middlewareCfg) where TMessage : class
         {
-            var middlewares = _serviceProvider.GetServices<IConsumeMiddleware<TMessage>>();
+            var middlewares = _serviceProvider.GetServices<IConsumeMiddleware<TMessage>>().ToArray();
+            if (middlewares == null)
+            {
+                throw new InvalidOperationException($"Consuming middleware are not found for type {typeof(TMessage)}");
+            }
+            
             var result = new List<IConsumeMiddleware<TMessage>>();
             foreach (var middlewareType in middlewareCfg)
             {
@@ -584,12 +565,10 @@ namespace Byndyusoft.Net.RabbitMq.Services
         ///     Returns subscribe message delegate, that will chain all consuming middlewares
         /// </summary>
         /// <typeparam name="TMessage">Publishing message type</typeparam>
-        /// <param name="pipeline">Producing pipeline</param>
         /// <param name="processMessage">Target message processing delegate</param>
         /// <param name="wrappersEnumerator">Middlewares enumerator</param>
         /// <returns></returns>
         private Func<IMessage<TMessage>, Task> BuildConsume<TMessage>(
-            QueuePipeline pipeline,
             Func<TMessage, Task> processMessage,
             IEnumerator<IConsumeMiddleware<TMessage>> wrappersEnumerator) where TMessage : class
         {
@@ -597,7 +576,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
             {
                 var current = wrappersEnumerator.Current;
                 return async message => await current
-                    .Handle(message, BuildConsume(pipeline, processMessage, wrappersEnumerator))
+                    .Handle(message, BuildConsume(processMessage, wrappersEnumerator))
                     .ConfigureAwait(false);
             }
 
@@ -636,7 +615,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
                     var newMessage = (Message<TMessage>)jsonSerializer.BytesToMessage(typeof(Message<TMessage>), Encoding.UTF8.GetBytes(error.Message));
 
-                    //TODO включить паблиш конфермс
+                    //TODO enable publishconfirms
                     await _bus.Advanced
                               .PublishAsync(pipeline.Exchange, error.RoutingKey, true, newMessage)
                               .ConfigureAwait(false);

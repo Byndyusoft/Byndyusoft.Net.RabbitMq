@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 
-namespace Byndyusoft.Net.RabbitMq.Services.Imitation
+namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
 {
     /// <summary>
     ///     Fake bus infrastructure layer for imitating interaction with Rabbit in integration tests

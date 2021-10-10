@@ -5,24 +5,24 @@ using EasyNetQ.DI;
 namespace Byndyusoft.Net.RabbitMq.Models
 {
     /// <summary>
-    ///     Connection and topology configuration for RabbintMq
+    ///     Connection and topology configuration for RabbitMq
     /// </summary>
     public sealed class RabbitMqConfiguration
     {
         /// <summary>
         ///     Connection string (for example 'host=localhost')
         /// </summary>
-        public string  ConnectionString { get; set; }
+        public string?  ConnectionString { get; internal set; }
 
         /// <summary>
-        ///     Configuration of exchanges of binded queues
+        ///     Configuration of exchanges of bound queues
         /// </summary>
         public Dictionary<string, ExchangeConfiguration> ExchangeConfigurations { get; }
 
         /// <summary>
-        ///     TODO
+        ///     Delegate for overriding internal services of EasyNetQ
         /// </summary>
-        public Action<IServiceRegister> Register { get; set; }
+        public Action<IServiceRegister>? RegisterServices { get; internal set; }
 
         /// <summary>
         ///     Ctor
@@ -35,7 +35,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
         /// <summary>
         ///      Add exchange configuration
         /// </summary>
-        /// <param name="exchangeName"></param>
         public void AddExchange(string exchangeName)
         {
             if (string.IsNullOrWhiteSpace(exchangeName))
