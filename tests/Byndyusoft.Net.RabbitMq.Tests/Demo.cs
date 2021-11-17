@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Extensions.Middlewares;
+using Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing;
 using Byndyusoft.Net.RabbitMq.Services;
 using Jaeger;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,36 +24,39 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             var secondQueueService = secondServiceProvider.GetRequiredService<IQueueService>();
             var secondTracer = secondServiceProvider.GetRequiredService<ITracer>();
 
-            using var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true);
-            using var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true);
-
-            firstQueueService.SubscribeAsync<RawDocument>(async raw =>
+            using (var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true))
             {
-                Console.WriteLine("Consume raw");
-                var enriched = new EnrichedDocument
+                using (var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true))
                 {
-                    RawDocument = raw
-                };
+                    firstQueueService.SubscribeAsync<RawDocument>(async raw =>
+                    {
+                        Console.WriteLine("Consume raw");
+                        var enriched = new EnrichedDocument
+                        {
+                            RawDocument = raw
+                        };
 
-                Console.WriteLine("Push enriched");
-                await firstQueueService.Publish(enriched, Guid.NewGuid().ToString());
-            });
+                        Console.WriteLine("Push enriched");
+                        await firstQueueService.Publish(enriched, Guid.NewGuid().ToString());
+                    });
 
-            secondQueueService.SubscribeAsync<EnrichedDocument>(raw =>
-            {
-                Console.WriteLine("Consume enriched");
-                return Task.CompletedTask;
-            });
+                    secondQueueService.SubscribeAsync<EnrichedDocument>(raw =>
+                    {
+                        Console.WriteLine("Consume enriched");
+                        return Task.CompletedTask;
+                    });
 
-            Console.WriteLine("Push enriched");
-            await firstQueueService.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
+                    Console.WriteLine("Push enriched");
+                    await firstQueueService.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
 
-            Console.WriteLine("Push raw");
-            await secondQueueService.Publish(new RawDocument {  Int = 100500 }, Guid.NewGuid().ToString());
+                    Console.WriteLine("Push raw");
+                    await secondQueueService.Publish(new RawDocument { Int = 100500 }, Guid.NewGuid().ToString());
 
-            Console.WriteLine("press any key...");
-            Console.ReadKey();
-            Console.WriteLine("Bye");
+                    Console.WriteLine("press any key...");
+                    Console.ReadKey();
+                    Console.WriteLine("Bye");
+                }
+            }
         }
 
         private static async Task<IServiceProvider> InitFirstQueueService()

@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 using OpenTracing;
 using OpenTracing.Propagation;
 
-namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
+namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
 {
     /// <summary>
     ///     Middleware for tracing of consuming messages
