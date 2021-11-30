@@ -2,7 +2,9 @@
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Configuration;
+using Microsoft.Extensions.Hosting;
 
+// ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
 
@@ -23,8 +25,12 @@ namespace Microsoft.Extensions.DependencyInjection
             var configurator = new ConnectionConfigurator();
             setup(configurator);
             var configuration = configurator.Build();
-            services.AddSingleton(configuration);
-            services.AddSingleton<IQueueService, QueueService>();
+            services.AddSingleton(configuration)
+                    .AddSingleton<QueueService>()
+                    .AddSingleton<IMessagePublisher>(provider => provider.GetRequiredService<QueueService>())
+                    .AddSingleton<IQueueSubscriber>(provider => provider.GetRequiredService<QueueService>())
+                    .AddSingleton<IMessageResender>(provider => provider.GetRequiredService<QueueService>())
+                    .AddSingleton<IHostedService>(provider => provider.GetRequiredService<QueueService>());
             return services;
         }
     }

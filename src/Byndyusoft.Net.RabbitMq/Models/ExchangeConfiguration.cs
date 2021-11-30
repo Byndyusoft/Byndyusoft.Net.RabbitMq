@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace Byndyusoft.Net.RabbitMq.Models
 {
     /// <summary>
-    ///     Configurations of exchange and binded queues
+    ///     Configurations of exchange and bound queues
     /// </summary>
     public sealed class ExchangeConfiguration
     {

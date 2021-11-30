@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.0</TargetFramework>
+	  <TargetFramework>netcoreapp3.1</TargetFramework>
     <Nullable>enable</Nullable>
     <LangVersion>8</LangVersion>
 	<IncludeSymbols>true</IncludeSymbols>
@@ -23,6 +23,7 @@
   <ItemGroup>
     <PackageReference Include="easynetq" Version="5.6.0" />
     <PackageReference Include="fluentassertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
     <PackageReference Include="moq" Version="4.16.1" />

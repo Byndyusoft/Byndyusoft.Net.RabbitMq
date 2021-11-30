@@ -6,6 +6,7 @@ using Byndyusoft.Net.RabbitMq.Extensions.Middlewares;
 using Byndyusoft.Net.RabbitMq.Services;
 using Jaeger;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 
@@ -18,16 +19,18 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             var firstServiceProvider = await InitFirstQueueService();
             var secondServiceProvider = await InitSecondQueueService();
 
-            var firstQueueService = firstServiceProvider.GetRequiredService<IQueueService>();
+            var firstMessagePublisher = firstServiceProvider.GetRequiredService<IMessagePublisher>();
+            var firstQueueSubscriber = firstServiceProvider.GetRequiredService<IQueueSubscriber>();
             var firstTracer = firstServiceProvider.GetRequiredService<ITracer>();
 
-            var secondQueueService = secondServiceProvider.GetRequiredService<IQueueService>();
+            var secondMessagePublisher = secondServiceProvider.GetRequiredService<IMessagePublisher>();
+            var secondQueueSubscriber = secondServiceProvider.GetRequiredService<IQueueSubscriber>();
             var secondTracer = secondServiceProvider.GetRequiredService<ITracer>();
 
             using var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true);
             using var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true);
 
-            firstQueueService.SubscribeAsync<RawDocument>(async raw =>
+            firstQueueSubscriber.Subscribe<RawDocument>(async raw =>
             {
                 Console.WriteLine("Consume raw");
                 var enriched = new EnrichedDocument
@@ -36,19 +39,20 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                 };
 
                 Console.WriteLine("Push enriched");
-                await firstQueueService.Publish(enriched, Guid.NewGuid().ToString());
+                await firstMessagePublisher.Publish(enriched, Guid.NewGuid().ToString());
             });
 
-            secondQueueService.SubscribeAsync<EnrichedDocument>(async raw =>
+            secondQueueSubscriber.Subscribe<EnrichedDocument>(raw =>
             {
                 Console.WriteLine("Consume enriched");
+                return Task.CompletedTask;
             });
 
             Console.WriteLine("Push enriched");
-            await firstQueueService.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
+            await firstMessagePublisher.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
 
             Console.WriteLine("Push raw");
-            await secondQueueService.Publish(new RawDocument {  Int = 100500 }, Guid.NewGuid().ToString());
+            await secondMessagePublisher.Publish(new RawDocument {  Int = 100500 }, Guid.NewGuid().ToString());
 
             Console.WriteLine("press any key...");
             Console.ReadKey();
@@ -78,8 +82,8 @@ namespace Byndyusoft.Net.RabbitMq.Tests
 
 
 
-            var queueService = serviceProvider.GetRequiredService<IQueueService>();
-            await queueService.Initialize().ConfigureAwait(false);
+            var queueService = serviceProvider.GetRequiredService<IHostedService>();
+            await queueService.StartAsync(CancellationToken.None).ConfigureAwait(false);
             return serviceProvider;
         }
 
@@ -103,8 +107,8 @@ namespace Byndyusoft.Net.RabbitMq.Tests
 
 
 
-            var queueService = serviceProvider.GetRequiredService<IQueueService>();
-            await queueService.Initialize().ConfigureAwait(false);
+            var queueService = serviceProvider.GetRequiredService<IHostedService>();
+            await queueService.StartAsync(CancellationToken.None).ConfigureAwait(false);
             return serviceProvider;
         }
 
@@ -120,7 +124,6 @@ namespace Byndyusoft.Net.RabbitMq.Tests
                 .AddSingleton<IProduceMiddleware<EnrichedDocument>, TracerProduceMiddleware<EnrichedDocument>>()
                 .AddSingleton<IReturnedMiddleware<EnrichedDocument>, TraceReturnedMiddleware<EnrichedDocument>>()
                 .AddSingleton<IReturnedMiddleware<RawDocument>, TraceReturnedMiddleware<RawDocument>>()
-                .AddSingleton<IQueueService, QueueService>()
                 .AddSingleton<IBusFactory, BusFactory>();
             return serviceCollection;
         }

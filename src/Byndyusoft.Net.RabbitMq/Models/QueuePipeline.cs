@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Byndyusoft.Net.RabbitMq.Abstractions;
 using EasyNetQ.Topology;
 
 namespace Byndyusoft.Net.RabbitMq.Models

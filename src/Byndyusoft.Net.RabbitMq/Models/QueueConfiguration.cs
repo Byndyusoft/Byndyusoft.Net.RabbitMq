@@ -53,11 +53,12 @@ namespace Byndyusoft.Net.RabbitMq.Models
             ReturnedMiddlewares = new List<Type>();
         }
 
-        protected bool Equals(QueueConfiguration other)
+        private bool Equals(QueueConfiguration other)
         {
             return QueueName == other.QueueName && RoutingKey == other.RoutingKey;
         }
 
+        /// <inheritdoc />
         public override bool Equals(object? obj)
         {
             if (ReferenceEquals(null, obj)) return false;
@@ -66,6 +67,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
             return Equals((QueueConfiguration) obj);
         }
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             unchecked

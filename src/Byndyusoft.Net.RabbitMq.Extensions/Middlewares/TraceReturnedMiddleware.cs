@@ -59,7 +59,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
                         args.MessageReturnedInfo.ReturnReason,
                         key);
 
-                    await next(args).ConfigureAwait(false);
+                    await next(args);
                 }
                 else
                 {

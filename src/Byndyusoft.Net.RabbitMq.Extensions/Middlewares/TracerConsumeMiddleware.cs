@@ -52,7 +52,7 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares
                 while (true)
                     try
                     {
-                        await next(message).ConfigureAwait(false);
+                        await next(message);
                         break;
                     }
                     catch (ProcessMessageException)

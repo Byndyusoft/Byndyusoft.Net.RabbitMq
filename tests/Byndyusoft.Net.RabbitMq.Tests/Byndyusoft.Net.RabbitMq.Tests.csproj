@@ -13,8 +13,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj" />
-    <ProjectReference Include="..\..\src\Byndyusoft.Net.RabbitMq.csproj" />
+    <ProjectReference Include="..\..\src\Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj" />
+    <ProjectReference Include="..\..\src\Byndyusoft.Net.RabbitMq\Byndyusoft.Net.RabbitMq.csproj" />
   </ItemGroup>
 
 </Project>

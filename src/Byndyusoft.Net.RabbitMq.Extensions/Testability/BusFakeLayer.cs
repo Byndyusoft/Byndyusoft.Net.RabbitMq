@@ -1,43 +1,60 @@
-﻿using Byndyusoft.Net.RabbitMq.Abstractions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Models;
+using EasyNetQ;
+using EasyNetQ.DI;
+using EasyNetQ.SystemMessages;
+using EasyNetQ.Topology;
+using Moq;
+using Newtonsoft.Json;
+using OpenTracing.Util;
+using RabbitMQ.Client;
 
-namespace Sod.Tests.Shared.IntegrationTests.Stubs
+namespace Byndyusoft.Net.RabbitMq.Extensions.Testability
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
-    using EasyNetQ;
-    using EasyNetQ.DI;
-    using EasyNetQ.SystemMessages;
-    using EasyNetQ.Topology;
-    using Moq;
-    using Newtonsoft.Json;
-    using OpenTracing.Util;
-    using RabbitMQ.Client;
     using BasicGetResult = RabbitMQ.Client.BasicGetResult;
     using IConnectionFactory = EasyNetQ.IConnectionFactory;
     using JsonSerializer = EasyNetQ.JsonSerializer;
 
     /// <summary>
-    ///     Класс для имитации работы с очередью сообщений
+    ///     Fake layer for profiling incoming and outgoing message in tests 
     /// </summary>
-    /// <typeparam name="TProcessMessage">Тип входящих сообщений сервиса</typeparam>
-    public class QueueServiceStub<TProcessMessage> where TProcessMessage : class
+    /// <typeparam name="TIncomingMessage">MessageType</typeparam>
+    public sealed class BusFakeLayer<TIncomingMessage> where TIncomingMessage : class
     {
-        private readonly Mock<IBusFactory>? _busServiceMock;
-        private readonly Dictionary<Type, Queue<object>> _pushedMessages;
-        private readonly Queue<object> _resendMessages;
-        private Func<IMessage<TProcessMessage>, MessageReceivedInfo, Task> _processQueueMessage;
-        private readonly Mock<IModel> _model;
+        /// <summary>
+        ///     Provider of fake connection to bus
+        /// </summary>
+        private readonly Mock<IBusFactory> _busServiceMock;
 
         /// <summary>
-        ///     Фабрика подулючений к шине
+        ///     Messages that were published during the sessions\test
+        /// </summary>
+        private readonly Dictionary<Type, Queue<object>> _pushedMessages;
+
+        /// <summary>
+        ///     Messages that were resent during the sessions\test
+        /// </summary>
+        private readonly Queue<object> _resendMessages;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private Func<IMessage<TIncomingMessage>, MessageReceivedInfo, Task> _processQueueMessage;
+
+        /// <summary>
+        ///     Provider of fake connection to bus
         /// </summary>
         public IBusFactory BusService => _busServiceMock.Object;
 
-        public QueueServiceStub()
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        public BusFakeLayer()
         {
             _pushedMessages = new Dictionary<Type, Queue<object>>();
             _resendMessages = new Queue<object>();
@@ -60,38 +77,38 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
             advancedBusMock.Setup(x => x.ExchangeDeclareAsync(It.IsAny<string>(), It.IsAny<string>(), false, true, false, false, null, false))
                            .ReturnsAsync(new Exchange(nameof(Exchange)));
 
-            advancedBusMock.Setup(x => x.Consume(It.IsAny<IQueue>(), It.IsAny<Func<IMessage<TProcessMessage>, MessageReceivedInfo, Task>>()))
-                           .Callback((IQueue queue, Func<IMessage<TProcessMessage>, MessageReceivedInfo, Task> processMessageFunc) => _processQueueMessage = processMessageFunc);
+            advancedBusMock.Setup(x => x.Consume(It.IsAny<IQueue>(), It.IsAny<Func<IMessage<TIncomingMessage>, MessageReceivedInfo, Task>>()))
+                           .Callback((IQueue queue, Func<IMessage<TIncomingMessage>, MessageReceivedInfo, Task> processMessageFunc) => _processQueueMessage = processMessageFunc);
 
             advancedBusMock.Setup(x => x.PublishAsync(It.IsAny<IExchange>(), It.IsAny<string>(), true, It.IsAny<IMessage>()))
                            .Callback(async (IExchange exchange, string routingKey, bool mandatory, IMessage message) =>
                                          {
-                                             CollectPushedMessage(message.GetBody());
-                                             if (message.GetBody() is TProcessMessage)
+                                             QueuePublishedMessage(message.GetBody());
+                                             if (message.GetBody() is TIncomingMessage)
                                              {
                                                  if(routingKey == "resend")
                                                  {
-                                                     await ImitateNewMessageReceiving((TProcessMessage) message.GetBody()).ConfigureAwait(false);
+                                                     await ImitateIncomingMessage((TIncomingMessage) message.GetBody());
                                                  }
                                              }
                                          });
 
 
-            _model = new Mock<IModel>();
+            var model = new Mock<IModel>();
             var connection = new Mock<IConnection>();
-            connection.Setup(conn => conn.CreateModel()).Returns(_model.Object);
+            connection.Setup(conn => conn.CreateModel()).Returns(model.Object);
             var connectionFactory = new Mock<IConnectionFactory>();
             connectionFactory.Setup(factory => factory.CreateConnection()).Returns(connection.Object);
             var serviceResolver = new Mock<IServiceResolver>();
             serviceResolver.Setup(resolver => resolver.Resolve<IConnectionFactory>()).Returns(connectionFactory.Object);
-            advancedBusMock.SetupGet(bus => bus.Container).Returns(serviceResolver.Object);
+            advancedBusMock.SetupGet(b => b.Container).Returns(serviceResolver.Object);
             
             var errorQueue = Mock.Of<IQueue>();
             var errorRoutingKey = ".error";
             advancedBusMock.Setup(x => x.QueueDeclareAsync(It.Is<string>(e => e.EndsWith(errorRoutingKey)), false, true, false, false, null, null, null, null, null, null, null))
                            .ReturnsAsync(errorQueue);
 
-            advancedBusMock.Setup(bus => bus.MessageCount(errorQueue))
+            advancedBusMock.Setup(b => b.MessageCount(errorQueue))
                            .Returns(() =>
                            {
                                if (_resendMessages != null)
@@ -103,7 +120,7 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
                            });
 
 
-            _model.Setup(m => m.BasicGet(It.Is<string>(e => e.EndsWith(errorRoutingKey)), false))
+            model.Setup(m => m.BasicGet(It.Is<string>(e => e.EndsWith(errorRoutingKey)), false))
                   .Returns(() =>
                   {
                       if (_resendMessages == null)
@@ -117,9 +134,9 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
                           RoutingKey = "resend",
                           BasicProperties = new MessageProperties
                           {
-                              Type = typeof(TProcessMessage).ToString()
+                              Type = typeof(TIncomingMessage).ToString()
                           },
-                          Message = Encoding.UTF8.GetString(jsonSerializer.MessageToBytes(typeof(TProcessMessage), msg))
+                          Message = Encoding.UTF8.GetString(jsonSerializer.MessageToBytes(typeof(TIncomingMessage), msg))
                       };
                       var body = jsonSerializer.MessageToBytes(typeof(Error), error);
                       var basicResult = new BasicGetResult(1, false, "", errorRoutingKey, 1, Mock.Of<IBasicProperties>(), body);
@@ -128,9 +145,9 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
         }
 
         /// <summary>
-        ///     Сохраняет отправленное исходящее сообщение во внутренней коллекции для дальнейших проверок
+        ///     Saves published message into internal collection
         /// </summary>
-        private void CollectPushedMessage(object message)
+        private void QueuePublishedMessage(object message)
         {
             var messageType = message.GetType();
 
@@ -141,32 +158,32 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
         }
 
         /// <summary>
-        ///     Имитирует появление входящего сообщения
+        ///     Imitate arriving of new incoming message for subscription
         /// </summary>
-        /// <param name="processMessage">Входящее сообщение</param>
-        public async Task ImitateNewMessageReceiving(TProcessMessage processMessage)
+        /// <param name="message">Incoming message</param>
+        public async Task ImitateIncomingMessage(TIncomingMessage message)
         {
             if (_processQueueMessage == null)
                 throw new Exception("No subscribers. Queue service was not registered or used wrong type");
 
-            using var scope = GlobalTracer.Instance.BuildSpan(nameof(ImitateNewMessageReceiving)).StartActive();
+            using var scope = GlobalTracer.Instance.BuildSpan(nameof(ImitateIncomingMessage)).StartActive();
             try
             {
-                await _processQueueMessage(new Message<TProcessMessage>(processMessage), new MessageReceivedInfo());
+                await _processQueueMessage(new Message<TIncomingMessage>(message), new MessageReceivedInfo());
             }
             catch (Exception)
             {
-                _resendMessages.Enqueue(processMessage);
+                _resendMessages.Enqueue(message);
             }
         }
 
         /// <summary>
-        ///     Возвращает все отправленые исходящие сообщения типа
+        ///     Removes the message at the head of the queue of published message and returns it
         /// </summary>
-        /// <typeparam name="TMessage">Тип исходящего сообщения</typeparam>
-        public TMessage GetPushedMessage<TMessage>()
+        /// <typeparam name="TOutgoingMessage">Outgoing message type</typeparam>
+        public TOutgoingMessage DequeuePublishedMessage<TOutgoingMessage>()
         {
-            var messageType = typeof(TMessage);
+            var messageType = typeof(TOutgoingMessage);
 
             if (_pushedMessages.ContainsKey(messageType) == false)
                 throw new Exception($"No message of type {messageType} was pushed");
@@ -174,13 +191,13 @@ namespace Sod.Tests.Shared.IntegrationTests.Stubs
             if (_pushedMessages[messageType].Any() == false)
                 throw new Exception($"No more messages of type {messageType} were pushed");
 
-            var pushedMessage = (TMessage)_pushedMessages[messageType].Dequeue();
+            var pushedMessage = (TOutgoingMessage)_pushedMessages[messageType].Dequeue();
 
             return pushedMessage;
         }
 
         /// <summary>
-        ///     Проверяет, что не осталось непрочитанных исходящих сообщений
+        ///     Verifies that internal queue of published messages is empty
         /// </summary>
         public void VerifyNoOthersPushes()
         {
