@@ -33,7 +33,7 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         /// <inheritdoc />
         public IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>() where TMessage : class
         {
-            var typeName = typeof(TMessage).FullName;
+            var typeName = typeof(TMessage).FullName!;
             return Consume<TMessage>(typeName, typeName);
         }
 
@@ -48,7 +48,7 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         /// <inheritdoc />
         public IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>() where TMessage : class
         {
-            var typeName = typeof(TMessage).FullName;
+            var typeName = typeof(TMessage).FullName!;
             return Produce<TMessage>(typeName, typeName);
         }
     }

@@ -3,6 +3,7 @@ using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Configuration;
 using Microsoft.Extensions.Hosting;
+using Byndyusoft.Net.RabbitMq.TestInfrastructure;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -31,6 +32,22 @@ namespace Microsoft.Extensions.DependencyInjection
                     .AddSingleton<IQueueSubscriber>(provider => provider.GetRequiredService<QueueService>())
                     .AddSingleton<IMessageResender>(provider => provider.GetRequiredService<QueueService>())
                     .AddSingleton<IHostedService>(provider => provider.GetRequiredService<QueueService>());
+
+            services.AddSingleton(configuration);
+            services.AddSingleton<IBusFactory, BusFactory>();
+            return services;
+        }
+
+        /// <summary>
+        ///     Adds RabbitMq test infrastructure to DI
+        /// </summary>
+        /// <param name="services">DI service collection</param>
+        public static IServiceCollection AddRabbitMqMockLayer(
+            this IServiceCollection services)
+        {
+            var mockLayer = new QueueMockLayer();
+            services.AddSingleton<IQueueMockLayer>(mockLayer);
+            services.AddSingleton(mockLayer.BusFactory);
             return services;
         }
     }

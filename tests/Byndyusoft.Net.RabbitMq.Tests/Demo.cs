@@ -2,7 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
-using Byndyusoft.Net.RabbitMq.Extensions.Middlewares;
+using Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing;
 using Byndyusoft.Net.RabbitMq.Services;
 using Jaeger;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,12 +27,12 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             var secondQueueSubscriber = secondServiceProvider.GetRequiredService<IQueueSubscriber>();
             var secondTracer = secondServiceProvider.GetRequiredService<ITracer>();
 
+
             using var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true);
             using var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true);
 
             firstQueueSubscriber.Subscribe<RawDocument>(async raw =>
             {
-                Console.WriteLine("Consume raw");
                 var enriched = new EnrichedDocument
                 {
                     RawDocument = raw

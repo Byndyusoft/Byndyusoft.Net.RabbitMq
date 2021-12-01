@@ -68,7 +68,7 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         {
             if (register == null) throw new ArgumentNullException(nameof(register));
 
-            _configuration.Register = register;
+            _configuration.RegisterServices = register;
             return new TopologyConfigurator(_configuration);
         }
     }
