@@ -22,7 +22,7 @@ jobs:
         run: dotnet build
 
       - name: test
-        run: | dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
+        run: dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
         
       - name: publish Byndyusoft.Net.RabbitMq
         uses: rohith/publish-nuget@v2
