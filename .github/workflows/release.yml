@@ -24,10 +24,19 @@ jobs:
       - name: test
         run: | dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
         
-      - name: publish Byndyusoft.AspNetCore.RabbitMq
+      - name: publish Byndyusoft.Net.RabbitMq
         uses: rohith/publish-nuget@v2
         with:
           PROJECT_FILE_PATH: src/Byndyusoft.Net.RabbitMq.csproj
+          VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
+          TAG_COMMIT: false
+          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+          INCLUDE_SYMBOLS: true
+
+      - name: publish Byndyusoft.Net.RabbitMq.Extensions
+        uses: rohith/publish-nuget@v2
+        with:
+          PROJECT_FILE_PATH: src/Byndyusoft.Net.RabbitMq.Extensions.csproj
           VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
           TAG_COMMIT: false
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}
