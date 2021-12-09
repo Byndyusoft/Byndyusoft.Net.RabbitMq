@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Version>0.0.1</Version>
+    <RootNamespace>Byndyusoft.Net.RabbitMq</RootNamespace>
+    <Authors>Byndyusoft</Authors>
+    <PackageTags>Byndyusoft;RabbitMq</PackageTags>
+	<RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+  </PropertyGroup>
+</Project>

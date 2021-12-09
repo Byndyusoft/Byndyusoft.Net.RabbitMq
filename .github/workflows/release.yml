@@ -12,16 +12,6 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@master
-      
-      - name: install dotnet 2.1
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 2.1.x      
-        
-      - name: install dotnet 3.1
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: 3.1.x
 
       - name: install dotnet 5.0
         uses: actions/setup-dotnet@v1
@@ -32,15 +22,21 @@ jobs:
         run: dotnet build
 
       - name: test
-        run: |
-          dotnet test --framework netcoreapp2.1
-          dotnet test --framework netcoreapp3.1
-          dotnet test --framework net5.0
+        run: dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
         
-      - name: publish Byndyusoft.AspNetCore.RabbitMq
+      - name: publish Byndyusoft.Net.RabbitMq
         uses: rohith/publish-nuget@v2
         with:
           PROJECT_FILE_PATH: src/Byndyusoft.Net.RabbitMq.csproj
+          VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
+          TAG_COMMIT: false
+          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+          INCLUDE_SYMBOLS: true
+
+      - name: publish Byndyusoft.Net.RabbitMq.Extensions
+        uses: rohith/publish-nuget@v2
+        with:
+          PROJECT_FILE_PATH: src/Byndyusoft.Net.RabbitMq.Extensions.csproj
           VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
           TAG_COMMIT: false
           NUGET_KEY: ${{secrets.NUGET_API_KEY}}

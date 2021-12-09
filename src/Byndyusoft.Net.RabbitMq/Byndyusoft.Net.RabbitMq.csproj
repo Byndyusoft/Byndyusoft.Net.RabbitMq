@@ -1,0 +1,36 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>8</LangVersion>
+	<IncludeSymbols>true</IncludeSymbols>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup>
+	<Version>0.0.1</Version>
+    <PackageId>Byndyusoft.AspNetCore.RabbitMq</PackageId>
+    <Title>Byndyusoft.AspNetCore.RabbitMq</Title>
+    <Authors>Byndyusoft</Authors>
+    <RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.AspNetCore.RabbitMq.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <AssemblyName>Byndyusoft.Net.RabbitMq</AssemblyName>
+    <RootNamespace>Byndyusoft.Net.RabbitMq</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="easynetq" Version="5.6.0" />
+    <PackageReference Include="fluentassertions" Version="5.10.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Options" Version="5.0.0" />
+    <PackageReference Include="moq" Version="4.16.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="OpenTracing" Version="0.12.1" />
+    <PackageReference Include="OpenTracing.Contrib.NetCore" Version="0.6.2" />
+    <PackageReference Include="RabbitMQ.Client" Version="6.2.1" />
+  </ItemGroup>
+
+</Project>

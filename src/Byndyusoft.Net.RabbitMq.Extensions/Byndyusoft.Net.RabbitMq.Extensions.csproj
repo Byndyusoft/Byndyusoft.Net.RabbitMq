@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net5.0</TargetFramework>
+	  <Nullable>enable</Nullable>
+	<IncludeSymbols>true</IncludeSymbols>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Byndyusoft.Metrics" Version="1.0.0" />
+    <PackageReference Include="Jaeger" Version="1.0.2" />
+    <PackageReference Include="OpenTracing.Contrib.NetCore" Version="0.6.2" />
+    <PackageReference Include="prometheus-net" Version="5.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Byndyusoft.Net.RabbitMq\Byndyusoft.Net.RabbitMq.csproj" />
+  </ItemGroup>
+
+</Project>
