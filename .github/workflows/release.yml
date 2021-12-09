@@ -27,7 +27,7 @@ jobs:
       - name: publish Byndyusoft.Net.RabbitMq
         uses: rohith/publish-nuget@v2
         with:
-          PROJECT_FILE_PATH: Byndyusoft.Net.RabbitMq.csproj
+          PROJECT_FILE_PATH: ./src/Byndyusoft.Net.RabbitMq/Byndyusoft.Net.RabbitMq.csproj
           VERSION_FILE_PATH: Directory.Build.props
           VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
           TAG_COMMIT: false
@@ -37,7 +37,7 @@ jobs:
       - name: publish Byndyusoft.Net.RabbitMq.Extensions
         uses: rohith/publish-nuget@v2
         with:
-          PROJECT_FILE_PATH: Byndyusoft.Net.RabbitMq.Extensions.csproj
+          PROJECT_FILE_PATH: ./src/Byndyusoft.Net.RabbitMq.Extensions/Byndyusoft.Net.RabbitMq.Extensions.csproj
           VERSION_FILE_PATH: Directory.Build.props
           VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
           TAG_COMMIT: false
