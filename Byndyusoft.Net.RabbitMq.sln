@@ -1,13 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31911.196
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq", "src\Byndyusoft.Net.RabbitMq\Byndyusoft.Net.RabbitMq.csproj", "{086D1008-A52F-4456-9F89-9E94ECBD7EAD}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Extensions", "src\Byndyusoft.Net.RabbitMq.Extensions\Byndyusoft.Net.RabbitMq.Extensions.csproj", "{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Net.RabbitMq.Tests", "tests\Byndyusoft.Net.RabbitMq.Tests\Byndyusoft.Net.RabbitMq.Tests.csproj", "{018CB7CE-DDF8-4F1A-B73A-2676168E1D2D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{91AB4082-CA49-4DB5-879F-6A897728BB9B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F021E742-6A0A-469D-A6CE-68AB0F50DD52}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,6 +39,11 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{086D1008-A52F-4456-9F89-9E94ECBD7EAD} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
+		{D168F2D2-796F-4550-8F99-BCD4AF7BDEB9} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
+		{018CB7CE-DDF8-4F1A-B73A-2676168E1D2D} = {91AB4082-CA49-4DB5-879F-6A897728BB9B}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F40608D2-7FC3-4557-9A87-5A76C4E0B531}
