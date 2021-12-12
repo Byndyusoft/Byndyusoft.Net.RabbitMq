@@ -1,45 +1,61 @@
-name: publish
+name: release
 on:
   release:
     types: [published]
     branches:
       - master
 jobs:
-  publish:
-    runs-on: ubuntu-latest
-    env:
-      DOTNET_NOLOGO: true
-    steps:
-      - name: checkout
-        uses: actions/checkout@master
+  test:
+    name: test
 
-      - name: install dotnet 5.0
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
-          
-      - name: build
-        run: dotnet build
-
-      - name: test
-        run: dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
-        
-      - name: publish Byndyusoft.Net.RabbitMq
-        uses: rohith/publish-nuget@v2
+          dotnet-version: '5.0.x'
+      - name: Run Cake script
+        uses: cake-build/cake-action@v1
         with:
-          PROJECT_FILE_PATH: ./src/Byndyusoft.Net.RabbitMq/Byndyusoft.Net.RabbitMq.csproj
-          VERSION_FILE_PATH: Directory.Build.props
-          VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
-          TAG_COMMIT: false
-          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-          INCLUDE_SYMBOLS: true
+          script-path: ./build/build.cake
+          target: Test
+          verbosity: Verbose
+          arguments: |
+            configuration: Release
+            nuget_useinprocessclient: true
+            settings_skipverification: true
+            settings_skippackageversioncheck: true
+  deploy:
+    name: deploy
+    needs: test
 
-      - name: publish Byndyusoft.Net.RabbitMq.Extensions
-        uses: rohith/publish-nuget@v2
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
         with:
-          PROJECT_FILE_PATH: ./src/Byndyusoft.Net.RabbitMq.Extensions/Byndyusoft.Net.RabbitMq.Extensions.csproj
-          VERSION_FILE_PATH: Directory.Build.props
-          VERSION_REGEX: ^\s*<Version>(.*)<\/Version>\s*$
-          TAG_COMMIT: false
-          NUGET_KEY: ${{secrets.NUGET_API_KEY}}
-          INCLUDE_SYMBOLS: true
+          dotnet-version: '5.0.x'
+      - name: Run Cake script
+        uses: cake-build/cake-action@v1
+        with:
+          script-path: ./build/build.cake
+          target: Pack
+          verbosity: Verbose
+          arguments: |
+            configuration: Release
+            nuget_useinprocessclient: true
+            settings_skipverification: true
+            settings_skippackageversioncheck: true
+      - name: Publish
+        working-directory: ./build/artifacts
+        run: dotnet nuget push "*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
