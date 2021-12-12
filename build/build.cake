@@ -1,6 +1,8 @@
 #tool "dotnet:?package=coverlet.console"
 #addin "nuget:?package=Cake.Coverlet"
 
+using System.Linq;
+
 // Target - The task you want to start. Runs the Default task if not specified.
 var target = Argument("Target", "Default");
 
@@ -14,6 +16,9 @@ var configuration =
 
 // A directory path to an Artifacts directory.
 var artifactsDirectory = MakeAbsolute(Directory("./artifacts"));
+
+// Directories with tests template
+var testsPathTemplate = "../tests/**/*.Tests.csproj";
  
 // Deletes the contents of the Artifacts folder if it should contain anything from a previous build.
 Task("Clean")
@@ -42,7 +47,7 @@ Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
     {
-        var projects = GetFiles("../tests/**/*.Tests.csproj");
+        var projects = GetFiles(testsPathTemplate);
         var settings = new DotNetTestSettings
         {
             Configuration = configuration,
@@ -52,6 +57,43 @@ Task("Test")
 
         foreach(var project in projects)
             DotNetTest(project.FullPath, settings);
+    });
+
+// Look under a 'test' folder and calculate tests against all of those projects.
+// Then calculates coverage and stores results in the artifacts directory
+Task("CalculateCoverage")
+    .IsDependentOn("Build")
+    .Does(() =>
+    {
+        var projects = GetFiles(testsPathTemplate).ToArray();
+        var temporaryCoverageFile = artifactsDirectory.CombineWithFilePath("coverage.json");
+
+        var coverletsettings = new CoverletSettings 
+        {
+            CollectCoverage = true,
+            CoverletOutputDirectory = artifactsDirectory,
+            CoverletOutputName = temporaryCoverageFile.GetFilenameWithoutExtension().ToString(),
+            MergeWithFile = temporaryCoverageFile,
+            Include = new List<string> {"[*]*"},
+            Exclude = new List<string> 
+            {
+                "[xunit*]*",
+                "[*.Tests]*"
+            }
+        };
+
+        for(var i = 0; i < projects.Length; i++)
+        {
+            var project = projects[i];
+            var projectName = project.GetFilenameWithoutExtension();
+            var projectAbsolutePath = project.GetDirectory();
+            var projectDll = GetFiles($"{projectAbsolutePath}/bin/Debug/*/*{projectName}.dll").First();
+
+            if(i == projects.Length - 1)
+                coverletsettings.CoverletOutputFormat = CoverletOutputFormat.opencover;
+
+            Coverlet(projectDll, project, coverletsettings);
+        }
     });
 
 // The default task to run if none is explicitly specified. In this case, we want
