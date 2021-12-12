@@ -96,6 +96,29 @@ Task("CalculateCoverage")
         }
     });
 
+// Run dotnet pack to produce NuGet packages from our projects.
+Task("Pack")
+    .IsDependentOn("Build")
+    .Does(() =>
+    {
+        DotNetPack(
+            "..", 
+            new DotNetPackSettings
+            {
+                Configuration = configuration,
+                NoRestore = true,
+                NoBuild = true,
+                OutputDirectory = artifactsDirectory,
+                IncludeSymbols = true,
+                MSBuildSettings 
+                    = new DotNetMSBuildSettings
+                      {
+                          Properties = { {"SymbolPackageFormat", new[] {"snupkg"} } }
+                      }
+            }
+        );
+    });
+
 // The default task to run if none is explicitly specified. In this case, we want
 // to run everything starting from Clean, all the way up to Test.
 Task("Default")
