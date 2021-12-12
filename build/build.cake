@@ -37,10 +37,27 @@ Task("Clean")
         );
     });
 
+// Look under a 'Tests' folder and run dotnet test against all of those projects.
+Task("Test")
+    .IsDependentOn("Build")
+    .Does(() =>
+    {
+        var projects = GetFiles("../tests/**/*.Tests.csproj");
+        var settings = new DotNetTestSettings
+        {
+            Configuration = configuration,
+            NoRestore = true,
+            NoBuild = true,
+        };
+
+        foreach(var project in projects)
+            DotNetTest(project.FullPath, settings);
+    });
+
 // The default task to run if none is explicitly specified. In this case, we want
 // to run everything starting from Clean, all the way up to Test.
 Task("Default")
-    .IsDependentOn("Build");
+    .IsDependentOn("Test");
  
 // Executes the task specified in the target argument.
 RunTarget(target);
