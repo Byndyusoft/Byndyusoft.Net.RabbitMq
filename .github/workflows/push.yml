@@ -4,30 +4,55 @@ on:
   - push
 
 jobs:
-  push:
-    name: push
+  test:
+    name: test
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    
     runs-on: ${{ matrix.os }}
-    env:
-      DOTNET_NOLOGO: true
-    steps:
-      - name: checkout
-        uses: actions/checkout@v2
 
-      - name: install dotnet 5.0
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 5.0.x
+          dotnet-version: '5.0.x'
+      - name: Run Cake script
+        uses: cake-build/cake-action@v1
+        with:
+          script-path: ./build/build.cake
+          target: Test
+          verbosity: Verbose
+          arguments: |
+            configuration: Release
+            nuget_useinprocessclient: true
+            settings_skipverification: true
+            settings_skippackageversioncheck: true
 
-      - name: install packages
-        run: dotnet restore
+  coverage:
+    name: coverage
+    needs: test
+    
+    runs-on: ubuntu-latest
 
-      - name: build
-        run: dotnet build
-
-      - name: test
-        run: dotnet test ./tests/Byndyusoft.Net.RabbitMq.Tests/Byndyusoft.Net.RabbitMq.Tests.csproj
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dotnet
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: '5.0.x'
+      - name: Run Cake script
+        uses: cake-build/cake-action@v1
+        with:
+          script-path: ./build/build.cake
+          target: CalculateCoverage
+          verbosity: Verbose
+          arguments: |
+            configuration: Debug
+            nuget_useinprocessclient: true
+            settings_skipverification: true
+            settings_skippackageversioncheck: true
