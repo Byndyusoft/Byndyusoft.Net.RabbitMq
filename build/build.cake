@@ -148,7 +148,7 @@ Task("CalculateCoverage")
 
 // Run dotnet pack to produce NuGet packages from our projects.
 Task("Pack")
-    .IsDependentOn("Build")
+    .IsDependentOn("Test")
     .Does(() =>
     {
         var settings = new DotNetPackSettings
