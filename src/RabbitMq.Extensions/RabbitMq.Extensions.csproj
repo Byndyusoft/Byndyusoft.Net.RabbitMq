@@ -7,7 +7,7 @@
 	  Reference name: $(RepositoryRefName)
 	  Working tree: $(RepositoryUrl)/tree/$(RepositoryCommit)
 	</PackageDescription>
-	<TargetFramework>net5.0</TargetFramework>
+	<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
     <Nullable>enable</Nullable>
     <LangVersion>8</LangVersion>
   </PropertyGroup>
