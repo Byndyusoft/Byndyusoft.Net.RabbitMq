@@ -1,40 +1,12 @@
 name: release
+
 on:
   release:
     types: [published]
-    branches:
-      - master
-jobs:
-  test:
-    name: test
-
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
     
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '5.0.x'
-      - name: Run Cake script
-        uses: cake-build/cake-action@v1
-        with:
-          script-path: ./build/build.cake
-          target: Test
-          verbosity: Verbose
-          arguments: |
-            configuration: Release
-            nuget_useinprocessclient: true
-            settings_skipverification: true
-            settings_skippackageversioncheck: true
+jobs:
   deploy:
     name: deploy
-    needs: test
 
     runs-on: ubuntu-latest
     
@@ -44,7 +16,7 @@ jobs:
       - name: Install dotnet
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: '6.0.x'
       - name: Run Cake script
         uses: cake-build/cake-action@v1
         with:
