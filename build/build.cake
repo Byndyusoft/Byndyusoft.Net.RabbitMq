@@ -96,17 +96,16 @@ Task("Clean")
 Task("Test")
     .IsDependentOn("Build")
     .Does(() =>
-    {
-        var projects = GetFiles(testsPathTemplate);
-        var settings = new DotNetTestSettings
-        {
-            Configuration = configuration,
-            NoRestore = true,
-            NoBuild = true,
-        };
-
-        foreach(var project in projects)
-            DotNetTest(project.FullPath, settings);
+    {   
+        DotNetTest(
+            "..", 
+            new DotNetTestSettings
+            {
+                Configuration = configuration,
+                NoRestore = true,
+                NoBuild = true
+            }
+        ); 
     });
 
 // Look under a 'test' folder and calculate tests against all of those projects.
