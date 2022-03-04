@@ -38,7 +38,8 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="processMessage">Incoming message handler</param>
         /// <param name="cancellationToken">Token for cancelling operation</param>
-        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage, CancellationToken cancellationToken = default) where TMessage : class;
+        public void SubscribeAsync<TMessage>(Func<TMessage, Task> processMessage,
+            CancellationToken cancellationToken = default) where TMessage : class;
 
         /// <summary>
         ///     Resends messages from particular error queue by message type

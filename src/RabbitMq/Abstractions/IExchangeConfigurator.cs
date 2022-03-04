@@ -11,7 +11,8 @@
         /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="queueName">Queue name</param>
         /// <param name="routingKey">Queue routing key</param>
-        IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey) where TMessage : class;
+        IConsumeMiddlewareConfigurator<TMessage> Consume<TMessage>(string queueName, string routingKey)
+            where TMessage : class;
 
         /// <summary>
         ///     Adds pipeline for consuming message
@@ -25,7 +26,8 @@
         /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="queueName">Queue name</param>
         /// <param name="routingKey">Queue routing key</param>
-        IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey) where TMessage : class;
+        IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey)
+            where TMessage : class;
 
         /// <summary>
         ///     Adds pipeline for producing message

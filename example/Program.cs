@@ -48,10 +48,11 @@ namespace Byndyusoft.Net.RabbitMq
             });
 
             Console.WriteLine("Push enriched");
-            await firstMessagePublisher.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
+            await firstMessagePublisher.Publish(new EnrichedDocument(), Guid.NewGuid().ToString())
+                .ConfigureAwait(false);
 
             Console.WriteLine("Push raw");
-            await secondMessagePublisher.Publish(new RawDocument { Int = 100500 }, Guid.NewGuid().ToString());
+            await secondMessagePublisher.Publish(new RawDocument {Int = 100500}, Guid.NewGuid().ToString());
 
             Console.WriteLine("press any key...");
             Console.ReadKey();
@@ -76,9 +77,7 @@ namespace Byndyusoft.Net.RabbitMq
                                 exchangeConfigurator.Produce<EnrichedDocument>("enriched_documents", "enriched")
                                     .Wrap<TracerProduceMiddleware<EnrichedDocument>>()
                                     .WrapReturned<TraceReturnedMiddleware<EnrichedDocument>>();
-
                             })).BuildServiceProvider();
-
 
 
             var queueService = serviceProvider.GetRequiredService<IHostedService>();
@@ -98,12 +97,10 @@ namespace Byndyusoft.Net.RabbitMq
                             exchangeConfigurator =>
                             {
                                 exchangeConfigurator.Produce<RawDocument>("raw_documents", "raw")
-                                                    .WrapReturned<TraceReturnedMiddleware<RawDocument>>();
+                                    .WrapReturned<TraceReturnedMiddleware<RawDocument>>();
 
                                 exchangeConfigurator.Consume<EnrichedDocument>("enriched_documents", "enriched");
-
                             })).BuildServiceProvider();
-
 
 
             var queueService = serviceProvider.GetRequiredService<IHostedService>();

@@ -1,7 +1,7 @@
 ﻿namespace Byndyusoft.Net.RabbitMq.Abstractions
 {
     /// <summary>
-    ///    Api for building pipeline for consuming message
+    ///     Api for building pipeline for consuming message
     /// </summary>
     /// <typeparam name="TMessage">Incoming message type</typeparam>
     public interface IConsumeMiddlewareConfigurator<TMessage> where TMessage : class

@@ -6,8 +6,28 @@ namespace Byndyusoft.Net.RabbitMq.Models
     /// <summary>
     ///     Queue configuration
     /// </summary>
-    public sealed  class QueueConfiguration
+    public sealed class QueueConfiguration
     {
+        /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="queueName">Queue name</param>
+        /// <param name="routingKey">Routing key for binding with exchange</param>
+        /// <param name="messageType">Type of messages in queue</param>
+        public QueueConfiguration(string queueName, string routingKey, Type messageType)
+        {
+            if (string.IsNullOrWhiteSpace(queueName))
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(queueName));
+            if (string.IsNullOrWhiteSpace(routingKey))
+                throw new ArgumentException("Value cannot be null or whitespace.", nameof(routingKey));
+
+            QueueName = queueName;
+            RoutingKey = routingKey;
+            MessageType = messageType ?? throw new ArgumentNullException(nameof(messageType));
+            Middlewares = new List<Type>();
+            ReturnedMiddlewares = new List<Type>();
+        }
+
         /// <summary>
         ///     Type of messages in queue
         /// </summary>
@@ -33,26 +53,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
         /// </summary>
         public List<Type> ReturnedMiddlewares { get; }
 
-        /// <summary>
-        ///     Ctor
-        /// </summary>
-        /// <param name="queueName">Queue name</param>
-        /// <param name="routingKey">Routing key for binding with exchange</param>
-        /// <param name="messageType">Type of messages in queue</param>
-        public QueueConfiguration(string queueName, string routingKey, Type messageType)
-        {
-            if (string.IsNullOrWhiteSpace(queueName))
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(queueName));
-            if (string.IsNullOrWhiteSpace(routingKey))
-                throw new ArgumentException("Value cannot be null or whitespace.", nameof(routingKey));
-
-            QueueName = queueName;
-            RoutingKey = routingKey;
-            MessageType = messageType ?? throw new ArgumentNullException(nameof(messageType));
-            Middlewares = new List<Type>();
-            ReturnedMiddlewares = new List<Type>();
-        }
-
         private bool Equals(QueueConfiguration other)
         {
             return QueueName == other.QueueName && RoutingKey == other.RoutingKey;
@@ -63,7 +63,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
+            if (obj.GetType() != GetType()) return false;
             return Equals((QueueConfiguration) obj);
         }
 

@@ -14,7 +14,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
         public PipelineConfigurationException(string message)
             : base(message)
         {
-            
         }
     }
 }

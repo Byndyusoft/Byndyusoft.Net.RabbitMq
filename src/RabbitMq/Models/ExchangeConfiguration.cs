@@ -9,22 +9,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
     public sealed class ExchangeConfiguration
     {
         /// <summary>
-        ///     Exchange name
-        /// </summary>
-        public string ExchangeName { get; }
-
-        /// <summary>
-        ///     Configurations of incoming queues
-        /// </summary>
-        public HashSet<QueueConfiguration> ConsumeQueueConfigurations { get; }
-
-        /// <summary>
-        ///    Configurations of outgoing queues
-        /// </summary>
-        public HashSet<QueueConfiguration> ProduceQueueConfigurations { get; }
-
-
-        /// <summary>
         ///     Ctor
         /// </summary>
         /// <param name="exchangeName">Exchange name</param>
@@ -37,5 +21,20 @@ namespace Byndyusoft.Net.RabbitMq.Models
             ConsumeQueueConfigurations = new HashSet<QueueConfiguration>();
             ProduceQueueConfigurations = new HashSet<QueueConfiguration>();
         }
+
+        /// <summary>
+        ///     Exchange name
+        /// </summary>
+        public string ExchangeName { get; }
+
+        /// <summary>
+        ///     Configurations of incoming queues
+        /// </summary>
+        public HashSet<QueueConfiguration> ConsumeQueueConfigurations { get; }
+
+        /// <summary>
+        ///     Configurations of outgoing queues
+        /// </summary>
+        public HashSet<QueueConfiguration> ProduceQueueConfigurations { get; }
     }
 }

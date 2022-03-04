@@ -5,7 +5,7 @@ using EasyNetQ.DI;
 
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
-    /// <inheritdoc cref="IConnectionConfigurator"/>
+    /// <inheritdoc cref="IConnectionConfigurator" />
     internal sealed class ConnectionConfigurator : IConnectionConfigurator
     {
         /// <summary>
@@ -21,14 +21,6 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _configuration = new RabbitMqConfiguration();
         }
 
-        /// <summary>
-        ///     Returns full configuration
-        /// </summary>
-        public RabbitMqConfiguration Build()
-        {
-            return _configuration;
-        }
-
         /// <inheritdoc />
         public IInjectionConfigurator Connection(string connectionString)
         {
@@ -38,9 +30,17 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
             _configuration.ConnectionString = connectionString;
             return new InjectionConfigurator(_configuration);
         }
+
+        /// <summary>
+        ///     Returns full configuration
+        /// </summary>
+        public RabbitMqConfiguration Build()
+        {
+            return _configuration;
+        }
     }
 
-    /// <inheritdoc cref="IInjectionConfigurator"/>
+    /// <inheritdoc cref="IInjectionConfigurator" />
     internal sealed class InjectionConfigurator : IInjectionConfigurator
     {
         private readonly RabbitMqConfiguration _configuration;

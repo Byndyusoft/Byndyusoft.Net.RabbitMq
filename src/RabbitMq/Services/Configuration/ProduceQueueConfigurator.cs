@@ -4,8 +4,9 @@ using Byndyusoft.Net.RabbitMq.Models;
 
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
-    /// <inheritdoc cref="IProduceMiddlewareConfigurator&lt;TMessage&gt;"/>
-    internal sealed class ProduceQueueConfigurator<TMessage> : IProduceMiddlewareConfigurator<TMessage> where TMessage : class
+    /// <inheritdoc cref="IProduceMiddlewareConfigurator{TMessage}" />
+    internal sealed class ProduceQueueConfigurator<TMessage> : IProduceMiddlewareConfigurator<TMessage>
+        where TMessage : class
     {
         /// <summary>
         ///     Configuration of queue
@@ -29,7 +30,8 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         }
 
         /// <inheritdoc />
-        public IProduceReturnedMiddlewareConfigurator<TMessage> WrapReturned<TReturnedPipe>() where TReturnedPipe : IReturnedMiddleware<TMessage>
+        public IProduceReturnedMiddlewareConfigurator<TMessage> WrapReturned<TReturnedPipe>()
+            where TReturnedPipe : IReturnedMiddleware<TMessage>
         {
             _queue.ReturnedMiddlewares.Add(typeof(TReturnedPipe));
             return this;

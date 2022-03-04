@@ -14,7 +14,6 @@ namespace Byndyusoft.Net.RabbitMq.Models
         public ProcessMessageException(string message)
             : base(message)
         {
-
         }
     }
 }

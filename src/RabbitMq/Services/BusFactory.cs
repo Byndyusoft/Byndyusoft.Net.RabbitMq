@@ -4,7 +4,7 @@ using EasyNetQ;
 
 namespace Byndyusoft.Net.RabbitMq.Services
 {
-    /// <inheritdoc cref="IBusFactory"/>
+    /// <inheritdoc cref="IBusFactory" />
     public sealed class BusFactory : IBusFactory
     {
         /// <inheritdoc />

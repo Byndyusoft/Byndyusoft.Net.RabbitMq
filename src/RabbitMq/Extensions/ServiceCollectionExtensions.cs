@@ -7,7 +7,6 @@ using Byndyusoft.Net.RabbitMq.TestInfrastructure;
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
 {
-
     /// <summary>
     ///     Dependency injection of package types
     /// </summary>

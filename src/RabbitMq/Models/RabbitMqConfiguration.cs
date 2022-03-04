@@ -10,9 +10,17 @@ namespace Byndyusoft.Net.RabbitMq.Models
     public sealed class RabbitMqConfiguration
     {
         /// <summary>
+        ///     Ctor
+        /// </summary>
+        public RabbitMqConfiguration()
+        {
+            ExchangeConfigurations = new Dictionary<string, ExchangeConfiguration>();
+        }
+
+        /// <summary>
         ///     Connection string (for example 'host=localhost')
         /// </summary>
-        public string?  ConnectionString { get; internal set; }
+        public string? ConnectionString { get; internal set; }
 
         /// <summary>
         ///     Configuration of exchanges of bound queues
@@ -25,15 +33,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
         public Action<IServiceRegister>? RegisterServices { get; internal set; }
 
         /// <summary>
-        ///     Ctor
-        /// </summary>
-        public RabbitMqConfiguration()
-        {
-            ExchangeConfigurations = new Dictionary<string, ExchangeConfiguration>();
-        }
-
-        /// <summary>
-        ///      Add exchange configuration
+        ///     Add exchange configuration
         /// </summary>
         public void AddExchange(string exchangeName)
         {
@@ -41,9 +41,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
                 throw new ArgumentException("Value cannot be null or whitespace.", nameof(exchangeName));
 
             if (ExchangeConfigurations.ContainsKey(exchangeName))
-            {
                 throw new Exception($"Exchange {exchangeName} has been already added");
-            }
 
             ExchangeConfigurations.Add(exchangeName, new ExchangeConfiguration(exchangeName));
         }

@@ -10,6 +10,21 @@ namespace Byndyusoft.Net.RabbitMq.Models
     public class QueuePipeline
     {
         /// <summary>
+        ///     Ctor
+        /// </summary>
+        /// <param name="routingKey">Queue routing key</param>
+        /// <param name="queue">Target queue</param>
+        /// <param name="exchange">Target exchange</param>
+        public QueuePipeline(string routingKey, IQueue queue, IExchange exchange)
+        {
+            RoutingKey = routingKey;
+            Queue = queue;
+            Exchange = exchange;
+            ProcessMiddlewares = new List<Type>();
+            ReturnedMiddlewares = new List<Type>();
+        }
+
+        /// <summary>
         ///     Queue routing key
         /// </summary>
         public string RoutingKey { get; }
@@ -33,21 +48,5 @@ namespace Byndyusoft.Net.RabbitMq.Models
         ///     Failure pipes for handling errors on message consuming or returned produced messages
         /// </summary>
         public IList<Type> ReturnedMiddlewares { get; }
-
-        /// <summary>
-        /// Ctor
-        /// </summary>
-        /// <param name="routingKey">Queue routing key</param>
-        /// <param name="queue">Target queue</param>
-        /// <param name="exchange">Target exchange</param>
-        public QueuePipeline(string routingKey, IQueue queue, IExchange exchange)
-        {
-            RoutingKey = routingKey;
-            Queue = queue;
-            Exchange = exchange;
-            ProcessMiddlewares = new List<Type>();
-            ReturnedMiddlewares = new List<Type>();
-        }
     }
-
 }

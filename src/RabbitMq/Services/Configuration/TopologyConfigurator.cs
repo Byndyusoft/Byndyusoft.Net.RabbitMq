@@ -4,7 +4,7 @@ using Byndyusoft.Net.RabbitMq.Models;
 
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
-    /// <inheritdoc cref="ITopologyConfigurator"/>
+    /// <inheritdoc cref="ITopologyConfigurator" />
     internal sealed class TopologyConfigurator : ITopologyConfigurator
     {
         /// <summary>

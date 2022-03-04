@@ -4,7 +4,7 @@ using Byndyusoft.Net.RabbitMq.Models;
 
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
-    /// <inheritdoc cref="IExchangeConfigurator"/>
+    /// <inheritdoc cref="IExchangeConfigurator" />
     internal sealed class ExchangeConfigurator : IExchangeConfigurator
     {
         /// <summary>
@@ -18,7 +18,8 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         /// <param name="exchangeConfiguration">Configuration of exchange</param>
         public ExchangeConfigurator(ExchangeConfiguration exchangeConfiguration)
         {
-            _exchangeConfiguration = exchangeConfiguration ?? throw new ArgumentNullException(nameof(exchangeConfiguration));
+            _exchangeConfiguration =
+                exchangeConfiguration ?? throw new ArgumentNullException(nameof(exchangeConfiguration));
         }
 
         /// <inheritdoc />
@@ -38,7 +39,8 @@ namespace Byndyusoft.Net.RabbitMq.Services.Configuration
         }
 
         /// <inheritdoc />
-        public IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey) where TMessage : class
+        public IProduceMiddlewareConfigurator<TMessage> Produce<TMessage>(string queueName, string routingKey)
+            where TMessage : class
         {
             var queue = new QueueConfiguration(queueName, routingKey, typeof(TMessage));
             _exchangeConfiguration.ProduceQueueConfigurations.Add(queue);

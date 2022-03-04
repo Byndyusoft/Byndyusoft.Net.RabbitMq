@@ -4,8 +4,9 @@ using Byndyusoft.Net.RabbitMq.Models;
 
 namespace Byndyusoft.Net.RabbitMq.Services.Configuration
 {
-    /// <inheritdoc cref="IConsumeMiddlewareConfigurator&lt;TMessage&gt;"/>
-    internal sealed class ConsumeQueueConfigurator<TMessage> : IConsumeMiddlewareConfigurator<TMessage> where TMessage : class
+    /// <inheritdoc cref="IConsumeMiddlewareConfigurator{TMessage}" />
+    internal sealed class ConsumeQueueConfigurator<TMessage> : IConsumeMiddlewareConfigurator<TMessage>
+        where TMessage : class
     {
         /// <summary>
         ///     Configuration of queue

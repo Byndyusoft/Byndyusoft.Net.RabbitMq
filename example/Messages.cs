@@ -3,7 +3,7 @@ namespace Byndyusoft.Net.RabbitMq
     public class Mail
     {
     }
-    
+
     public interface IMessage
     {
     }
