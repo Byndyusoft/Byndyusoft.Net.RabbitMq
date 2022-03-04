@@ -1,8 +1,7 @@
-﻿using System;
+using System;
 using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Services;
 using Byndyusoft.Net.RabbitMq.Services.Configuration;
-using Microsoft.Extensions.Hosting;
 using Byndyusoft.Net.RabbitMq.TestInfrastructure;
 
 // ReSharper disable once CheckNamespace
@@ -26,12 +25,13 @@ namespace Microsoft.Extensions.DependencyInjection
             var configurator = new ConnectionConfigurator();
             setup(configurator);
             var configuration = configurator.Build();
+
             services.AddSingleton(configuration)
-                    .AddSingleton<QueueService>()
-                    .AddSingleton<IMessagePublisher>(provider => provider.GetRequiredService<QueueService>())
-                    .AddSingleton<IQueueSubscriber>(provider => provider.GetRequiredService<QueueService>())
-                    .AddSingleton<IMessageResender>(provider => provider.GetRequiredService<QueueService>())
-                    .AddSingleton<IHostedService>(provider => provider.GetRequiredService<QueueService>());
+                .AddSingleton<QueueService>()
+                .AddSingleton<IMessagePublisher>(provider => provider.GetService<QueueService>())
+                .AddSingleton<IQueueSubscriber>(provider => provider.GetService<QueueService>())
+                .AddSingleton<IMessageResender>(provider => provider.GetService<QueueService>())
+                .AddHostedService(provider => provider.GetService<QueueService>());
 
             services.AddSingleton(configuration);
             services.AddSingleton<IBusFactory, BusFactory>();

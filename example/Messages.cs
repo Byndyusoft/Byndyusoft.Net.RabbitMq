@@ -1,4 +1,4 @@
-﻿namespace Byndyusoft.Net.RabbitMq.Tests
+namespace Byndyusoft.Net.RabbitMq
 {
     public class Mail
     {
@@ -19,6 +19,6 @@
 
     public class EnrichedDocument : IMessage
     {
-        public RawDocument RawDocument { get; set; }
+        public RawDocument RawDocument { get; set; } = default!;
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Abstractions;
@@ -10,9 +10,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using OpenTracing;
 
-namespace Byndyusoft.Net.RabbitMq.Tests
+namespace Byndyusoft.Net.RabbitMq
 {
-    public class Program
+    public static class Program
     {
         public static async Task Main()
         {
@@ -26,7 +26,6 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             var secondMessagePublisher = secondServiceProvider.GetRequiredService<IMessagePublisher>();
             var secondQueueSubscriber = secondServiceProvider.GetRequiredService<IQueueSubscriber>();
             var secondTracer = secondServiceProvider.GetRequiredService<ITracer>();
-
 
             using var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true);
             using var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true);
@@ -52,7 +51,7 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             await firstMessagePublisher.Publish(new EnrichedDocument(), Guid.NewGuid().ToString()).ConfigureAwait(false);
 
             Console.WriteLine("Push raw");
-            await secondMessagePublisher.Publish(new RawDocument {  Int = 100500 }, Guid.NewGuid().ToString());
+            await secondMessagePublisher.Publish(new RawDocument { Int = 100500 }, Guid.NewGuid().ToString());
 
             Console.WriteLine("press any key...");
             Console.ReadKey();
