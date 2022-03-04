@@ -4,12 +4,22 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.31911.196
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{91AB4082-CA49-4DB5-879F-6A897728BB9B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{F021E742-6A0A-469D-A6CE-68AB0F50DD52}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		CONTRIBUTING.md = CONTRIBUTING.md
 		Directory.Build.props = Directory.Build.props
+		icon.png = icon.png
+		LICENSE = LICENSE
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMq", "src\RabbitMq\RabbitMq.csproj", "{083ECD48-3AC4-4BA9-94A1-55AFFF941246}"
@@ -17,6 +27,15 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMq.Extensions", "src\RabbitMq.Extensions\RabbitMq.Extensions.csproj", "{FF8EA81E-AA93-4382-8DC9-7BB47E6891EB}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RabbitMq.Tests", "tests\RabbitMq.Tests\RabbitMq.Tests.csproj", "{65072C0E-1A70-47F6-9F70-D95ADA4B835C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{801EA14B-698A-4663-9B71-46FCDF08B9DB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{35F66474-3842-4474-A097-B450CF49E484}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\pull-request.yml = .github\workflows\pull-request.yml
+		.github\workflows\push.yml = .github\workflows\push.yml
+		.github\workflows\release.yml = .github\workflows\release.yml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -44,6 +63,7 @@ Global
 		{083ECD48-3AC4-4BA9-94A1-55AFFF941246} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 		{FF8EA81E-AA93-4382-8DC9-7BB47E6891EB} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 		{65072C0E-1A70-47F6-9F70-D95ADA4B835C} = {91AB4082-CA49-4DB5-879F-6A897728BB9B}
+		{35F66474-3842-4474-A097-B450CF49E484} = {801EA14B-698A-4663-9B71-46FCDF08B9DB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F40608D2-7FC3-4557-9A87-5A76C4E0B531}

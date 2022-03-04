@@ -1,25 +1,23 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	<Description>Yet another .NET API for RabbitMQ</Description>
-	<PackageDescription Condition="'$(VersionSuffix)'!=''">
-	  $(Description)
-	  Reference name: $(RepositoryRefName)
-	  Working tree: $(RepositoryUrl)/tree/$(RepositoryCommit)
-	</PackageDescription>
-	<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
-    <Nullable>enable</Nullable>
-    <LangVersion>8</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<Description>Yet another .NET API for RabbitMQ</Description>
+		<PackageDescription Condition="'$(VersionSuffix)'!=''">
+			$(Description)
+			Reference name: $(RepositoryRefName)
+			Working tree: $(RepositoryUrl)/tree/$(RepositoryCommit)
+		</PackageDescription>
+		<TargetFrameworks>netstandard2.1;net6.0</TargetFrameworks>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="easynetq" Version="5.6.0" />
-    <PackageReference Include="fluentassertions" Version="6.4.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.22" />
-    <PackageReference Include="moq" Version="4.16.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-    <PackageReference Include="OpenTracing" Version="0.12.1" />
-    <PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="easynetq" Version="5.6.0" />
+		<PackageReference Include="fluentassertions" Version="6.4.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="3.1.22" />
+		<PackageReference Include="moq" Version="4.16.1" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
+		<PackageReference Include="OpenTracing" Version="0.12.1" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.2.2" />
+	</ItemGroup>
 
 </Project>
