@@ -8,6 +8,6 @@
 		<RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<Nullable>enable</Nullable>
-		<LangVersion>8</LangVersion>
+		<LangVersion>9</LangVersion>
 	</PropertyGroup>
 </Project>
