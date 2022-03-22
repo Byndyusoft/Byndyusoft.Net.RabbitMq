@@ -1,127 +1,113 @@
 using System;
-using System.Threading;
+using System.Diagnostics;
+using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Byndyusoft.Net.RabbitMq.Abstractions;
-using Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing;
-using Byndyusoft.Net.RabbitMq.Services;
-using Jaeger;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using OpenTracing;
+using Byndyusoft.Messaging.Abstractions;
+using Byndyusoft.Messaging.Core;
+using Byndyusoft.Messaging.OpenTracing;
+using Byndyusoft.Messaging.RabbitMq;
+using Newtonsoft.Json;
+using OpenTelemetry;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTracing.Util;
 
 namespace Byndyusoft.Net.RabbitMq
 {
     public static class Program
     {
+        private static readonly ActivitySource ActivitySource = new(nameof(Program));
+
         public static async Task Main()
         {
-            var firstServiceProvider = await InitFirstQueueService();
-            var secondServiceProvider = await InitSecondQueueService();
-
-            var firstMessagePublisher = firstServiceProvider.GetRequiredService<IMessagePublisher>();
-            var firstQueueSubscriber = firstServiceProvider.GetRequiredService<IQueueSubscriber>();
-            var firstTracer = firstServiceProvider.GetRequiredService<ITracer>();
-
-            var secondMessagePublisher = secondServiceProvider.GetRequiredService<IMessagePublisher>();
-            var secondQueueSubscriber = secondServiceProvider.GetRequiredService<IQueueSubscriber>();
-            var secondTracer = secondServiceProvider.GetRequiredService<ITracer>();
-
-            using var scope1 = firstTracer.BuildSpan(nameof(Main)).StartActive(true);
-            using var scope2 = secondTracer.BuildSpan(nameof(Main)).StartActive(true);
-
-            firstQueueSubscriber.Subscribe<RawDocument>(async raw =>
-            {
-                var enriched = new EnrichedDocument
+            using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+                .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService("Byndyusoft.Net.RabbitMq"))
+                .SetSampler(new AlwaysOnSampler())
+                .AddSource(ActivitySource.Name)
+                .AddJaegerExporter(jaeger =>
                 {
-                    RawDocument = raw
-                };
+                    jaeger.AgentHost = "localhost";
+                    jaeger.AgentPort = 6831;
 
-                Console.WriteLine("Push enriched");
-                await firstMessagePublisher.Publish(enriched, Guid.NewGuid().ToString());
-            });
+                })
+                .AddOpenTracingExporter(QueueServiceActivitySource.Name)
+                .AddQueueServiceInstrumentation()
+                .Build();
 
-            secondQueueSubscriber.Subscribe<EnrichedDocument>(raw =>
+            var service = new RabbitQueueService("host=localhost;username=rabbitmq;password=rabbitmq");
+            var message = new QueueMessage
             {
-                Console.WriteLine("Consume enriched");
-                return Task.CompletedTask;
+                RoutingKey = "dead",
+                Content = JsonContent.Create(new
+                {
+                    Property1 = "property1"
+                }),
+                Properties = new QueueMessageProperties
+                {
+                    Expiration = TimeSpan.FromSeconds(10),
+                    Timestamp = DateTime.UtcNow,
+                    Priority = 3
+                },
+                Headers = new QueueMessageHeaders
+                {
+                    {"header-key", "header-value"}
+                }
+            };
+
+            var message2 = new QueueMessage
+            {
+                RoutingKey = "dead",
+                Content = JsonContent.Create(new
+                {
+                    Property1 = "property2"
+                }),
+                Properties = new QueueMessageProperties
+                {
+                    Expiration = TimeSpan.FromSeconds(5),
+                    Timestamp = DateTime.UtcNow,
+                    Priority = 9
+                },
+                Headers = new QueueMessageHeaders
+                {
+                    {"header-key", "header-value"}
+                }
+            };
+
+
+
+            GlobalTracer.Register(new Jaeger.Tracer.Builder("Byndyusoft.Net.RabbitMq").Build());
+
+            var span = GlobalTracer.Instance.BuildSpan(nameof(Main)).StartActive(true);
+
+            using var activity = ActivitySource.StartActivity(nameof(Main));
+            activity?.AddBaggage("baggage-key1", "baggage-value1");
+            activity?.AddBaggage("baggage-key2", "baggage-value2");
+
+            await service.PublishBatchAsync(new[]{message, message2});
+
+            service.Subscribe("queue", async (queueMessage, _) =>
+            {
+                Console.WriteLine(await queueMessage.Content.ReadAsStringAsync());
             });
 
-            Console.WriteLine("Push enriched");
-            await firstMessagePublisher.Publish(new EnrichedDocument(), Guid.NewGuid().ToString())
-                .ConfigureAwait(false);
+            activity?.Dispose();
+            span?.Dispose();
 
-            Console.WriteLine("Push raw");
-            await secondMessagePublisher.Publish(new RawDocument {Int = 100500}, Guid.NewGuid().ToString());
-
-            Console.WriteLine("press any key...");
             Console.ReadKey();
-            Console.WriteLine("Bye");
-        }
 
-        private static async Task<IServiceProvider> InitFirstQueueService()
-        {
-            var serviceCollection = BuildServiceCollection();
+            //await Task.Delay(5000);
 
-            var serviceProvider =
-                serviceCollection.AddRabbitMq(
-                    configurator => configurator.Connection("host=localhost")
-                        .InjectServices(register => { })
-                        .Exchange("incoming_documents",
-                            exchangeConfigurator =>
-                            {
-                                exchangeConfigurator.Consume<RawDocument>("raw_documents", "raw")
-                                    .Wrap<TracerConsumeMiddleware<RawDocument>>();
+            //while (true)
+            //{
+            //    var got = await service.GetAsync("queue2");
+            //    if (got is null)
+            //        break;
 
+            //    Console.WriteLine(JsonConvert.SerializeObject(got));
 
-                                exchangeConfigurator.Produce<EnrichedDocument>("enriched_documents", "enriched")
-                                    .Wrap<TracerProduceMiddleware<EnrichedDocument>>()
-                                    .WrapReturned<TraceReturnedMiddleware<EnrichedDocument>>();
-                            })).BuildServiceProvider();
-
-
-            var queueService = serviceProvider.GetRequiredService<IHostedService>();
-            await queueService.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            return serviceProvider;
-        }
-
-        private static async Task<IServiceProvider> InitSecondQueueService()
-        {
-            var serviceCollection = BuildServiceCollection();
-
-            var serviceProvider =
-                serviceCollection.AddRabbitMq(
-                    configurator => configurator.Connection("host=localhost")
-                        .InjectServices(register => { })
-                        .Exchange("incoming_documents",
-                            exchangeConfigurator =>
-                            {
-                                exchangeConfigurator.Produce<RawDocument>("raw_documents", "raw")
-                                    .WrapReturned<TraceReturnedMiddleware<RawDocument>>();
-
-                                exchangeConfigurator.Consume<EnrichedDocument>("enriched_documents", "enriched");
-                            })).BuildServiceProvider();
-
-
-            var queueService = serviceProvider.GetRequiredService<IHostedService>();
-            await queueService.StartAsync(CancellationToken.None).ConfigureAwait(false);
-            return serviceProvider;
-        }
-
-        private static ServiceCollection BuildServiceCollection()
-        {
-            var serviceCollection = new ServiceCollection();
-            var tracer = new Tracer.Builder("Demo").Build();
-            serviceCollection.AddSingleton<ITracer>(tracer)
-                .AddLogging(builder => builder.AddConsole())
-                .AddSingleton<IConsumeMiddleware<RawDocument>, TracerConsumeMiddleware<RawDocument>>()
-                .AddSingleton<IProduceMiddleware<RawDocument>, TracerProduceMiddleware<RawDocument>>()
-                .AddSingleton<IConsumeMiddleware<EnrichedDocument>, TracerConsumeMiddleware<EnrichedDocument>>()
-                .AddSingleton<IProduceMiddleware<EnrichedDocument>, TracerProduceMiddleware<EnrichedDocument>>()
-                .AddSingleton<IReturnedMiddleware<EnrichedDocument>, TraceReturnedMiddleware<EnrichedDocument>>()
-                .AddSingleton<IReturnedMiddleware<RawDocument>, TraceReturnedMiddleware<RawDocument>>()
-                .AddSingleton<IBusFactory, BusFactory>();
-            return serviceCollection;
+            //    await service.AckAsync(got);
+            //}
         }
     }
 }

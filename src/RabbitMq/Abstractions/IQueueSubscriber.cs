@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+using System;
 using System.Threading.Tasks;
 
 namespace Byndyusoft.Net.RabbitMq.Abstractions
@@ -14,8 +13,6 @@ namespace Byndyusoft.Net.RabbitMq.Abstractions
         /// </summary>
         /// <typeparam name="TMessage">Incoming message type</typeparam>
         /// <param name="processMessage">Incoming message handler</param>
-        /// <param name="cancellationToken">Token for cancelling operation</param>
-        public void Subscribe<TMessage>(Func<TMessage, Task> processMessage,
-            CancellationToken cancellationToken = default) where TMessage : class;
+        public void Subscribe<TMessage>(Func<TMessage, Task> processMessage) where TMessage : class;
     }
 }

@@ -19,7 +19,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
     /// <summary>
     ///     RabbitMq messaging service
     /// </summary>
-    public sealed class QueueService : IHostedService, IQueueSubscriber, IMessagePublisher, IMessageResender
+    public sealed class QueueService : IHostedService, IQueueSubscriber, IMessagePublisher, IMessageResender, IDisposable
     {
         /// <summary>
         ///     Rabbit connections factory
@@ -66,6 +66,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// </summary>
         private readonly IDictionary<Type, Func<MessageReturnedEventArgs, Task>> _returnedActions;
 
+        private readonly List<IDisposable> _subscriptions = new List<IDisposable>();
+
         /// <summary>
         ///     Returns initialized bus connection
         /// </summary>
@@ -78,6 +80,14 @@ namespace Byndyusoft.Net.RabbitMq.Services
             }
         }
 
+        private QueueService()
+        {
+            _consumingPipelines = new Dictionary<Type, QueuePipeline>();
+            _producingPipelines = new Dictionary<Type, QueuePipeline>();
+            _returnedActions = new Dictionary<Type, Func<MessageReturnedEventArgs, Task>>();
+            _producingActions = new Dictionary<Type, Delegate>();
+        }
+
 
         /// <summary>
         ///     Ctor
@@ -87,15 +97,19 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="serviceProvider">IoC service locator for getting wrappers and pipes</param>
         public QueueService(IBusFactory busFactory, 
                             RabbitMqConfiguration configuration,
-                            IServiceProvider serviceProvider)
+                            IServiceProvider serviceProvider) : this()
         {
             _busFactory = busFactory ?? throw new ArgumentNullException(nameof(busFactory));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
-            _consumingPipelines = new Dictionary<Type, QueuePipeline>();
-            _producingPipelines = new Dictionary<Type, QueuePipeline>();
-            _returnedActions = new Dictionary<Type, Func<MessageReturnedEventArgs, Task>>();
-            _producingActions = new Dictionary<Type, Delegate>();
+           
+        }
+
+        public QueueService(string connectionString)
+        {
+            _configuration = new RabbitMqConfiguration {ConnectionString = connectionString};
+            _busFactory = new BusFactory();
+            _serviceProvider = new ServiceCollection().BuildServiceProvider();
         }
 
         #region IHostedService Implementation
@@ -114,7 +128,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
             _bus = _busFactory.CreateBus(_configuration);
 
             Bus.Advanced.MessageReturned += OnMessageReturned;
-            Bus.Advanced.Conventions.ErrorQueueNamingConvention = info => $"{info.Exchange}.{info.RoutingKey}.error";
+            Bus.Advanced.Conventions.ErrorQueueNamingConvention = info => $"{info.Queue}.error";
             Bus.Advanced.Conventions.ErrorExchangeNamingConvention = info => $"{info.Exchange}.error";
 
             foreach (var exchangeCfg in _configuration.ExchangeConfigurations.Values)
@@ -202,7 +216,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <param name="exchange">Exchange</param>
         private async Task<QueuePipeline> BuildConsumingPipeline(ExchangeConfiguration exchangeCfg, QueueConfiguration queueCfg, IExchange exchange)
         {
-            var queue = await Bus.Advanced.QueueDeclareAsync($"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}");
+            var queueName = queueCfg.QueueName ?? $"{exchangeCfg.ExchangeName}.{queueCfg.RoutingKey}";
+
+            var queue = await Bus.Advanced.QueueDeclareAsync(queueName);
 
             await Bus.Advanced.BindAsync(exchange, queue, queueCfg.RoutingKey);
 
@@ -312,9 +328,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
                         $"Queue routing key {queue.RoutingKey} is configured for consuming and for producing simultaneously");
                 }
             }
-
-
-
+            
             foreach (var queue in exchangeCfg.ProduceQueueConfigurations)
             {
                 ValidateConfig(queue, errors);
@@ -371,7 +385,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
         /// <inheritdoc />
         public async Task Publish<TMessage>(TMessage message,
-            string key,
+            string correlationId,
             Dictionary<string, string>? headers = null,
             Action<MessageReturnedEventArgs>? returnedHandled = null,
             CancellationToken cancellationToken = default) where TMessage : class
@@ -380,14 +394,19 @@ namespace Byndyusoft.Net.RabbitMq.Services
                 throw new InvalidOperationException("Initialize bus before use");
             
             var publishPipeline = (Func<IMessage<TMessage>, Task>)_producingActions[typeof(TMessage)];
-            
-            var properties = GetMessageProperties();
-            properties.Headers.Add(Consts.MessageKeyHeader, key);
-            if (headers != null)
-                foreach (var header in headers)
-                    properties.Headers.Add(header.Key, header.Value);
 
-            await publishPipeline(new Message<TMessage>(message));
+            var msg = new Message<TMessage>(message);
+
+            var properties = msg.Properties;
+            properties.ContentType = MediaTypeNames.Application.Json;
+            properties.DeliveryMode = 2;
+            properties.Headers.Add(Consts.MessageKeyHeader, correlationId);
+            properties.CorrelationId = correlationId;
+            if (headers != null)
+                foreach (var (key, value) in headers)
+                    properties.Headers.Add(key, value);
+
+            await publishPipeline(msg);
         }
 
 
@@ -549,8 +568,7 @@ namespace Byndyusoft.Net.RabbitMq.Services
 
 
         /// <inheritdoc />
-        public void Subscribe<TMessage>(Func<TMessage, Task> processMessage,
-            CancellationToken cancellationToken = default) where TMessage : class
+        public void Subscribe<TMessage>(Func<TMessage, Task> processMessage) where TMessage : class
         {
             if (_isInitialized == false)
                 throw new InvalidOperationException("Initialize bus before use");
@@ -565,7 +583,8 @@ namespace Byndyusoft.Net.RabbitMq.Services
             var consumingMiddlewares = GetConsumingMiddlewares<TMessage>(pipeline.ProcessMiddlewares);
             var consumePipeline = BuildConsume(processMessage, consumingMiddlewares.GetEnumerator());
 
-            Bus.Advanced.Consume<TMessage>(pipeline.Queue, (message, messageInfo) => consumePipeline(message));
+            var subscription = Bus.Advanced.Consume<TMessage>(pipeline.Queue, (message, messageInfo) => consumePipeline(message));
+            _subscriptions.Add(subscription);
         }
 
 
@@ -660,5 +679,15 @@ namespace Byndyusoft.Net.RabbitMq.Services
         }
 
         #endregion
+
+        public void Dispose()
+        {
+            _subscriptions.ForEach(s => s.Dispose());
+            _subscriptions.Clear();
+
+            _bus?.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
     }
 }

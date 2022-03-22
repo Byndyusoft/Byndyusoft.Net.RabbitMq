@@ -1,14 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
-    <AssemblyName>Byndyusoft.Messaging.RabbitMq</AssemblyName>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
+		<AssemblyName>Byndyusoft.Messaging.RabbitMq</AssemblyName>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="EasyNetQ" Version="6.3.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.0.0" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="1.0.0" />
+		<PackageReference Include="EasyNetQ" Version="6.3.1" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Byndyusoft.Messaging.Core\Byndyusoft.Messaging.Core.csproj" />
+	</ItemGroup>
 
 </Project>

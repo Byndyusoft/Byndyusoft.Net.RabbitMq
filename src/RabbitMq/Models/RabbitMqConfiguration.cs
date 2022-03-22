@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using EasyNetQ.DI;
 
@@ -20,7 +20,7 @@ namespace Byndyusoft.Net.RabbitMq.Models
         /// <summary>
         ///     Connection string (for example 'host=localhost')
         /// </summary>
-        public string? ConnectionString { get; internal set; }
+        public string? ConnectionString { get; set; }
 
         /// <summary>
         ///     Configuration of exchanges of bound queues

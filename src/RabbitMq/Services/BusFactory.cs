@@ -1,4 +1,4 @@
-﻿using Byndyusoft.Net.RabbitMq.Abstractions;
+using Byndyusoft.Net.RabbitMq.Abstractions;
 using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
 
@@ -10,7 +10,9 @@ namespace Byndyusoft.Net.RabbitMq.Services
         /// <inheritdoc />
         public IBus CreateBus(RabbitMqConfiguration configuration)
         {
-            return RabbitHutch.CreateBus(configuration.ConnectionString, configuration.RegisterServices);
+            if (configuration.RegisterServices != null)
+                return RabbitHutch.CreateBus(configuration.ConnectionString, configuration.RegisterServices);
+            return RabbitHutch.CreateBus(configuration.ConnectionString);
         }
     }
 }
