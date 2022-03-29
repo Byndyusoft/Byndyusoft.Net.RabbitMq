@@ -83,11 +83,11 @@ namespace Byndyusoft.Messaging.Topology
         /// <param name="options">The options instance</param>
         /// <param name="deadLetterExchange">The deadLetterExchange to set</param>
         /// <returns>QueueOptions</returns>
-        public static QueueOptions WithDeadLetterExchange(this QueueOptions options, string deadLetterExchange)
+        public static QueueOptions WithDeadLetterExchange(this QueueOptions options, string? deadLetterExchange)
         {
             Preconditions.CheckNotNull(options, nameof(options));
 
-            return options.WithArgument("x-dead-letter-exchange", deadLetterExchange);
+            return options.WithArgument("x-dead-letter-exchange", deadLetterExchange ?? string.Empty);
         }
 
         /// <summary>

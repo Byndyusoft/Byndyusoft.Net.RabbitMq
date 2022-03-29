@@ -7,6 +7,8 @@ namespace Byndyusoft.Messaging.Abstractions
 {
     public interface IQueueService : IDisposable
     {
+        QueueServiceOptions Options { get; }
+
         Task<ConsumedQueueMessage?> GetAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task AckAsync(ConsumedQueueMessage message, CancellationToken cancellationToken = default);

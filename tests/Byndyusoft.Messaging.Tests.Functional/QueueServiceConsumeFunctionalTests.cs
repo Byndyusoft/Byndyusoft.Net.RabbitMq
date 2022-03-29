@@ -1,4 +1,3 @@
-using System.Text;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.Models;
 using EasyNetQ;
@@ -36,7 +35,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             //Act
             Message consumedMessage = null!;
-            _queueService.Subscribe<Message>((msg) => Task.FromResult(consumedMessage = msg));
+            _queueService.Subscribe<Message>(msg => Task.FromResult(consumedMessage = msg));
 
             var properties = new MessageProperties {Type = typeof(Message).AssemblyQualifiedName};
             var body = new JsonSerializer().MessageToBytes(typeof(Message), new Message {Content = content});

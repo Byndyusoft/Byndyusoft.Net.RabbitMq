@@ -121,9 +121,9 @@ namespace Byndyusoft.Messaging.Core
             return await QueueServiceActivitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    var result = await _onMessage(message, CancellationToken.None).ConfigureAwait(false);
-                    QueueServiceActivitySource.MessageConsumed(activity, message, result);
-                    return result;
+                    var consumeResult = await _onMessage(message, CancellationToken.None).ConfigureAwait(false);
+                    QueueServiceActivitySource.MessageConsumed(activity, message, consumeResult);
+                    return consumeResult;
                 });
         }
 

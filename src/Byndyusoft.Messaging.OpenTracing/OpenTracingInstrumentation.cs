@@ -24,6 +24,8 @@ namespace Byndyusoft.Messaging.OpenTracing
             ActivitySource.AddActivityListener(_listener);
         }
 
+        private ITracer Tracer => _tracer ?? GlobalTracer.Instance;
+
         public void Dispose()
         {
             _listener.Dispose();
@@ -43,15 +45,10 @@ namespace Byndyusoft.Messaging.OpenTracing
         {
             if (activity.GetCustomProperty("opentracing-span") is ISpan span)
             {
-                foreach (var tag in activity.Tags)
-                {
-                    span.SetTag(tag.Key, tag.Value);
-                }
+                foreach (var tag in activity.Tags) span.SetTag(tag.Key, tag.Value);
 
                 span.Finish();
             }
         }
-        
-        private ITracer Tracer => _tracer ?? GlobalTracer.Instance;
     }
 }

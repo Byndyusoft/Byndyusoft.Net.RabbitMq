@@ -4,7 +4,7 @@ using EasyNetQ;
 using EasyNetQ.Topology;
 
 namespace Byndyusoft.Messaging.Tests.Functional
-{ 
+{
     public class DisposableExchange : IExchange, IDisposable
     {
         private readonly IExchange _inner;
@@ -16,7 +16,6 @@ namespace Byndyusoft.Messaging.Tests.Functional
             _rabbit = rabbit;
         }
 
-        public string Name => _inner.Name;
         public string Type => _inner.Type;
         public bool IsDurable => _inner.IsDurable;
         public bool IsAutoDelete => _inner.IsAutoDelete;
@@ -26,5 +25,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
         {
             _rabbit.ExchangeDelete(_inner);
         }
+
+        public string Name => _inner.Name;
     }
 }

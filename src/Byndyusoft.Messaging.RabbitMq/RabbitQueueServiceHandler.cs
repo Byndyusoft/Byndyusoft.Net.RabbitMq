@@ -9,6 +9,7 @@ using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -18,25 +19,37 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly object _lock = new();
+        private readonly QueueServiceOptions _options;
         private readonly Dictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus _bus = default!;
         private bool _isInitialized;
 
-        public RabbitQueueServiceHandler(string connectionString)
-            : this(connectionString, new BusFactory())
+        internal RabbitQueueServiceHandler(string connectionString)
         {
             Preconditions.CheckNotNull(connectionString, nameof(connectionString));
 
+            _options = new QueueServiceOptions {ConnectionString = connectionString};
+            _busFactory = new BusFactory();
             _connectionConfiguration = new ConnectionStringParser().Parse(connectionString);
         }
 
-        public RabbitQueueServiceHandler(string connectionString, IBusFactory busFactory)
+        public RabbitQueueServiceHandler(IOptions<QueueServiceOptions> options, IBusFactory busFactory)
         {
-            Preconditions.CheckNotNull(connectionString, nameof(connectionString));
+            Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
-            _connectionConfiguration = new ConnectionStringParser().Parse(connectionString);
+            _options = options.Value;
+            _connectionConfiguration = new ConnectionStringParser().Parse(_options.ConnectionString);
             _busFactory = busFactory;
+        }
+
+        public QueueServiceOptions Options
+        {
+            get
+            {
+                Preconditions.CheckNotDisposed(this);
+                return _options;
+            }
         }
 
         public ConnectionConfiguration ConnectionConfiguration
@@ -140,18 +153,17 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             async Task<AckStrategy> OnMessage(byte[] body, MessageProperties properties, MessageReceivedInfo info)
             {
-                var consumedMessage = RabbitMessageConverter.CreateConsumedMessage(body, properties, info)!;
-                var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
-                    .ConfigureAwait(false);
-
-                return consumeResult switch
+                try
                 {
-                    ConsumeResult.Ack => AckStrategies.Ack,
-                    ConsumeResult.Error => throw new Exception(),
-                    ConsumeResult.RejectWithRequeue => AckStrategies.NackWithRequeue,
-                    ConsumeResult.RejectWithoutRequeue => AckStrategies.NackWithoutRequeue,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
+                    var consumedMessage = RabbitMessageConverter.CreateConsumedMessage(body, properties, info)!;
+                    var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
+                        .ConfigureAwait(false);
+                    return await HandleConsumeResultAsync(body, properties, info, consumeResult);
+                }
+                catch (Exception exception)
+                {
+                    return await HandleConsumeResultAsync(body, properties, info, ConsumeResult.Error, exception);
+                }
             }
 
             return _bus.Advanced.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
@@ -278,6 +290,49 @@ namespace Byndyusoft.Messaging.RabbitMq
             var queue = new Queue(queueName);
             await _bus.Advanced.BindAsync(exchange, queue, routingKey, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        private async Task<AckStrategy> HandleConsumeResultAsync(byte[] body, MessageProperties properties,
+            MessageReceivedInfo info, ConsumeResult consumeResult, Exception? exception = null)
+        {
+            if (consumeResult == ConsumeResult.RejectWithRequeue)
+                return AckStrategies.NackWithRequeue;
+            if (consumeResult == ConsumeResult.RejectWithoutRequeue)
+                return AckStrategies.NackWithoutRequeue;
+
+            if (consumeResult == ConsumeResult.Retry)
+            {
+                var retryQueueName = _options.RetryQueueName(info.Queue);
+                if (await QueueExistsAsync(retryQueueName).ConfigureAwait(false) == false)
+                    return AckStrategies.NackWithRequeue;
+
+                await _bus.Advanced.PublishAsync(Exchange.GetDefault(), retryQueueName, true, properties, body)
+                    .ConfigureAwait(false);
+            }
+
+            if (consumeResult == ConsumeResult.Error)
+            {
+                var errorQueueName = _options.ErrorQueueName(info.Queue);
+
+                if (await QueueExistsAsync(errorQueueName).ConfigureAwait(false) == false)
+                    await CreateQueueAsync(errorQueueName, QueueOptions.Default.AsDurable(true)).ConfigureAwait(false);
+
+                if (exception is not null)
+                {
+                    properties.Headers["exception-type"] = exception.GetType().FullName;
+                    properties.Headers["exception-message"] = exception.Message;
+                }
+
+                properties.Headers.Remove("x-death");
+                properties.Headers.Remove("x-first-death-exchange");
+                properties.Headers.Remove("x-first-death-queue");
+                properties.Headers.Remove("x-first-death-reason");
+
+                await _bus.Advanced.PublishAsync(Exchange.GetDefault(), errorQueueName, true, properties, body)
+                    .ConfigureAwait(false);
+            }
+
+            return AckStrategies.Ack;
         }
 
         private void Initialize()

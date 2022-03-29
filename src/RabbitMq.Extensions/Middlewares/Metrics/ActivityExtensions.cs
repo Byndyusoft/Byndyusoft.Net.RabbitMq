@@ -8,9 +8,9 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Metrics
     public static class ActivityExtensions
     {
         /// <summary>
-        ///    Name for baggage item with message type value
+        ///     Name for baggage item with message type value
         /// </summary>
-        private static string MessageTypeBaggageItemName = "MessageType";
+        private static readonly string MessageTypeBaggageItemName = "MessageType";
 
         /// <summary>
         ///     Sets message type for activity

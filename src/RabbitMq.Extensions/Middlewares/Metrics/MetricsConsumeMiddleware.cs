@@ -15,10 +15,10 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Metrics
         /// <summary>
         ///     Source for measuring consuming activity
         /// </summary>
-        private static readonly ActivitySource ActivitySource = new ActivitySource(nameof(MetricsConsumeMiddleware<TMessage>));
+        private static readonly ActivitySource ActivitySource = new(nameof(MetricsConsumeMiddleware<TMessage>));
 
         /// <summary>
-        ///     Adds measure to activity source 
+        ///     Adds measure to activity source
         /// </summary>
         /// <param name="message">Consuming message</param>
         /// <param name="next">Next middleware in a chain</param>

@@ -10,7 +10,6 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Metrics
     public class ConsumeListener : ActivityListenerBase
     {
         /// <summary>
-        ///     
         /// </summary>
         private readonly IConsumeMetricsHandler _consumeMetricsHandler;
 

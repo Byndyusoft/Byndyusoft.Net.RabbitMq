@@ -29,7 +29,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             var consumer = base.Subscribe(queueName, onMessage, false);
             consumer.OnStarting(async (_, handler, cancellationToken) =>
             {
-                await handler.CreateQueueIfNotExistsAsync(queueName, QueueOptions.Default, cancellationToken)
+                await handler
+                    .CreateQueueIfNotExistsAsync(queueName, options => { options.AsDurable(true); }, cancellationToken)
                     .ConfigureAwait(false);
             });
 

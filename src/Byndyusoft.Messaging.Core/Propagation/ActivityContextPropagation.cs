@@ -30,11 +30,11 @@ namespace Byndyusoft.Messaging.Propagation
             if (activity.ParentId is not null)
                 return;
 
-            if (message.Headers[PropagationHeaderNames.TraceParent] is string parentId) 
+            if (message.Headers[PropagationHeaderNames.TraceParent] is string parentId)
                 activity.SetParentId(parentId);
 
             activity.TraceStateString = message.Headers[PropagationHeaderNames.TraceState] as string;
-            
+
             if (message.Headers[PropagationHeaderNames.Baggage] is string baggageString)
                 foreach (var item in baggageString.Split(';'))
                     if (NameValueHeaderValue.TryParse(item, out NameValueHeaderValue baggageItem))

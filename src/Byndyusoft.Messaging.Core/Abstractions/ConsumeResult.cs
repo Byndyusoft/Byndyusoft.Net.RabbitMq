@@ -5,6 +5,7 @@ namespace Byndyusoft.Messaging.Abstractions
         Ack,
         RejectWithRequeue,
         RejectWithoutRequeue,
-        Error
+        Error,
+        Retry
     }
 }

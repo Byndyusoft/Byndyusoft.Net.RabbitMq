@@ -7,7 +7,6 @@ using Byndyusoft.Messaging.Abstractions;
 using Byndyusoft.Messaging.Core;
 using Byndyusoft.Messaging.OpenTracing;
 using Byndyusoft.Messaging.RabbitMq;
-using Byndyusoft.Messaging.Topology;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using OpenTelemetry;
@@ -20,7 +19,7 @@ namespace Byndyusoft.Net.RabbitMq
 {
     public class Message
     {
-        public string Property { get; set; }
+        public string Property { get; set; } = default!;
     }
 
     public static class Program
@@ -44,45 +43,21 @@ namespace Byndyusoft.Net.RabbitMq
                 .Build();
 
             var service = new ServiceCollection()
-                .AddRabbitQueueService("host=localhost;username=guest;password=guest")
+                .AddRabbitQueueService(options =>
+                {
+                    options.ConnectionString = "host=localhost;username=guest;password=guest";
+                    options.ApplicationName = "Byndyusoft.Net.RabbitMq";
+                })
                 .BuildServiceProvider()
                 .GetRequiredService<IRabbitQueueService>();
 
-
-            await service.CreateExchangeIfNotExistsAsync("exchange", ExchangeOptions.Default);
-
             var message = new QueueMessage
             {
-                RoutingKey = "dead",
+                RoutingKey = "queue",
                 Content = JsonContent.Create(new Message
                 {
                     Property = "property1"
                 }),
-                Properties = new QueueMessageProperties
-                {
-                    Expiration = TimeSpan.FromSeconds(10),
-                    Timestamp = DateTime.UtcNow,
-                    Priority = 3
-                },
-                Headers = new QueueMessageHeaders
-                {
-                    {"header-key", "header-value"}
-                }
-            };
-
-            var message2 = new QueueMessage
-            {
-                RoutingKey = "dead",
-                Content = JsonContent.Create(new Message
-                {
-                    Property = "property2"
-                }),
-                Properties = new QueueMessageProperties
-                {
-                    Expiration = TimeSpan.FromSeconds(5),
-                    Timestamp = DateTime.UtcNow,
-                    Priority = 9
-                },
                 Headers = new QueueMessageHeaders
                 {
                     {"header-key", "header-value"}
@@ -97,39 +72,27 @@ namespace Byndyusoft.Net.RabbitMq
             activity?.AddBaggage("baggage-key1", "baggage-value1");
             activity?.AddBaggage("baggage-key2", "baggage-value2");
 
-            await service.PublishBatchAsync(new[] {message, message2});
-
             service.Subscribe("queue",
                     async (queueMessage, cancellationToken) =>
                     {
+                        Console.WriteLine(queueMessage.RetryCount);
+
+                        if (queueMessage.RetryCount == 5)
+                            return ConsumeResult.Error;
+
                         var msg = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine(JsonConvert.SerializeObject(msg));
-                    })
-                .WithBindingToExchange("exchange", "routingKey");
 
-            service.Subscribe("queue2",
-                async (queueMessage, cancellationToken) =>
-                {
-                    var msg = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
-                    Console.WriteLine(JsonConvert.SerializeObject(msg));
-                });
+                        return ConsumeResult.Retry;
+                    })
+                .WithRetryTimeout(TimeSpan.FromSeconds(60));
+
+            await service.PublishBatchAsync(new[] {message});
+
             activity?.Dispose();
             span?.Dispose();
 
             Console.ReadKey();
-
-            //await Task.Delay(5000);
-
-            //while (true)
-            //{
-            //    var got = await service.GetAsync("queue2");
-            //    if (got is null)
-            //        break;
-
-            //    Console.WriteLine(JsonConvert.SerializeObject(got));
-
-            //    await service.AckAsync(got);
-            //}
         }
     }
 }

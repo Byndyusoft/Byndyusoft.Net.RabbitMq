@@ -14,26 +14,29 @@ namespace Byndyusoft.Messaging.Core
     public abstract class QueueService : Disposable, IQueueService
     {
         private readonly bool _disposeHandler;
+        private readonly QueueServiceOptions _options = default!;
         private IQueueServiceHandler _handler = default!;
 
-        protected QueueService()
+        private QueueService()
         {
         }
 
         protected QueueService(IQueueServiceHandler handler, bool disposeHandler = false)
+            : this()
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
 
             _handler = handler;
             _disposeHandler = disposeHandler;
+            _options = handler.Options;
         }
 
-        protected IQueueServiceHandler Handler
+        public QueueServiceOptions Options
         {
-            set
+            get
             {
-                Preconditions.CheckNotNull(value, nameof(Handler));
-                _handler = value;
+                Preconditions.CheckNotDisposed(this);
+                return _options;
             }
         }
 
@@ -135,7 +138,6 @@ namespace Byndyusoft.Messaging.Core
             try
             {
                 if (autoStart) consumer.Start();
-
                 return consumer;
             }
             catch
@@ -170,6 +172,7 @@ namespace Byndyusoft.Messaging.Core
             }
 
             message.Properties.Type ??= (message.Content as ObjectContent)?.ObjectType.FullName;
+            message.Properties.AppId ??= _options.ApplicationName;
         }
 
         private void SetConsumedMessageProperties(ConsumedQueueMessage? message)

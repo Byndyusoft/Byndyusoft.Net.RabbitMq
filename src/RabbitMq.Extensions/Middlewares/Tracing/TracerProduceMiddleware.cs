@@ -8,7 +8,7 @@ using OpenTracing;
 using OpenTracing.Propagation;
 
 namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
-{ 
+{
     /// <summary>
     ///     Middleware for tracing of producing messages
     /// </summary>

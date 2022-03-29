@@ -13,14 +13,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
     public abstract class QueueServiceFunctionalTests : IDisposable
     {
         private readonly IBus _bus;
-        protected readonly IAdvancedBus _rabbit;
-        protected readonly QueueService _queueService;
-        protected readonly RabbitMqConfiguration _configuration;
         protected readonly CancellationToken _cancellationToken = new();
+        protected readonly RabbitMqConfiguration _configuration;
+        protected readonly QueueService _queueService;
+        protected readonly IAdvancedBus _rabbit;
 
         public QueueServiceFunctionalTests()
         {
-            Mock<ITracer> tracerMock = new Mock<ITracer>();
+            Mock<ITracer> tracerMock = new();
             var span = Mock.Of<ISpan>();
             var spanBuilder = Mock.Of<ISpanBuilder>(builder => builder.Start() == span);
             tracerMock.SetupGet(tracer => tracer.ActiveSpan).Returns(span);

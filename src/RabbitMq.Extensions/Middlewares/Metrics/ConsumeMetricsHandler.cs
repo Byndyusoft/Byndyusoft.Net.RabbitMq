@@ -6,18 +6,18 @@ using Prometheus;
 
 namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Metrics
 {
-    /// <inheritdoc cref="IConsumeMetricsHandler"/>
+    /// <inheritdoc cref="IConsumeMetricsHandler" />
     public class ConsumeMetricsHandler : IConsumeMetricsHandler
     {
-        /// <summary>
-        ///     Tracer
-        /// </summary>
-        private readonly ITracer _tracer;
-        
         /// <summary>
         ///     Prometheus histogram for consuming messages duration
         /// </summary>
         private readonly Histogram _handleTimeHistogram;
+
+        /// <summary>
+        ///     Tracer
+        /// </summary>
+        private readonly ITracer _tracer;
 
         /// <summary>
         ///     Ctor
@@ -31,19 +31,15 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Metrics
                     $"Message processed duration in seconds by {GetServiceName()}",
                     new HistogramConfiguration
                     {
-                        Buckets = new double[] { 1, 2, 3, 5, 7, 10, 14, 20 },
-                        LabelNames = new[] { "message_type" }
+                        Buckets = new double[] {1, 2, 3, 5, 7, 10, 14, 20},
+                        LabelNames = new[] {"message_type"}
                     });
-
         }
 
         /// <inheritdoc />
         public void OnConsumed(string messageType, bool hasError, TimeSpan duration)
         {
-            if (hasError)
-            {
-                _tracer.ActiveSpan.SetTag(Tags.Error, true);
-            }
+            if (hasError) _tracer.ActiveSpan.SetTag(Tags.Error, true);
 
             SaveProcessingDuration(messageType, duration);
         }

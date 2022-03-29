@@ -16,9 +16,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             _rabbit = rabbit;
         }
 
-        public string Name => _inner.Name;
         public bool IsDurable => _inner.IsDurable;
-        public bool IsExclusive => _inner.IsExclusive;
         public bool IsAutoDelete => _inner.IsAutoDelete;
         public IDictionary<string, object> Arguments => _inner.Arguments;
 
@@ -26,5 +24,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
         {
             _rabbit.QueueDelete(_inner);
         }
+
+        public string Name => _inner.Name;
+        public bool IsExclusive => _inner.IsExclusive;
     }
 }

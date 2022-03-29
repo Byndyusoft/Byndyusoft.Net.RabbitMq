@@ -35,13 +35,16 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
         {
             _resendMessages = new Queue<TConsumeMessage>();
 
-            advancedBusMock.Setup(x => x.Consume(It.IsAny<IQueue>(), It.IsAny<Func<IMessage<TConsumeMessage>, MessageReceivedInfo, Task>>()))
-                .Callback((IQueue queue, Func<IMessage<TConsumeMessage>, MessageReceivedInfo, Task> processMessageFunc) => _consumePipeline = processMessageFunc);
+            advancedBusMock.Setup(x => x.Consume(It.IsAny<IQueue>(),
+                    It.IsAny<Func<IMessage<TConsumeMessage>, MessageReceivedInfo, Task>>()))
+                .Callback(
+                    (IQueue queue, Func<IMessage<TConsumeMessage>, MessageReceivedInfo, Task> processMessageFunc) =>
+                        _consumePipeline = processMessageFunc);
 
             modelMock.Setup(m => m.BasicGet(It.Is<string>(e => e.EndsWith(".error")), false))
                 .Returns(() =>
                 {
-                    if(_resendMessages.TryDequeue(out var msg) == false)
+                    if (_resendMessages.TryDequeue(out var msg) == false)
                         return null;
 
                     var jsonSerializer = new JsonSerializer();
@@ -61,10 +64,11 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
 
             var errorQueue = Mock.Of<IQueue>();
             var errorRoutingKey = ".error";
-            advancedBusMock.Setup(x => x.QueueDeclareAsync(It.Is<string>(e => e.EndsWith(errorRoutingKey)), false, true, false, false, null, null, null, null, null, null, null))
+            advancedBusMock.Setup(x => x.QueueDeclareAsync(It.Is<string>(e => e.EndsWith(errorRoutingKey)), false, true,
+                    false, false, null, null, null, null, null, null, null))
                 .ReturnsAsync(errorQueue);
 
-            advancedBusMock.Setup(bus => bus.MessageCount(errorQueue)).Returns(() => (uint)_resendMessages.Count);
+            advancedBusMock.Setup(bus => bus.MessageCount(errorQueue)).Returns(() => (uint) _resendMessages.Count);
         }
 
         /// <summary>
@@ -73,7 +77,7 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
         /// <param name="message">Incoming message</param>
         public Task ImitateIncoming(object message)
         {
-            return Imitate((TConsumeMessage)message);
+            return Imitate((TConsumeMessage) message);
         }
 
         /// <summary>

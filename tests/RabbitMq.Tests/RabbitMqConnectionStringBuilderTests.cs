@@ -1,12 +1,39 @@
 using System;
 using System.Collections.Generic;
-using Byndyusoft.Messaging.RabbitMq;
 using Xunit;
 
 namespace Byndyusoft.Net.RabbitMq.Tests
 {
-   public class RabbitMqConnectionStringBuilderTests
+    public class RabbitMqConnectionStringBuilderTests
     {
+        public static IEnumerable<object[]> Data =>
+            new List<object[]>
+            {
+                new object[]
+                {
+                    "host=myServer:1234;virtualHost=myVirtualHost;username=mike;password=topsecret;requestedHeartbeat=10;prefetchcount=20;timeout=30",
+                    new RabbitMqConnectionStringBuilder
+                    {
+                        Hosts = new List<RabbitMqHost> {new RabbitMqHost("myServer", 1234)},
+                        VirtualHost = "myVirtualHost",
+                        UserName = "mike",
+                        Password = "topsecret",
+                        RequestedHeartbeat = TimeSpan.FromSeconds(10),
+                        PrefetchCount = 20,
+                        ConnectionTimeout = TimeSpan.FromSeconds(30)
+                    }
+                },
+                new object[]
+                {
+                    "host=host1:1234,host2:5678",
+                    new RabbitMqConnectionStringBuilder
+                    {
+                        Hosts = new List<RabbitMqHost>
+                            {new RabbitMqHost("host1", 1234), new RabbitMqHost("host2", 5678)}
+                    }
+                }
+            };
+
         [Fact]
         public void Constructor_Default()
         {
@@ -55,32 +82,5 @@ namespace Byndyusoft.Net.RabbitMq.Tests
             Assert.Equal(expected.ConnectionTimeout, builder.ConnectionTimeout);
             Assert.Equal(expected.RequestedHeartbeat, builder.RequestedHeartbeat);
         }
-
-        public static IEnumerable<object[]> Data =>
-            new List<object[]>
-            {
-                new object[]
-                {
-                    "host=myServer:1234;virtualHost=myVirtualHost;username=mike;password=topsecret;requestedHeartbeat=10;prefetchcount=20;timeout=30",
-                    new RabbitMqConnectionStringBuilder
-                    {
-                        Hosts = new List<RabbitMqHost>{ new RabbitMqHost("myServer", 1234) },
-                        VirtualHost = "myVirtualHost",
-                        UserName = "mike",
-                        Password = "topsecret",
-                        RequestedHeartbeat = TimeSpan.FromSeconds(10),
-                        PrefetchCount = 20,
-                        ConnectionTimeout = TimeSpan.FromSeconds(30)
-                    }
-                },
-                new object[]
-                {
-                    "host=host1:1234,host2:5678",
-                    new RabbitMqConnectionStringBuilder
-                    {
-                        Hosts = new List<RabbitMqHost>{ new RabbitMqHost("host1", 1234), new RabbitMqHost("host2", 5678) }
-                    }
-                }
-            };
     }
 }

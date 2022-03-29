@@ -18,8 +18,8 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
     /// <typeparam name="TMessage">Consuming message type</typeparam>
     public sealed class TracerConsumeMiddleware<TMessage> : IConsumeMiddleware<TMessage> where TMessage : class
     {
-        private readonly ITracer _tracer;
         private readonly ILogger<TracerConsumeMiddleware<TMessage>> _logger;
+        private readonly ITracer _tracer;
 
         /// <summary>
         ///     Ctor
@@ -39,12 +39,18 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
         /// <param name="next">Next middleware in a chain</param>
         public async Task Handle(IMessage<TMessage> message, Func<IMessage<TMessage>, Task> next)
         {
-            var stringDictionary = message.Properties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
+            var stringDictionary = message.Properties.Headers.Where(x => x.Value.GetType() == typeof(byte[]))
+                .ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[]) x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
             var spanContext = _tracer.Extract(BuiltinFormats.HttpHeaders, textMapExtractAdapter);
 
-            using (_tracer.BuildSpan(nameof(Handle)).AddReference(References.FollowsFrom, spanContext).StartActive(true))
-            using (_logger.BeginScope(new[] { new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId), _tracer.ActiveSpan.Context.TraceId) }))
+            using (_tracer.BuildSpan(nameof(Handle)).AddReference(References.FollowsFrom, spanContext)
+                .StartActive(true))
+            using (_logger.BeginScope(new[]
+            {
+                new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId),
+                    _tracer.ActiveSpan.Context.TraceId)
+            }))
             {
                 var tryCount = 0;
 

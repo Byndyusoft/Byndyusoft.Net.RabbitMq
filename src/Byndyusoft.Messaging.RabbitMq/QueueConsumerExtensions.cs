@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
+using Byndyusoft.Messaging.Topology;
 using Byndyusoft.Messaging.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -21,6 +22,27 @@ namespace Byndyusoft.Messaging.RabbitMq
             return consumer;
         }
 
+        public static IQueueConsumer WithRetryTimeout(this IQueueConsumer consumer, TimeSpan delay)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+
+            var queueService = consumer.QueueService as IRabbitQueueService;
+            if (queueService is null)
+                return consumer;
+
+            var retryQueueName = queueService.Options.RetryQueueName(consumer.QueueName);
+            queueService.CreateQueueAsync(retryQueueName, options =>
+            {
+                options
+                    .AsDurable(true)
+                    .WithDeadLetterExchange(null)
+                    .WithDeadLetterRoutingKey(consumer.QueueName)
+                    .WithMessageTtl(delay);
+            }).GetAwaiter().GetResult();
+
+            return consumer;
+        }
+
         public static IQueueConsumer OnStarting(this IQueueConsumer consumer,
             Func<IQueueConsumer, IRabbitQueueService, CancellationToken, Task> handler)
         {
@@ -29,7 +51,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.Check(consumer.IsRunning == false, "Can't change running consumer");
 
             consumer.BeforeStart += async (c, h, ct) =>
-                await handler(consumer, (IRabbitQueueService) h, ct).ConfigureAwait(false);
+                await handler(c, (IRabbitQueueService) h, ct).ConfigureAwait(false);
             return consumer;
         }
 
@@ -50,7 +72,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.Check(consumer.IsRunning == false, "Can't change running consumer");
 
             consumer.AfterStop += async (c, h, ct) =>
-                await handler(consumer, (IRabbitQueueService) h, ct).ConfigureAwait(false);
+                await handler(c, (IRabbitQueueService) h, ct).ConfigureAwait(false);
             return consumer;
         }
 
@@ -60,7 +82,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(handler, nameof(handler));
 
-            consumer.OnStopped(async (c, h, _) => await handler(consumer, h).ConfigureAwait(false));
+            consumer.OnStopped(async (c, h, _) => await handler(c, h).ConfigureAwait(false));
             return consumer;
         }
     }

@@ -7,20 +7,32 @@ namespace Byndyusoft.Messaging.Abstractions
 {
     public class ConsumedQueueMessage : Disposable
     {
-        static ConsumedQueueMessage()
-        {
-            MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
-        }
-        
         private readonly string _consumerTag = default!;
         private readonly HttpContent? _content;
         private readonly ulong _deliveryTag;
-        private readonly string _exchange = default!;
+        private readonly string? _exchange;
         private readonly QueueMessageHeaders _headers = new();
         private readonly QueueMessageProperties _properties = new();
         private readonly string _queue = default!;
         private readonly bool _redelivered;
+        private readonly int? _retryCount;
         private readonly string _routingKey = default!;
+
+        static ConsumedQueueMessage()
+        {
+            MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
+        }
+
+        public int? RetryCount
+        {
+            get
+            {
+                Preconditions.CheckNotDisposed(this);
+                return _retryCount;
+            }
+            init => _retryCount = value;
+        }
+
 
         /// <summary>
         ///     Consumer (subscription) identifier
@@ -34,7 +46,7 @@ namespace Byndyusoft.Messaging.Abstractions
             }
             init
             {
-                Preconditions.CheckNotNull(value, nameof(Exchange));
+                Preconditions.CheckNotNull(value, nameof(ConsumerTag));
                 _consumerTag = value;
             }
         }
@@ -68,18 +80,14 @@ namespace Byndyusoft.Messaging.Abstractions
         /// <summary>
         ///     Exchange which routed this message
         /// </summary>
-        public string Exchange
+        public string? Exchange
         {
             get
             {
                 Preconditions.CheckNotDisposed(this);
                 return _exchange;
             }
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(Exchange));
-                _exchange = value;
-            }
+            init => _exchange = value;
         }
 
         /// <summary>
@@ -115,7 +123,6 @@ namespace Byndyusoft.Messaging.Abstractions
                 _queue = value;
             }
         }
-
 
         public QueueMessageProperties Properties
         {

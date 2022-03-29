@@ -56,6 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
+            var retryCount = GetRetryCount(messageProperties);
 
             return new ConsumedQueueMessage
             {
@@ -67,8 +68,20 @@ namespace Byndyusoft.Messaging.RabbitMq
                 RoutingKey = info.RoutingKey,
                 Exchange = info.Exchange,
                 Properties = properties,
-                Headers = headers
+                Headers = headers,
+                RetryCount = (int?) retryCount
             };
+        }
+
+        public static long? GetRetryCount(MessageProperties properties)
+        {
+            if (properties.Headers.TryGetValue("x-death", out var value))
+            {
+                var retryInfo = (IDictionary<string, object>) ((List<object>) value)[0];
+                return (long) retryInfo["count"];
+            }
+
+            return null;
         }
 
         public static QueueMessageHeaders CreateMessageHeaders(MessageProperties properties)

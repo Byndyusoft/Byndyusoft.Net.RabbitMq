@@ -19,8 +19,8 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
     /// <typeparam name="TMessage">Returned message type</typeparam>
     public sealed class TraceReturnedMiddleware<TMessage> : IReturnedMiddleware<TMessage> where TMessage : class
     {
-        private readonly ITracer _tracer;
         private readonly ILogger<TraceReturnedMiddleware<TMessage>> _logger;
+        private readonly ITracer _tracer;
 
         /// <summary>
         ///     Ctor
@@ -40,16 +40,22 @@ namespace Byndyusoft.Net.RabbitMq.Extensions.Middlewares.Tracing
         /// <param name="next">Next middleware in a chain</param>
         public async Task Handle(MessageReturnedEventArgs args, Func<MessageReturnedEventArgs, Task> next)
         {
-            var stringDictionary = args.MessageProperties.Headers.Where(x => x.Value.GetType() == typeof(byte[])).ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[])x.Value));
+            var stringDictionary = args.MessageProperties.Headers.Where(x => x.Value.GetType() == typeof(byte[]))
+                .ToDictionary(x => x.Key, x => Encoding.UTF8.GetString((byte[]) x.Value));
             var textMapExtractAdapter = new TextMapExtractAdapter(stringDictionary);
             var spanContext = _tracer.Extract(BuiltinFormats.HttpHeaders, textMapExtractAdapter);
 
             using (_tracer.BuildSpan(nameof(Handle)).AddReference(References.ChildOf, spanContext).StartActive(true))
-            using (_logger.BeginScope(new[] { new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId), _tracer.ActiveSpan.Context.TraceId) }))
+            using (_logger.BeginScope(new[]
+            {
+                new KeyValuePair<string, object>(nameof(_tracer.ActiveSpan.Context.TraceId),
+                    _tracer.ActiveSpan.Context.TraceId)
+            }))
             {
                 _tracer.ActiveSpan.SetTag(Tags.Error, true);
 
-                if (args.MessageProperties.Headers.TryGetValue(Consts.MessageKeyHeader, out var bytes) && bytes is byte[] value)
+                if (args.MessageProperties.Headers.TryGetValue(Consts.MessageKeyHeader, out var bytes) &&
+                    bytes is byte[] value)
                 {
                     var key = Encoding.UTF8.GetString(value);
 

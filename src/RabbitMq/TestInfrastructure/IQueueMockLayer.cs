@@ -10,7 +10,7 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
     ///     Allows to fake RabbitMQ rather than consume\produce handlers. Also provide abilities:
     ///     - imitate appearance of new message in incoming queue
     ///     - imitate resend messages from error queue
-    ///     - collect and verify produced messages 
+    ///     - collect and verify produced messages
     /// </remarks>
     public interface IQueueMockLayer
     {
@@ -18,7 +18,7 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
         ///     Factory of fake connections to RabbitMq
         /// </summary>
         /// <remarks>
-        ///     Should be injected to DI to substitute real <see cref="IBusFactory"/>  
+        ///     Should be injected to DI to substitute real <see cref="IBusFactory" />
         /// </remarks>
         IBusFactory BusFactory { get; }
 
@@ -29,7 +29,7 @@ namespace Byndyusoft.Net.RabbitMq.TestInfrastructure
         Task ImitateIncoming<TConsumeMessage>(TConsumeMessage message) where TConsumeMessage : class;
 
         /// <summary>
-        ///     Returns single produced of type from internal collection 
+        ///     Returns single produced of type from internal collection
         /// </summary>
         /// <typeparam name="TProduceMessage">Produces message type</typeparam>
         TProduceMessage DequeueProduced<TProduceMessage>() where TProduceMessage : class;
