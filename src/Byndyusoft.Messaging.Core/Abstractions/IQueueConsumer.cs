@@ -4,6 +4,12 @@ using System.Threading.Tasks;
 
 namespace Byndyusoft.Messaging.Abstractions
 {
+    public delegate Task BeforeQueueConsumerStartEventHandler(IQueueConsumer consumer, IQueueService queueService,
+        CancellationToken cancellationToken);
+
+    public delegate Task AfterQueueConsumerStopEventHandler(IQueueConsumer consumer, IQueueService queueService,
+        CancellationToken cancellationToken);
+
     public interface IQueueConsumer : IDisposable
     {
         string QueueName { get; }
@@ -12,9 +18,17 @@ namespace Byndyusoft.Messaging.Abstractions
 
         ushort? PrefetchCount { get; }
 
-        ValueTask<IQueueConsumer> StartAsync(CancellationToken cancellationToken = default);
+        public bool IsRunning { get; }
 
-        ValueTask<IQueueConsumer> StopAsync(CancellationToken cancellationToken = default);
+        public IQueueService QueueService { get; }
+
+        public event BeforeQueueConsumerStartEventHandler? BeforeStart;
+
+        public event AfterQueueConsumerStopEventHandler? AfterStop;
+
+        ValueTask StartAsync(CancellationToken cancellationToken = default);
+
+        ValueTask StopAsync(CancellationToken cancellationToken = default);
 
         /// <summary>Switch a consumer to exclusive mode</summary>
         IQueueConsumer WithExclusive(bool exclusive);

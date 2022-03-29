@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
@@ -44,7 +43,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public static Dictionary<string, object?> CreateRabbitMessageHeaders(QueueMessage message)
         {
-            return message.Headers.ToDictionary(x => x.Key, x => (object?) x.Value);
+            return message.Headers;
         }
 
         public static Task<byte[]> CreateRabbitMessageBodyAsync(QueueMessage message, CancellationToken _)

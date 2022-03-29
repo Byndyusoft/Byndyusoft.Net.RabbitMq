@@ -13,7 +13,6 @@ namespace Byndyusoft.Messaging.Core
             return queueService.Subscribe(queueName, handler.HandleAsync, autoStart);
         }
 
-
         public static IQueueConsumer Subscribe(this IQueueService queueService, string queueName,
             Func<ConsumedQueueMessage, CancellationToken, Task> onMessage, bool autoStart = true)
         {

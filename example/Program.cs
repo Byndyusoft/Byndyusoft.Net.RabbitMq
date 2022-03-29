@@ -1,19 +1,28 @@
 using System;
 using System.Diagnostics;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
 using Byndyusoft.Messaging.Core;
 using Byndyusoft.Messaging.OpenTracing;
 using Byndyusoft.Messaging.RabbitMq;
+using Byndyusoft.Messaging.Topology;
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTracing.Util;
+using Tracer = Jaeger.Tracer;
 
 namespace Byndyusoft.Net.RabbitMq
 {
+    public class Message
+    {
+        public string Property { get; set; }
+    }
+
     public static class Program
     {
         private static readonly ActivitySource ActivitySource = new(nameof(Program));
@@ -29,19 +38,25 @@ namespace Byndyusoft.Net.RabbitMq
                 {
                     jaeger.AgentHost = "localhost";
                     jaeger.AgentPort = 6831;
-
                 })
                 .AddOpenTracingExporter(QueueServiceActivitySource.Name)
                 .AddQueueServiceInstrumentation()
                 .Build();
 
-            var service = new RabbitQueueService("host=localhost;username=rabbitmq;password=rabbitmq");
+            var service = new ServiceCollection()
+                .AddRabbitQueueService("host=localhost;username=guest;password=guest")
+                .BuildServiceProvider()
+                .GetRequiredService<IRabbitQueueService>();
+
+
+            await service.CreateExchangeIfNotExistsAsync("exchange", ExchangeOptions.Default);
+
             var message = new QueueMessage
             {
                 RoutingKey = "dead",
-                Content = JsonContent.Create(new
+                Content = JsonContent.Create(new Message
                 {
-                    Property1 = "property1"
+                    Property = "property1"
                 }),
                 Properties = new QueueMessageProperties
                 {
@@ -58,9 +73,9 @@ namespace Byndyusoft.Net.RabbitMq
             var message2 = new QueueMessage
             {
                 RoutingKey = "dead",
-                Content = JsonContent.Create(new
+                Content = JsonContent.Create(new Message
                 {
-                    Property1 = "property2"
+                    Property = "property2"
                 }),
                 Properties = new QueueMessageProperties
                 {
@@ -74,9 +89,7 @@ namespace Byndyusoft.Net.RabbitMq
                 }
             };
 
-
-
-            GlobalTracer.Register(new Jaeger.Tracer.Builder("Byndyusoft.Net.RabbitMq").Build());
+            GlobalTracer.Register(new Tracer.Builder("Byndyusoft.Net.RabbitMq").Build());
 
             var span = GlobalTracer.Instance.BuildSpan(nameof(Main)).StartActive(true);
 
@@ -84,13 +97,22 @@ namespace Byndyusoft.Net.RabbitMq
             activity?.AddBaggage("baggage-key1", "baggage-value1");
             activity?.AddBaggage("baggage-key2", "baggage-value2");
 
-            await service.PublishBatchAsync(new[]{message, message2});
+            await service.PublishBatchAsync(new[] {message, message2});
 
-            service.Subscribe("queue", async (queueMessage, _) =>
-            {
-                Console.WriteLine(await queueMessage.Content.ReadAsStringAsync());
-            });
+            service.Subscribe("queue",
+                    async (queueMessage, cancellationToken) =>
+                    {
+                        var msg = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
+                        Console.WriteLine(JsonConvert.SerializeObject(msg));
+                    })
+                .WithBindingToExchange("exchange", "routingKey");
 
+            service.Subscribe("queue2",
+                async (queueMessage, cancellationToken) =>
+                {
+                    var msg = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
+                    Console.WriteLine(JsonConvert.SerializeObject(msg));
+                });
             activity?.Dispose();
             span?.Dispose();
 

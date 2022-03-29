@@ -11,19 +11,35 @@ namespace Byndyusoft.Messaging.Core
         private readonly IQueueServiceHandler _handler;
         private readonly Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> _onMessage;
         private readonly string _queueName;
+        private readonly IQueueService _service;
         private IDisposable? _consumer;
         private bool? _exclusive;
         private ushort? _prefetchCount;
 
-        public QueueConsumer(IQueueServiceHandler handler, string queueName,
+        public QueueConsumer(IQueueService service, IQueueServiceHandler handler, string queueName,
             Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
+            _service = service;
             _handler = handler;
             _onMessage = onMessage;
             _queueName = queueName;
         }
 
-        private bool IsStarted => _consumer is not null;
+        public bool IsRunning => _consumer is not null;
+
+        public event BeforeQueueConsumerStartEventHandler? BeforeStart;
+
+        public event AfterQueueConsumerStopEventHandler? AfterStop;
+
+        public IQueueService QueueService
+        {
+            get
+            {
+                Preconditions.CheckNotDisposed(this);
+                return _service;
+            }
+        }
+
 
         /// <inheritdoc />
         public string QueueName
@@ -56,33 +72,34 @@ namespace Byndyusoft.Messaging.Core
         }
 
         /// <inheritdoc />
-        public ValueTask<IQueueConsumer> StartAsync(CancellationToken cancellationToken = default)
+        public async ValueTask StartAsync(CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
 
-            if (IsStarted == false) _consumer = _handler.Consume(QueueName, _exclusive, _prefetchCount, OnMessage);
-
-            return new ValueTask<IQueueConsumer>(this);
+            if (IsRunning == false)
+            {
+                await OnBeforeStartAsync(cancellationToken).ConfigureAwait(false);
+                _consumer = _handler.Consume(QueueName, _exclusive, _prefetchCount, OnMessage);
+            }
         }
 
         /// <inheritdoc />
-        public ValueTask<IQueueConsumer> StopAsync(CancellationToken cancellationToken = default)
+        public async ValueTask StopAsync(CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
 
-            if (IsStarted)
+            if (IsRunning)
             {
+                await OnAfterStopAsync(cancellationToken).ConfigureAwait(false);
                 _consumer?.Dispose();
                 _consumer = null;
             }
-
-            return new ValueTask<IQueueConsumer>(this);
         }
 
         /// <inheritdoc />
         public IQueueConsumer WithExclusive(bool exclusive)
         {
-            Preconditions.Check(IsStarted == false, "Can't change exclusive mode for started consumer");
+            Preconditions.Check(IsRunning == false, "Can't change exclusive mode for started consumer");
 
             _exclusive = exclusive;
             return this;
@@ -91,7 +108,7 @@ namespace Byndyusoft.Messaging.Core
         /// <inheritdoc />
         public IQueueConsumer WithPrefetchCount(ushort prefetchCount)
         {
-            Preconditions.Check(IsStarted == false, "Can't change prefetch count for started consumer");
+            Preconditions.Check(IsRunning == false, "Can't change prefetch count for started consumer");
 
             _prefetchCount = prefetchCount;
             return this;
@@ -108,6 +125,20 @@ namespace Byndyusoft.Messaging.Core
                     QueueServiceActivitySource.MessageConsumed(activity, message, result);
                     return result;
                 });
+        }
+
+        private async Task OnBeforeStartAsync(CancellationToken cancellationToken)
+        {
+            if (BeforeStart is not null)
+                await BeforeStart(this, _service, cancellationToken)
+                    .ConfigureAwait(false);
+        }
+
+        private async Task OnAfterStopAsync(CancellationToken cancellationToken)
+        {
+            if (AfterStop is not null)
+                await AfterStop(this, _service, cancellationToken)
+                    .ConfigureAwait(false);
         }
 
         protected override void Dispose(bool disposing)

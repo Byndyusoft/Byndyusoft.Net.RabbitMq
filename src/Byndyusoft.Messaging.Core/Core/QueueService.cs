@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
@@ -11,17 +13,19 @@ namespace Byndyusoft.Messaging.Core
 {
     public abstract class QueueService : Disposable, IQueueService
     {
+        private readonly bool _disposeHandler;
         private IQueueServiceHandler _handler = default!;
 
         protected QueueService()
         {
         }
 
-        protected QueueService(IQueueServiceHandler handler)
+        protected QueueService(IQueueServiceHandler handler, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
 
-            Handler = handler;
+            _handler = handler;
+            _disposeHandler = disposeHandler;
         }
 
         protected IQueueServiceHandler Handler
@@ -33,7 +37,7 @@ namespace Byndyusoft.Messaging.Core
             }
         }
 
-        public async Task<ConsumedQueueMessage?> GetAsync(string queueName,
+        public virtual async Task<ConsumedQueueMessage?> GetAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -45,12 +49,13 @@ namespace Byndyusoft.Messaging.Core
             {
                 var message = await _handler.GetAsync(queueName, cancellationToken)
                     .ConfigureAwait(false);
+                SetConsumedMessageProperties(message);
                 QueueServiceActivitySource.MessageGot(activity, message);
                 return message;
             });
         }
 
-        public async Task AckAsync(ConsumedQueueMessage message, CancellationToken cancellationToken = default)
+        public virtual async Task AckAsync(ConsumedQueueMessage message, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
@@ -64,7 +69,7 @@ namespace Byndyusoft.Messaging.Core
             });
         }
 
-        public async Task RejectAsync(ConsumedQueueMessage message, bool requeue = false,
+        public virtual async Task RejectAsync(ConsumedQueueMessage message, bool requeue = false,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
@@ -79,7 +84,7 @@ namespace Byndyusoft.Messaging.Core
             });
         }
 
-        public async Task PublishAsync(QueueMessage message, CancellationToken cancellationToken = default)
+        public virtual async Task PublishAsync(QueueMessage message, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
@@ -95,7 +100,7 @@ namespace Byndyusoft.Messaging.Core
             });
         }
 
-        public async Task PublishBatchAsync(IReadOnlyCollection<QueueMessage> messages,
+        public virtual async Task PublishBatchAsync(IReadOnlyCollection<QueueMessage> messages,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(messages, nameof(messages));
@@ -112,7 +117,7 @@ namespace Byndyusoft.Messaging.Core
             });
         }
 
-        public IQueueConsumer Subscribe(string queueName,
+        public virtual IQueueConsumer Subscribe(string queueName,
             Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage, bool autoStart = true)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -120,19 +125,34 @@ namespace Byndyusoft.Messaging.Core
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(_handler, nameof(QueueService), "Handler should be provided");
 
-            var consumer = new QueueConsumer(_handler, queueName, onMessage);
-            if (autoStart)
-                consumer.StartAsync().GetAwaiter().GetResult();
-            return consumer;
+            async Task<ConsumeResult> OnMessage(ConsumedQueueMessage message, CancellationToken cancellationToken)
+            {
+                SetConsumedMessageProperties(message);
+                return await onMessage(message, cancellationToken).ConfigureAwait(false);
+            }
+
+            var consumer = new QueueConsumer(this, _handler, queueName, OnMessage);
+            try
+            {
+                if (autoStart) consumer.Start();
+
+                return consumer;
+            }
+            catch
+            {
+                consumer.Dispose();
+                throw;
+            }
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
-            {
-                _handler.Dispose();
-                _handler = null!;
-            }
+                if (_disposeHandler)
+                {
+                    _handler.Dispose();
+                    _handler = null!;
+                }
 
             base.Dispose(disposing);
         }
@@ -141,7 +161,29 @@ namespace Byndyusoft.Messaging.Core
         {
             message.Properties.ContentEncoding ??= message.Content.Headers.ContentEncoding?.FirstOrDefault();
             message.Properties.ContentType ??= message.Content.Headers.ContentType?.MediaType;
+
+            if (message.Properties.Type is null)
+            {
+                var objectType = (message.Content as ObjectContent)?.ObjectType ??
+                                 (message.Content as JsonContent)?.ObjectType;
+                if (objectType is not null) message.Properties.Type = $"{objectType.Name}, {objectType.Namespace}";
+            }
+
             message.Properties.Type ??= (message.Content as ObjectContent)?.ObjectType.FullName;
+        }
+
+        private void SetConsumedMessageProperties(ConsumedQueueMessage? message)
+        {
+            if (message is null)
+                return;
+
+            var properties = message.Properties;
+            var content = message.Content;
+
+            if (properties.ContentType is not null)
+                content.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
+
+            if (properties.ContentEncoding is not null) content.Headers.ContentEncoding.Add(properties.ContentEncoding);
         }
     }
 }

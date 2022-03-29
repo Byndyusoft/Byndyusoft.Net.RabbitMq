@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace Byndyusoft.Messaging.Serialization
 {
-    public static class JsonConvert
+    internal static class JsonConvert
     {
         private static readonly JsonSerializerOptions Options = new()
         {
@@ -13,7 +13,6 @@ namespace Byndyusoft.Messaging.Serialization
 
         public static string Serialize(object value)
         {
-
             return JsonSerializer.Serialize(value, Options);
         }
     }

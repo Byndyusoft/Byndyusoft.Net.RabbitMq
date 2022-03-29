@@ -1,14 +1,19 @@
 using Byndyusoft.Messaging.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
+using Byndyusoft.Messaging.RabbitMq;
 
-namespace Byndyusoft.Messaging.RabbitMq.DependencyInjection
+// ReSharper disable once CheckNamespace
+namespace Microsoft.Extensions.DependencyInjection
 {
     public static class RabbitQueueServiceCollectionExtensions
     {
         public static IServiceCollection AddRabbitQueueService(this IServiceCollection services,
             string connectionString)
         {
+            services.AddSingleton<IBusFactory, BusFactory>();
             services.AddSingleton<IQueueService, RabbitQueueService>();
+            services.AddSingleton<IRabbitQueueService, RabbitQueueService>();
+            services.AddTransient<IRabbitQueueServiceHandler>(sp =>
+                new RabbitQueueServiceHandler(connectionString, sp.GetService<IBusFactory>()));
 
             return services;
         }

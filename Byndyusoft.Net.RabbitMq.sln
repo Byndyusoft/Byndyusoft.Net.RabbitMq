@@ -56,7 +56,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.Rabbit
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.Core", "src\Byndyusoft.Messaging.Core\Byndyusoft.Messaging.Core.csproj", "{DD07D194-DF0D-4C90-A0D3-083034300715}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Messaging.OpenTracing", "src\Byndyusoft.Messaging.OpenTracing\Byndyusoft.Messaging.OpenTracing.csproj", "{9FE65580-08F8-4957-A370-5DB3006A84D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.OpenTracing", "src\Byndyusoft.Messaging.OpenTracing\Byndyusoft.Messaging.OpenTracing.csproj", "{9FE65580-08F8-4957-A370-5DB3006A84D2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
