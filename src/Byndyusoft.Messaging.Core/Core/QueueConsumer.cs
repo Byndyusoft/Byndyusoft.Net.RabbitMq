@@ -39,8 +39,7 @@ namespace Byndyusoft.Messaging.Core
                 return _service;
             }
         }
-
-
+        
         /// <inheritdoc />
         public string QueueName
         {
@@ -130,14 +129,14 @@ namespace Byndyusoft.Messaging.Core
         private async Task OnBeforeStartAsync(CancellationToken cancellationToken)
         {
             if (BeforeStart is not null)
-                await BeforeStart(this, _service, cancellationToken)
+                await BeforeStart(this, cancellationToken)
                     .ConfigureAwait(false);
         }
 
         private async Task OnAfterStopAsync(CancellationToken cancellationToken)
         {
             if (AfterStop is not null)
-                await AfterStop(this, _service, cancellationToken)
+                await AfterStop(this, cancellationToken)
                     .ConfigureAwait(false);
         }
 

@@ -22,6 +22,6 @@ namespace Byndyusoft.Messaging.Abstractions
             CancellationToken cancellationToken = default);
 
         IQueueConsumer Subscribe(string queueName,
-            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage, bool autoStart = true);
+            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage);
     }
 }

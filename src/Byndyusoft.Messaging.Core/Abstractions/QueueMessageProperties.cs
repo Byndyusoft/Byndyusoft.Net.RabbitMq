@@ -2,7 +2,7 @@ using System;
 
 namespace Byndyusoft.Messaging.Abstractions
 {
-    public class QueueMessageProperties //: IEnumerable<KeyValuePair<string, object?>>
+    public class QueueMessageProperties
     {
         /// <summary>
         ///     Application Id.
@@ -58,24 +58,5 @@ namespace Byndyusoft.Messaging.Abstractions
         ///     User Id.
         /// </summary>
         public string? UserId { get; set; }
-
-        //public IEnumerator<KeyValuePair<string, object?>> GetEnumerator()
-        //{
-        //    yield return new KeyValuePair<string, object?>(nameof(ContentType), ContentType);
-        //    yield return new KeyValuePair<string, object?>(nameof(ContentEncoding), ContentEncoding);
-        //    yield return new KeyValuePair<string, object?>(nameof(Priority), Priority);
-        //    yield return new KeyValuePair<string, object?>(nameof(CorrelationId), CorrelationId);
-        //    yield return new KeyValuePair<string, object?>(nameof(ReplyTo), ReplyTo);
-        //    yield return new KeyValuePair<string, object?>(nameof(Type), Type);
-        //    yield return new KeyValuePair<string, object?>(nameof(MessageId), MessageId);
-        //    yield return new KeyValuePair<string, object?>(nameof(Expiration), Expiration);
-        //    yield return new KeyValuePair<string, object?>(nameof(Timestamp), Timestamp);
-        //    yield return new KeyValuePair<string, object?>(nameof(UserId), UserId);
-        //}
-
-        //IEnumerator IEnumerable.GetEnumerator()
-        //{
-        //    return GetEnumerator();
-        //}
     }
 }

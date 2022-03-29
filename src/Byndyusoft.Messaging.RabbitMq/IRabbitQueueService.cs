@@ -1,7 +1,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
-using Byndyusoft.Messaging.Topology;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {

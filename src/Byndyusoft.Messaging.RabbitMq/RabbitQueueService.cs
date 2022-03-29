@@ -3,7 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
 using Byndyusoft.Messaging.Core;
-using Byndyusoft.Messaging.Topology;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -16,35 +16,15 @@ namespace Byndyusoft.Messaging.RabbitMq
             : base(new RabbitQueueServiceHandler(connectionString), true)
         {
         }
+        public RabbitQueueService(QueueServiceOptions options)
+            : base(new RabbitQueueServiceHandler(options), true)
+        {
+        }
 
         public RabbitQueueService(IRabbitQueueServiceHandler handler)
             : base(handler)
         {
             _handler = handler;
-        }
-
-        public override IQueueConsumer Subscribe(string queueName,
-            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage, bool autoStart = true)
-        {
-            var consumer = base.Subscribe(queueName, onMessage, false);
-            consumer.OnStarting(async (_, handler, cancellationToken) =>
-            {
-                await handler
-                    .CreateQueueIfNotExistsAsync(queueName, options => { options.AsDurable(true); }, cancellationToken)
-                    .ConfigureAwait(false);
-            });
-
-            try
-            {
-                if (autoStart)
-                    consumer.Start();
-                return consumer;
-            }
-            catch
-            {
-                consumer.Dispose();
-                throw;
-            }
         }
 
         public async Task CreateQueueAsync(string queueName, QueueOptions options,

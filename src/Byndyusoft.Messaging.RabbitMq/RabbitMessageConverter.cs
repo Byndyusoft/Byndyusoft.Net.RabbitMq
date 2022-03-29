@@ -69,11 +69,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 Exchange = info.Exchange,
                 Properties = properties,
                 Headers = headers,
-                RetryCount = (int?) retryCount
+                RetryCount = (int) retryCount
             };
         }
 
-        public static long? GetRetryCount(MessageProperties properties)
+        public static long GetRetryCount(MessageProperties properties)
         {
             if (properties.Headers.TryGetValue("x-death", out var value))
             {
@@ -81,7 +81,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 return (long) retryInfo["count"];
             }
 
-            return null;
+            return 0;
         }
 
         public static QueueMessageHeaders CreateMessageHeaders(MessageProperties properties)

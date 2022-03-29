@@ -15,7 +15,7 @@ namespace Byndyusoft.Messaging.Abstractions
         private readonly QueueMessageProperties _properties = new();
         private readonly string _queue = default!;
         private readonly bool _redelivered;
-        private readonly int? _retryCount;
+        private readonly int _retryCount;
         private readonly string _routingKey = default!;
 
         static ConsumedQueueMessage()
@@ -23,7 +23,7 @@ namespace Byndyusoft.Messaging.Abstractions
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
         }
 
-        public int? RetryCount
+        public int RetryCount
         {
             get
             {

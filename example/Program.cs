@@ -12,8 +12,6 @@ using Newtonsoft.Json;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
-using OpenTracing.Util;
-using Tracer = Jaeger.Tracer;
 
 namespace Byndyusoft.Net.RabbitMq
 {
@@ -51,48 +49,115 @@ namespace Byndyusoft.Net.RabbitMq
                 .BuildServiceProvider()
                 .GetRequiredService<IRabbitQueueService>();
 
-            var message = new QueueMessage
-            {
-                RoutingKey = "queue",
-                Content = JsonContent.Create(new Message
-                {
-                    Property = "property1"
-                }),
-                Headers = new QueueMessageHeaders
-                {
-                    {"header-key", "header-value"}
-                }
-            };
+            await SubscribeExchangeExample(service);
+            await SubscribeAsJsonExample(service);
+            await RetryAndErrorExample(service);
+            await PullingExample(service);
 
-            GlobalTracer.Register(new Tracer.Builder("Byndyusoft.Net.RabbitMq").Build());
+            Console.ReadKey();
+        }
 
-            var span = GlobalTracer.Instance.BuildSpan(nameof(Main)).StartActive(true);
+        public static async Task SubscribeExchangeExample(IRabbitQueueService service)
+        {
+            await service.CreateExchangeIfNotExistsAsync("exchange", ex =>  ex.AsAutoDelete(true));
+            
+            var message = new Message {Property = "exchange-example"};
 
-            using var activity = ActivitySource.StartActivity(nameof(Main));
-            activity?.AddBaggage("baggage-key1", "baggage-value1");
-            activity?.AddBaggage("baggage-key2", "baggage-value2");
-
-            service.Subscribe("queue",
+            service.Subscribe("exchange", "routingKey",
                     async (queueMessage, cancellationToken) =>
                     {
-                        Console.WriteLine(queueMessage.RetryCount);
+                        var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
+                        Console.WriteLine(JsonConvert.SerializeObject(model));
+                        return ConsumeResult.Ack;
+                    })
+                .WithErrorQueue(option => option.AsAutoDelete(true))
+                .WithQueue(options => options.AsAutoDelete(true))
+                .WithRetryQueue(TimeSpan.FromSeconds(60), options =>  options.AsAutoDelete(true))
+                .Start();
+
+            await service.PublishAsJsonAsync("exchange", "routingKey", message);
+        }
+
+        public static async Task PullingExample(IRabbitQueueService service)
+        {
+            var queueName = Guid.NewGuid().ToString();
+            await service.CreateQueueAsync(queueName, options =>  options.AsAutoDelete(true) );
+
+            var getTask = Task.Run(async () =>
+            {
+                while (true)
+                {
+                    var message = await service.GetAsync(queueName);
+                    if (message is not null)
+                    {
+                        var model = await message.Content.ReadFromJsonAsync<Message>();
+                        Console.WriteLine(JsonConvert.SerializeObject(model));
+                        await service.AckAsync(message);
+                    }
+                    else
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(5));
+                    }
+                }
+            });
+
+            var publishTask = Task.Run(async () =>
+            {
+                var rand = new Random();
+                while (true)
+                {
+                    var model = new Message {Property = "pulling-example"};
+                    await service.PublishAsJsonAsync(null, queueName, model);
+                    await Task.Delay(TimeSpan.FromSeconds(rand.Next(3, 10)));
+                }
+            });
+        }
+
+        public static async Task SubscribeAsJsonExample(IRabbitQueueService service)
+        {
+            var queueName = Guid.NewGuid().ToString();
+
+            var message = new Message {Property = "json-example"};
+
+            service.SubscribeAsJson<Message>(queueName,
+                (msg, _) =>
+                {
+                    Console.WriteLine(JsonConvert.SerializeObject(msg));
+                    return Task.CompletedTask;
+                })
+                .WithQueue(options => options.AsAutoDelete(true))
+                .Start();
+
+
+            await service.PublishAsJsonAsync(null, queueName, message);
+        }
+
+        public static async Task RetryAndErrorExample(IRabbitQueueService service)
+        {
+            var queueName = Guid.NewGuid().ToString();
+          
+            var message = new QueueMessage
+            {
+                RoutingKey = queueName,
+                Content = JsonContent.Create(new Message {Property = "retry-example"})
+            };
+
+            service.Subscribe(queueName,
+                    async (queueMessage, cancellationToken) =>
+                    {
+                        var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
+                        Console.WriteLine($"{JsonConvert.SerializeObject(model)}, Retried: {queueMessage.RetryCount}");
 
                         if (queueMessage.RetryCount == 5)
                             return ConsumeResult.Error;
-
-                        var msg = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
-                        Console.WriteLine(JsonConvert.SerializeObject(msg));
-
                         return ConsumeResult.Retry;
                     })
-                .WithRetryTimeout(TimeSpan.FromSeconds(60));
+                .WithQueue(options => options.AsAutoDelete(true))
+                .WithErrorQueue(option => option.AsAutoDelete(true))
+                .WithRetryQueue(TimeSpan.FromSeconds(60), options => options.AsAutoDelete(true))
+                .Start();
 
-            await service.PublishBatchAsync(new[] {message});
-
-            activity?.Dispose();
-            span?.Dispose();
-
-            Console.ReadKey();
+            await service.PublishAsync(message);
         }
     }
 }

@@ -1,10 +1,10 @@
 using System.Collections.Generic;
 
-namespace Byndyusoft.Messaging.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class QueueOptions
     {
-        public static QueueOptions Default => new();
+        public static QueueOptions Default => new QueueOptions().AsDurable(true);
 
         public QueueType Type { get; set; } = QueueType.Classic;
 

@@ -17,7 +17,11 @@ namespace Byndyusoft.Messaging.Propagation
                 .Select(pair => new NameValueHeaderValue(pair.Key, WebUtility.UrlEncode(pair.Value)).ToString())
                 .ToArray();
 
-            message.Headers[PropagationHeaderNames.TraceState] = activity.TraceStateString;
+            if (activity.TraceStateString is not null)
+            {
+                message.Headers[PropagationHeaderNames.TraceState] = activity.TraceStateString;
+            }
+
             message.Headers[PropagationHeaderNames.TraceParent] = activity.Id;
             message.Headers[PropagationHeaderNames.Baggage] = string.Join(";", baggage);
         }

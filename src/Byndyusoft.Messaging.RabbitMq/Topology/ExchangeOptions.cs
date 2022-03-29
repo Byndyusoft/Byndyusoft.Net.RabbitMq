@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Byndyusoft.Messaging.Utils;
 
-namespace Byndyusoft.Messaging.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class ExchangeOptions
     {

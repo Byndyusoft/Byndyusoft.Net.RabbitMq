@@ -121,7 +121,7 @@ namespace Byndyusoft.Messaging.Core
         }
 
         public virtual IQueueConsumer Subscribe(string queueName,
-            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage, bool autoStart = true)
+            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
@@ -134,17 +134,7 @@ namespace Byndyusoft.Messaging.Core
                 return await onMessage(message, cancellationToken).ConfigureAwait(false);
             }
 
-            var consumer = new QueueConsumer(this, _handler, queueName, OnMessage);
-            try
-            {
-                if (autoStart) consumer.Start();
-                return consumer;
-            }
-            catch
-            {
-                consumer.Dispose();
-                throw;
-            }
+            return new QueueConsumer(this, _handler, queueName, OnMessage);
         }
 
         protected override void Dispose(bool disposing)
@@ -168,7 +158,7 @@ namespace Byndyusoft.Messaging.Core
             {
                 var objectType = (message.Content as ObjectContent)?.ObjectType ??
                                  (message.Content as JsonContent)?.ObjectType;
-                if (objectType is not null) message.Properties.Type = $"{objectType.Name}, {objectType.Namespace}";
+                if (objectType is not null) message.Properties.Type = objectType.FullName;
             }
 
             message.Properties.Type ??= (message.Content as ObjectContent)?.ObjectType.FullName;

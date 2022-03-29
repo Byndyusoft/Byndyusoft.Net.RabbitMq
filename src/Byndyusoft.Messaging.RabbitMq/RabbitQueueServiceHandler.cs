@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
-using Byndyusoft.Messaging.Topology;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Utils;
 using EasyNetQ;
 using EasyNetQ.ConnectionString;
@@ -24,13 +24,22 @@ namespace Byndyusoft.Messaging.RabbitMq
         private IBus _bus = default!;
         private bool _isInitialized;
 
-        internal RabbitQueueServiceHandler(string connectionString)
+        public RabbitQueueServiceHandler(string connectionString)
         {
             Preconditions.CheckNotNull(connectionString, nameof(connectionString));
 
-            _options = new QueueServiceOptions {ConnectionString = connectionString};
+            _options = new QueueServiceOptions { ConnectionString = connectionString};
             _busFactory = new BusFactory();
             _connectionConfiguration = new ConnectionStringParser().Parse(connectionString);
+        }
+
+        public RabbitQueueServiceHandler(QueueServiceOptions options)
+        {
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            _options = options;
+            _busFactory = new BusFactory();
+            _connectionConfiguration = new ConnectionStringParser().Parse(options.ConnectionString);
         }
 
         public RabbitQueueServiceHandler(IOptions<QueueServiceOptions> options, IBusFactory busFactory)
@@ -158,11 +167,13 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var consumedMessage = RabbitMessageConverter.CreateConsumedMessage(body, properties, info)!;
                     var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
                         .ConfigureAwait(false);
-                    return await HandleConsumeResultAsync(body, properties, info, consumeResult);
+                    return await HandleConsumeResultAsync(body, properties, info, consumeResult)
+                        .ConfigureAwait(false);
                 }
                 catch (Exception exception)
                 {
-                    return await HandleConsumeResultAsync(body, properties, info, ConsumeResult.Error, exception);
+                    return await HandleConsumeResultAsync(body, properties, info, ConsumeResult.Error, exception)
+                        .ConfigureAwait(false);
                 }
             }
 
@@ -315,7 +326,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 var errorQueueName = _options.ErrorQueueName(info.Queue);
 
                 if (await QueueExistsAsync(errorQueueName).ConfigureAwait(false) == false)
-                    await CreateQueueAsync(errorQueueName, QueueOptions.Default.AsDurable(true)).ConfigureAwait(false);
+                    return AckStrategies.NackWithRequeue;
 
                 if (exception is not null)
                 {

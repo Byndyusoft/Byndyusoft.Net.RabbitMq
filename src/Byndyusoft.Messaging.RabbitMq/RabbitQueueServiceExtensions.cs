@@ -1,13 +1,31 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.Topology;
+using Byndyusoft.Messaging.Abstractions;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitQueueServiceExtensions
     {
+        public static IQueueConsumer Subscribe(this IRabbitQueueService queueService, string exchangeName,
+            string routingKey,
+            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+        {
+            Preconditions.CheckNotNull(queueService, nameof(queueService));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+
+            var application = queueService.Options.ApplicationName;
+            var queueName =
+                queueService.Options.QueueName(new (exchangeName, routingKey, application));
+
+            return queueService.Subscribe(queueName, onMessage)
+                .WithQueueBinding(exchangeName, routingKey);
+        }
+
         public static async Task CreateQueueAsync(this IRabbitQueueService queueService, string queueName,
             Action<QueueOptions> optionsSetup,
             CancellationToken cancellationToken = default)
@@ -45,8 +63,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
 
-            await queueService.CreateQueueAsync(queueName, optionsSetup, cancellationToken).ConfigureAwait(false);
-            return true;
+            var options = QueueOptions.Default;
+            optionsSetup(options);
+
+            return await queueService.CreateQueueIfNotExistsAsync(queueName, options, cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public static async Task CreateExchangeAsync(this IRabbitQueueService queueService, string exchangeName,
@@ -86,11 +107,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
 
-            if (await queueService.ExchangeExistsAsync(exchangeName, cancellationToken).ConfigureAwait(false))
-                return false;
+            var options = ExchangeOptions.Default;
+            optionsSetup(options);
 
-            await queueService.CreateExchangeAsync(exchangeName, optionsSetup, cancellationToken).ConfigureAwait(false);
-            return true;
+            return await queueService.CreateExchangeIfNotExistsAsync(exchangeName, options, cancellationToken)
+                .ConfigureAwait(false);
         }
     }
 }

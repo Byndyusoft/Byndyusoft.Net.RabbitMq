@@ -1,7 +1,9 @@
 using System;
+using System.Diagnostics;
 
 namespace Byndyusoft.Messaging.Utils
 {
+    [DebuggerStepThrough]
     public static class Preconditions
     {
         public static void CheckNotNull<T>(T value, string paramName)

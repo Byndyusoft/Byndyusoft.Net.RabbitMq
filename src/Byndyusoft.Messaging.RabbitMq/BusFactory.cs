@@ -6,10 +6,7 @@ namespace Byndyusoft.Messaging.RabbitMq
     {
         public virtual IBus CreateBus(ConnectionConfiguration connectionConfiguration)
         {
-            return RabbitHutch.CreateBus(
-                connectionConfiguration,
-                services => services.Register<IConventions>(
-                    c => new NamingConventions(c.Resolve<ITypeNameSerializer>())));
+            return RabbitHutch.CreateBus(connectionConfiguration, _ => { });
         }
     }
 }

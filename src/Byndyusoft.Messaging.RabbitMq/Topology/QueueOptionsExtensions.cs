@@ -1,7 +1,7 @@
 using System;
 using Byndyusoft.Messaging.Utils;
 
-namespace Byndyusoft.Messaging.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     /// <summary>
     ///     Various extensions for <see cref="QueueOptions" />.

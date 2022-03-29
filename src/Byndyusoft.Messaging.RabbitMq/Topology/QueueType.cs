@@ -1,4 +1,4 @@
-namespace Byndyusoft.Messaging.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public enum QueueType
     {
