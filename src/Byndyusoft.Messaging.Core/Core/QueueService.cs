@@ -17,7 +17,7 @@ namespace Byndyusoft.Messaging.Core
         private readonly QueueServiceOptions _options = default!;
         private IQueueServiceHandler _handler = default!;
 
-        private QueueService()
+        protected QueueService()
         {
         }
 
@@ -30,6 +30,8 @@ namespace Byndyusoft.Messaging.Core
             _disposeHandler = disposeHandler;
             _options = handler.Options;
         }
+
+        protected IQueueServiceHandler Handler => _handler;
 
         public QueueServiceOptions Options
         {
@@ -68,6 +70,7 @@ namespace Byndyusoft.Messaging.Core
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.AckAsync(message, cancellationToken).ConfigureAwait(false);
+                message.Dispose();
                 return 0;
             });
         }
@@ -83,6 +86,7 @@ namespace Byndyusoft.Messaging.Core
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.RejectAsync(message, requeue, cancellationToken).ConfigureAwait(false);
+                message.Dispose();
                 return 0;
             });
         }
@@ -131,7 +135,9 @@ namespace Byndyusoft.Messaging.Core
             async Task<ConsumeResult> OnMessage(ConsumedQueueMessage message, CancellationToken cancellationToken)
             {
                 SetConsumedMessageProperties(message);
-                return await onMessage(message, cancellationToken).ConfigureAwait(false);
+                var result = await onMessage(message, cancellationToken).ConfigureAwait(false);
+                message.Dispose();
+                return result;
             }
 
             return new QueueConsumer(this, _handler, queueName, OnMessage);

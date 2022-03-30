@@ -16,10 +16,13 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitQueueService(string connectionString)
             : base(new RabbitQueueServiceHandler(connectionString), true)
         {
+            _handler = (IRabbitQueueServiceHandler) Handler;
         }
+
         public RabbitQueueService(QueueServiceOptions options)
             : base(new RabbitQueueServiceHandler(options), true)
         {
+            _handler = (IRabbitQueueServiceHandler) Handler;
         }
 
         public RabbitQueueService(IRabbitQueueServiceHandler handler)
@@ -52,6 +55,14 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _handler.DeleteQueueAsync(queueName, ifUnused, ifEmpty, cancellationToken).ConfigureAwait(false);
         }
 
+        public async Task<ulong> GetQueueMessageCountAsync(string queueName,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+
+            return await _handler.GetQueueMessageCountAsync(queueName, cancellationToken).ConfigureAwait(false);
+        }
+
         public async Task CreateExchangeAsync(string exchangeName, ExchangeOptions options,
             CancellationToken cancellationToken = default)
         {
@@ -76,17 +87,20 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _handler.DeleteExchangeAsync(exchangeName, ifUnused, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task BindQueueAsync(string? exchangeName, string routingKey, string queueName,
+
+        public async Task BindQueueAsync(string exchangeName, string routingKey, string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
 
             await _handler.BindQueueAsync(exchangeName, routingKey, queueName, cancellationToken)
                 .ConfigureAwait(false);
         }
 
-        public override IQueueConsumer Subscribe(string queueName, Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+        public override IQueueConsumer Subscribe(string queueName,
+            Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
             async Task<ConsumeResult> OnMessage(ConsumedQueueMessage message, CancellationToken token)
             {
@@ -107,16 +121,17 @@ namespace Byndyusoft.Messaging.RabbitMq
             return base.Subscribe(queueName, OnMessage);
         }
 
-        private async Task<ConsumeResult> HandleConsumeResultAsync(ConsumedQueueMessage consumedMessage, ConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
+        private async Task<ConsumeResult> HandleConsumeResultAsync(ConsumedQueueMessage consumedMessage,
+            ConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
         {
             if (consumeResult == ConsumeResult.Retry)
             {
                 var retryQueueName = Options.RetryQueueName(consumedMessage.Queue);
-                if (await QueueExistsAsync(retryQueueName, cancellationToken).ConfigureAwait(false) == false)
+                if (await _handler.QueueExistsAsync(retryQueueName, cancellationToken).ConfigureAwait(false) == false)
                     return ConsumeResult.RejectWithRequeue;
 
-                var retryMessage = RabbitMessageConverter.CreateRetryMessage(consumedMessage, retryQueueName);
-                await PublishAsync(retryMessage, cancellationToken)
+                var retryMessage = QueueMessageFactory.CreateRetryMessage(consumedMessage, retryQueueName);
+                await _handler.PublishAsync(retryMessage, cancellationToken)
                     .ConfigureAwait(false);
 
                 return ConsumeResult.Ack;
@@ -125,11 +140,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (consumeResult == ConsumeResult.Error)
             {
                 var errorQueueName = Options.ErrorQueueName(consumedMessage.Queue);
-                if (await QueueExistsAsync(errorQueueName, cancellationToken).ConfigureAwait(false) == false)
+                if (await _handler.QueueExistsAsync(errorQueueName, cancellationToken).ConfigureAwait(false) == false)
                     return ConsumeResult.RejectWithRequeue;
 
-                var errorMessage = RabbitMessageConverter.CreateErrorMessage(consumedMessage, errorQueueName, exception);
-                await PublishAsync(errorMessage, cancellationToken)
+                var errorMessage = QueueMessageFactory.CreateErrorMessage(consumedMessage, errorQueueName, exception);
+                await _handler.PublishAsync(errorMessage, cancellationToken)
                     .ConfigureAwait(false);
 
                 return ConsumeResult.Ack;

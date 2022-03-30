@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 
 namespace Byndyusoft.Messaging.Abstractions
 {
-    public delegate Task BeforeQueueConsumerStartEventHandler(IQueueConsumer consumer, CancellationToken cancellationToken);
+    public delegate Task BeforeQueueConsumerStartEventHandler(IQueueConsumer consumer,
+        CancellationToken cancellationToken);
 
-    public delegate Task AfterQueueConsumerStopEventHandler(IQueueConsumer consumer, CancellationToken cancellationToken);
+    public delegate Task AfterQueueConsumerStopEventHandler(IQueueConsumer consumer,
+        CancellationToken cancellationToken);
 
     public interface IQueueConsumer : IDisposable
     {

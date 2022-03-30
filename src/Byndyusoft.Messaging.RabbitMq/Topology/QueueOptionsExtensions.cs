@@ -76,6 +76,15 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
             return options.WithArgument("x-message-ttl", (int) messageTtl.TotalMilliseconds);
         }
 
+        public static TimeSpan? GetMessageTtl(this QueueOptions options)
+        {
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            if (options.Arguments.TryGetValue("x-message-ttl", out var value) == false)
+                return null;
+            return TimeSpan.FromMilliseconds((int) value);
+        }
+
         /// <summary>
         ///     Sets deadLetterExchange. Determines an exchange's name can remain unused before it is automatically deleted by the
         ///     server.
@@ -90,6 +99,15 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
             return options.WithArgument("x-dead-letter-exchange", deadLetterExchange ?? string.Empty);
         }
 
+        public static string? GetDeadLetterExchange(this QueueOptions options)
+        {
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            if (options.Arguments.TryGetValue("x-dead-letter-exchange", out var value) == false)
+                return null;
+            return (string?) value;
+        }
+
         /// <summary>
         ///     Sets deadLetterRoutingKey. If set, will route message with the routing key specified, if not set, message will be
         ///     routed with the same routing keys they were originally published with.
@@ -102,6 +120,15 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
             Preconditions.CheckNotNull(options, nameof(options));
 
             return options.WithArgument("x-dead-letter-routing-key", deadLetterRoutingKey);
+        }
+
+        public static string? GetDeadLetterRoutingKey(this QueueOptions options)
+        {
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            if (options.Arguments.TryGetValue("x-dead-letter-routing-key", out var value) == false)
+                return null;
+            return (string?) value;
         }
 
         /// <summary>

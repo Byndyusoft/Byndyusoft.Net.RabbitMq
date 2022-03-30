@@ -10,10 +10,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class QueueConsumerExtensions
     {
-        public static IQueueConsumer WithQueueBinding(this IQueueConsumer consumer, string? exchangeName,
+        public static IQueueConsumer WithQueueBinding(this IQueueConsumer consumer, string exchangeName,
             string routingKey)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
             return consumer.OnStarting(async (_, cancellationToken) =>
@@ -79,18 +80,19 @@ namespace Byndyusoft.Messaging.RabbitMq
             });
         }
 
-        public static IQueueConsumer WithRetryQueue(this IQueueConsumer consumer, TimeSpan delay, Action<QueueOptions> optionsSetup)
+        public static IQueueConsumer WithRetryQueue(this IQueueConsumer consumer, TimeSpan delay,
+            Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
 
             var options = QueueOptions.Default;
             optionsSetup(options);
-            
+
             return WithRetryQueue(consumer, delay, options);
         }
 
-        public static IQueueConsumer WithErrorQueue(this IQueueConsumer consumer,  QueueOptions options)
+        public static IQueueConsumer WithErrorQueue(this IQueueConsumer consumer, QueueOptions options)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));

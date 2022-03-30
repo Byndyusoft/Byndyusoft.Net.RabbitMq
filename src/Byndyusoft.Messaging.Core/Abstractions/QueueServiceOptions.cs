@@ -11,7 +11,7 @@ namespace Byndyusoft.Messaging.Abstractions
             $"{x.exchange}::{x.application}::{x.routingKey}".ToLowerInvariant();
 
         public Func<string, string> RetryQueueName = message => $"{message}.retry";
-       
+
         public string ConnectionString { get; set; } = default!;
 
         public string ApplicationName { get; set; } = Assembly.GetExecutingAssembly().GetName().Name;

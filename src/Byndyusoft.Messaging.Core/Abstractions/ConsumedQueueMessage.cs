@@ -9,14 +9,10 @@ namespace Byndyusoft.Messaging.Abstractions
     {
         private readonly string _consumerTag = default!;
         private readonly HttpContent? _content;
-        private readonly ulong _deliveryTag;
-        private readonly string? _exchange;
         private readonly QueueMessageHeaders _headers = new();
         private readonly bool _persistent;
         private readonly QueueMessageProperties _properties = new();
         private readonly string _queue = default!;
-        private readonly bool _redelivered;
-        private readonly int _retryCount;
         private readonly string _routingKey = default!;
 
         static ConsumedQueueMessage()
@@ -34,27 +30,14 @@ namespace Byndyusoft.Messaging.Abstractions
             init => _persistent = value;
         }
 
-        public int RetryCount
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _retryCount;
-            }
-            init => _retryCount = value;
-        }
-
+        public long RetryCount { get; init; }
 
         /// <summary>
         ///     Consumer (subscription) identifier
         /// </summary>
         public string ConsumerTag
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _consumerTag;
-            }
+            get => _consumerTag;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(ConsumerTag));
@@ -65,52 +48,24 @@ namespace Byndyusoft.Messaging.Abstractions
         /// <summary>
         ///     Delivery identifier
         /// </summary>
-        public ulong DeliveryTag
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _deliveryTag;
-            }
-            init => _deliveryTag = value;
-        }
+        public ulong DeliveryTag { get; init; }
 
         /// <summary>
         ///     Set to `true` if this message was previously delivered and requeued
         /// </summary>
-        public bool Redelivered
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _redelivered;
-            }
-            init => _redelivered = value;
-        }
+        public bool Redelivered { get; init; }
 
         /// <summary>
         ///     Exchange which routed this message
         /// </summary>
-        public string? Exchange
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _exchange;
-            }
-            init => _exchange = value;
-        }
+        public string? Exchange { get; init; }
 
         /// <summary>
         ///     Routing key used by the publisher
         /// </summary>
         public string RoutingKey
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _routingKey;
-            }
+            get => _routingKey;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(RoutingKey));
@@ -123,11 +78,7 @@ namespace Byndyusoft.Messaging.Abstractions
         /// </summary>
         public string Queue
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _queue;
-            }
+            get => _queue;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(Queue));
@@ -137,11 +88,7 @@ namespace Byndyusoft.Messaging.Abstractions
 
         public QueueMessageProperties Properties
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _properties;
-            }
+            get => _properties;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(Properties));
@@ -151,11 +98,7 @@ namespace Byndyusoft.Messaging.Abstractions
 
         public HttpContent Content
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _content!;
-            }
+            get => _content!;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(Content));
@@ -165,11 +108,7 @@ namespace Byndyusoft.Messaging.Abstractions
 
         public QueueMessageHeaders Headers
         {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _headers;
-            }
+            get => _headers;
             init
             {
                 Preconditions.CheckNotNull(value, nameof(Headers));

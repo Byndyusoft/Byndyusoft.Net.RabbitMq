@@ -7,23 +7,21 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitQueueServiceHandler : IQueueServiceHandler
     {
-        Task CreateQueueAsync(string queueName, QueueOptions options,
-            CancellationToken cancellationToken = default);
+        Task CreateQueueAsync(string queueName, QueueOptions options, CancellationToken cancellationToken);
 
-        Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default);
+        Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken);
 
-        Task DeleteQueueAsync(string queueName, bool ifUnused = false, bool ifEmpty = false,
-            CancellationToken cancellationToken = default);
+        Task DeleteQueueAsync(string queueName, bool ifUnused, bool ifEmpty, CancellationToken cancellationToken);
 
-        Task CreateExchangeAsync(string exchangeName, ExchangeOptions options,
-            CancellationToken cancellationToken = default);
+        Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken = default);
+        Task CreateExchangeAsync(string exchangeName, ExchangeOptions options, CancellationToken cancellationToken);
 
-        Task DeleteExchangeAsync(string exchangeName, bool ifUnused = false,
-            CancellationToken cancellationToken = default);
+        Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken);
 
-        Task BindQueueAsync(string? exchangeName, string routingKey, string queueName,
-            CancellationToken cancellationToken = default);
+        Task DeleteExchangeAsync(string exchangeName, bool ifUnused, CancellationToken cancellationToken);
+
+        Task BindQueueAsync(string exchangeName, string routingKey, string queueName,
+            CancellationToken cancellationToken);
     }
 }

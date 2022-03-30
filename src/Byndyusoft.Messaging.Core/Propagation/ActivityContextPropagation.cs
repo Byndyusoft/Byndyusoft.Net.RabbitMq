@@ -18,9 +18,7 @@ namespace Byndyusoft.Messaging.Propagation
                 .ToArray();
 
             if (activity.TraceStateString is not null)
-            {
                 message.Headers[PropagationHeaderNames.TraceState] = activity.TraceStateString;
-            }
 
             message.Headers[PropagationHeaderNames.TraceParent] = activity.Id;
             message.Headers[PropagationHeaderNames.Baggage] = string.Join(";", baggage);

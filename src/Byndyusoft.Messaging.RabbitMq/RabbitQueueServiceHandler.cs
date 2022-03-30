@@ -19,15 +19,14 @@ namespace Byndyusoft.Messaging.RabbitMq
     public class RabbitQueueServiceHandler : Disposable, IRabbitQueueServiceHandler
     {
         private static readonly ConnectionStringParser ConnectionStringParser = new();
-
-        private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly IBusFactory _busFactory;
+        private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly object _lock = new();
         private readonly QueueServiceOptions _options;
         private readonly Dictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
-        private QueueServiceEndpoint? _queueServiceEndpoint;
         private IBus _bus = default!;
         private bool _isInitialized;
+        private QueueServiceEndpoint? _queueServiceEndpoint;
 
         public RabbitQueueServiceHandler(string connectionString)
         {
@@ -92,7 +91,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return RabbitMessageConverter.CreateConsumedMessage(pullingResult);
+            return ConsumedQueueMessageFactory.CreateConsumedMessage(pullingResult);
         }
 
         public async Task AckAsync(ConsumedQueueMessage message, CancellationToken cancellationToken)
@@ -134,9 +133,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var exchange = message.Exchange is null ? Exchange.GetDefault() : new Exchange(message.Exchange);
 
-            var body = await RabbitMessageConverter.CreateRabbitMessageBodyAsync(message, cancellationToken)
-                .ConfigureAwait(false);
-            var properties = RabbitMessageConverter.CreateRabbitMessageProperties(message);
+            var (body, properties) = await RabbitMessageFactory.CreateRabbitMessageAsync(message).ConfigureAwait(false);
 
             await _bus.Advanced.PublishAsync(exchange, message.RoutingKey, message.Mandatory, properties, body,
                     cancellationToken)
@@ -175,7 +172,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
-                    var consumedMessage = RabbitMessageConverter.CreateConsumedMessage(body, properties, info)!;
+                    var consumedMessage = ConsumedQueueMessageFactory.CreateConsumedMessage(body, properties, info)!;
                     var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
                         .ConfigureAwait(false);
                     return await HandleConsumeResultAsync(body, properties, info, consumeResult)
@@ -245,6 +242,19 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        public async Task<ulong> GetQueueMessageCountAsync(string queueName,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotDisposed(this);
+
+            Initialize();
+
+            var starts = await _bus.Advanced.GetQueueStatsAsync(new Queue(queueName), cancellationToken)
+                .ConfigureAwait(false);
+            return starts.MessagesCount;
+        }
+
         public async Task CreateExchangeAsync(string exchangeName, ExchangeOptions options,
             CancellationToken cancellationToken = default)
         {
@@ -299,7 +309,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task BindQueueAsync(string? exchangeName, string routingKey, string queueName,
+        public async Task BindQueueAsync(string exchangeName, string routingKey, string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
@@ -308,7 +318,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            var exchange = exchangeName != null ? new Exchange(exchangeName) : Exchange.GetDefault();
+            var exchange = new Exchange(exchangeName);
             var queue = new Queue(queueName);
             await _bus.Advanced.BindAsync(exchange, queue, routingKey, cancellationToken)
                 .ConfigureAwait(false);
@@ -339,16 +349,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 if (await QueueExistsAsync(errorQueueName).ConfigureAwait(false) == false)
                     return AckStrategies.NackWithRequeue;
 
-                if (exception is not null)
-                {
-                    properties.Headers["exception-type"] = exception.GetType().FullName;
-                    properties.Headers["exception-message"] = exception.Message;
-                }
-
-                properties.Headers.Remove("x-death");
-                properties.Headers.Remove("x-first-death-exchange");
-                properties.Headers.Remove("x-first-death-queue");
-                properties.Headers.Remove("x-first-death-reason");
+                properties.Headers.SetException(exception);
+                properties.Headers.RemovedRetryData();
 
                 await _bus.Advanced.PublishAsync(Exchange.GetDefault(), errorQueueName, true, properties, body)
                     .ConfigureAwait(false);

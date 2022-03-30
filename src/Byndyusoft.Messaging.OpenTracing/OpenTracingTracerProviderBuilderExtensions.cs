@@ -15,7 +15,6 @@ namespace Byndyusoft.Messaging.OpenTracing
                     AddOpenTracingExporter(builder, sp, names);
                 });
 
-
             return builder.AddInstrumentation(() => new OpenTracingInstrumentation(null, names));
         }
 

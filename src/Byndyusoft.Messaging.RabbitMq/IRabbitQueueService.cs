@@ -15,6 +15,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         Task DeleteQueueAsync(string queueName, bool ifUnused = false, bool ifEmpty = false,
             CancellationToken cancellationToken = default);
 
+        Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
+
         Task CreateExchangeAsync(string exchangeName, ExchangeOptions options,
             CancellationToken cancellationToken = default);
 
@@ -23,7 +25,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         Task DeleteExchangeAsync(string exchangeName, bool ifUnused = false,
             CancellationToken cancellationToken = default);
 
-        Task BindQueueAsync(string? exchangeName, string routingKey, string queueName,
+        Task BindQueueAsync(string exchangeName, string routingKey, string queueName,
             CancellationToken cancellationToken = default);
     }
 }

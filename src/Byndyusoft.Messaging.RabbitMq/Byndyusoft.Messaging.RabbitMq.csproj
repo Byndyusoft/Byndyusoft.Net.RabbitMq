@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<TargetFramework>netstandard2.1</TargetFramework>
 		<RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
 		<AssemblyName>Byndyusoft.Messaging.RabbitMq</AssemblyName>
 	</PropertyGroup>
@@ -12,7 +12,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\Byndyusoft.Messaging.Core\Byndyusoft.Messaging.Core.csproj" />
+		<ProjectReference Include="..\Byndyusoft.Messaging.Core\Byndyusoft.Messaging.Core.csproj" />
 	</ItemGroup>
 
 </Project>
