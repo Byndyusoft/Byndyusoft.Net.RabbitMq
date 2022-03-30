@@ -59,9 +59,7 @@ namespace Byndyusoft.Net.RabbitMq
 
         public static async Task SubscribeExchangeExample(IRabbitQueueService service)
         {
-            await service.CreateExchangeIfNotExistsAsync("exchange", ex =>  ex.AsAutoDelete(true));
-            
-            var message = new Message {Property = "exchange-example"};
+            await service.CreateExchangeIfNotExistsAsync("exchange", ex => ex.AsAutoDelete(true));
 
             service.Subscribe("exchange", "routingKey",
                     async (queueMessage, cancellationToken) =>
@@ -70,18 +68,18 @@ namespace Byndyusoft.Net.RabbitMq
                         Console.WriteLine(JsonConvert.SerializeObject(model));
                         return ConsumeResult.Ack;
                     })
-                .WithErrorQueue(option => option.AsAutoDelete(true))
                 .WithQueue(options => options.AsAutoDelete(true))
-                .WithRetryQueue(TimeSpan.FromSeconds(60), options =>  options.AsAutoDelete(true))
+                .WithErrorQueue(option => option.AsAutoDelete(true))
                 .Start();
 
+            var message = new Message { Property = "exchange-example" };
             await service.PublishAsJsonAsync("exchange", "routingKey", message);
         }
 
         public static async Task PullingExample(IRabbitQueueService service)
         {
             var queueName = Guid.NewGuid().ToString();
-            await service.CreateQueueAsync(queueName, options =>  options.AsAutoDelete(true) );
+            await service.CreateQueueAsync(queueName, options => options.AsAutoDelete(true));
 
             var getTask = Task.Run(async () =>
             {
@@ -117,30 +115,22 @@ namespace Byndyusoft.Net.RabbitMq
         {
             var queueName = Guid.NewGuid().ToString();
 
-            var message = new Message {Property = "json-example"};
-
             service.SubscribeAsJson<Message>(queueName,
-                (msg, _) =>
-                {
-                    Console.WriteLine(JsonConvert.SerializeObject(msg));
-                    return Task.CompletedTask;
-                })
+                    (model, _) =>
+                    {
+                        Console.WriteLine(JsonConvert.SerializeObject(model));
+                        return Task.CompletedTask;
+                    })
                 .WithQueue(options => options.AsAutoDelete(true))
                 .Start();
 
-
+            var message = new Message { Property = "json-example" };
             await service.PublishAsJsonAsync(null, queueName, message);
         }
 
         public static async Task RetryAndErrorExample(IRabbitQueueService service)
         {
             var queueName = Guid.NewGuid().ToString();
-          
-            var message = new QueueMessage
-            {
-                RoutingKey = queueName,
-                Content = JsonContent.Create(new Message {Property = "retry-example"})
-            };
 
             service.Subscribe(queueName,
                     async (queueMessage, cancellationToken) =>
@@ -154,9 +144,14 @@ namespace Byndyusoft.Net.RabbitMq
                     })
                 .WithQueue(options => options.AsAutoDelete(true))
                 .WithErrorQueue(option => option.AsAutoDelete(true))
-                .WithRetryQueue(TimeSpan.FromSeconds(60), options => options.AsAutoDelete(true))
+                .WithRetryQueue(TimeSpan.FromSeconds(10), options => options.AsAutoDelete(true))
                 .Start();
 
+            var message = new QueueMessage
+            {
+                RoutingKey = queueName,
+                Content = JsonContent.Create(new Message { Property = "retry-example" })
+            };
             await service.PublishAsync(message);
         }
     }

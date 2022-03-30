@@ -12,6 +12,7 @@ namespace Byndyusoft.Messaging.Abstractions
         private readonly ulong _deliveryTag;
         private readonly string? _exchange;
         private readonly QueueMessageHeaders _headers = new();
+        private readonly bool _persistent;
         private readonly QueueMessageProperties _properties = new();
         private readonly string _queue = default!;
         private readonly bool _redelivered;
@@ -21,6 +22,16 @@ namespace Byndyusoft.Messaging.Abstractions
         static ConsumedQueueMessage()
         {
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
+        }
+
+        public bool Persistent
+        {
+            get
+            {
+                Preconditions.CheckNotDisposed(this);
+                return _persistent;
+            }
+            init => _persistent = value;
         }
 
         public int RetryCount

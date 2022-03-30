@@ -11,7 +11,7 @@ namespace Byndyusoft.Messaging.Abstractions
         private bool _mandatory;
         private bool _persistent;
         private QueueMessageProperties _properties;
-        private string? _routingKey;
+        private string _routingKey = default!;
 
         public QueueMessage()
         {
@@ -34,7 +34,7 @@ namespace Byndyusoft.Messaging.Abstractions
             }
         }
 
-        public string? RoutingKey
+        public string RoutingKey
         {
             get
             {

@@ -8,14 +8,51 @@ using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
 using EasyNetQ;
 
-namespace Byndyusoft.Messaging.RabbitMq
+namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class RabbitMessageConverter
     {
+        public static QueueMessage CreateRetryMessage(ConsumedQueueMessage consumedMessage, string retryQueueName)
+        {
+            return new()
+            {
+                Content = consumedMessage.Content,
+                Properties = consumedMessage.Properties,
+                Mandatory = false,
+                Persistent = consumedMessage.Persistent,
+                Headers = consumedMessage.Headers,
+                RoutingKey = retryQueueName
+            };
+        }
+
+        public static QueueMessage CreateErrorMessage(ConsumedQueueMessage consumedMessage, string errorQueueName,
+            Exception? exception = null)
+        {
+            var headers = new QueueMessageHeaders(consumedMessage.Headers);
+            if (exception is not null)
+            {
+                headers["exception-type"] = exception.GetType().FullName;
+                headers["exception-message"] = exception.Message;
+            }
+
+            headers.Remove("x-death");
+            headers.Remove("x-first-death-exchange");
+            headers.Remove("x-first-death-queue");
+            headers.Remove("x-first-death-reason");
+
+            return new QueueMessage
+            {
+                Content = consumedMessage.Content,
+                Properties = consumedMessage.Properties,
+                Mandatory = false,
+                Persistent = consumedMessage.Persistent,
+                Headers = headers,
+                RoutingKey = errorQueueName
+            };
+        }
+
         public static MessageProperties CreateRabbitMessageProperties(QueueMessage message)
         {
-            var headers = CreateRabbitMessageHeaders(message);
-
             var properties = new MessageProperties
             {
                 Type = message.Properties.Type,
@@ -27,7 +64,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 MessageId = message.Properties.MessageId,
                 ReplyTo = message.Properties.ReplyTo,
                 UserId = message.Properties.UserId,
-                Headers = headers
+                Headers = message.Headers
             };
 
             if (message.Properties.Priority is not null) properties.Priority = message.Properties.Priority.Value;
@@ -39,11 +76,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 properties.Expiration = $"{(int) message.Properties.Expiration.Value.TotalMilliseconds}";
 
             return properties;
-        }
-
-        public static Dictionary<string, object?> CreateRabbitMessageHeaders(QueueMessage message)
-        {
-            return message.Headers;
         }
 
         public static Task<byte[]> CreateRabbitMessageBodyAsync(QueueMessage message, CancellationToken _)
@@ -69,7 +101,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 Exchange = info.Exchange,
                 Properties = properties,
                 Headers = headers,
-                RetryCount = (int) retryCount
+                RetryCount = (int) retryCount,
+                Persistent = messageProperties.DeliveryMode == 2
             };
         }
 
@@ -92,9 +125,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 var value = header.Value switch
                 {
-                    IEnumerable<object> list => string.Join(";", list.Select(x => x.ToString())),
                     byte[] bytes => Encoding.UTF8.GetString(bytes),
-                    _ => header.Value?.ToString()
+                    _ => header.Value
                 };
 
                 if (value is not null) headers.Add(header.Key, value);

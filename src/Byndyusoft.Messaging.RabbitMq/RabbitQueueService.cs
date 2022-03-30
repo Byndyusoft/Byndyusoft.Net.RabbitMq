@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
 using Byndyusoft.Messaging.Core;
+using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Utils;
 
@@ -83,6 +84,58 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             await _handler.BindQueueAsync(exchangeName, routingKey, queueName, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        public override IQueueConsumer Subscribe(string queueName, Func<ConsumedQueueMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+        {
+            async Task<ConsumeResult> OnMessage(ConsumedQueueMessage message, CancellationToken token)
+            {
+                try
+                {
+                    var consumeResult = await onMessage(message, token)
+                        .ConfigureAwait(false);
+                    return await HandleConsumeResultAsync(message, consumeResult, null, token)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception)
+                {
+                    return await HandleConsumeResultAsync(message, ConsumeResult.Error, exception, token)
+                        .ConfigureAwait(false);
+                }
+            }
+
+            return base.Subscribe(queueName, OnMessage);
+        }
+
+        private async Task<ConsumeResult> HandleConsumeResultAsync(ConsumedQueueMessage consumedMessage, ConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
+        {
+            if (consumeResult == ConsumeResult.Retry)
+            {
+                var retryQueueName = Options.RetryQueueName(consumedMessage.Queue);
+                if (await QueueExistsAsync(retryQueueName, cancellationToken).ConfigureAwait(false) == false)
+                    return ConsumeResult.RejectWithRequeue;
+
+                var retryMessage = RabbitMessageConverter.CreateRetryMessage(consumedMessage, retryQueueName);
+                await PublishAsync(retryMessage, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return ConsumeResult.Ack;
+            }
+
+            if (consumeResult == ConsumeResult.Error)
+            {
+                var errorQueueName = Options.ErrorQueueName(consumedMessage.Queue);
+                if (await QueueExistsAsync(errorQueueName, cancellationToken).ConfigureAwait(false) == false)
+                    return ConsumeResult.RejectWithRequeue;
+
+                var errorMessage = RabbitMessageConverter.CreateErrorMessage(consumedMessage, errorQueueName, exception);
+                await PublishAsync(errorMessage, cancellationToken)
+                    .ConfigureAwait(false);
+
+                return ConsumeResult.Ack;
+            }
+
+            return consumeResult;
         }
     }
 }

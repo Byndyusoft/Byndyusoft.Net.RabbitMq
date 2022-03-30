@@ -20,7 +20,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var application = queueService.Options.ApplicationName;
             var queueName =
-                queueService.Options.QueueName(new (exchangeName, routingKey, application));
+                queueService.Options.QueueName(
+                    new ValueTuple<string, string, string>(exchangeName, routingKey, application));
 
             return queueService.Subscribe(queueName, onMessage)
                 .WithQueueBinding(exchangeName, routingKey);

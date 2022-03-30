@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
+using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Utils;
 using EasyNetQ;
