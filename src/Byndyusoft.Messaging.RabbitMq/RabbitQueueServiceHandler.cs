@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
@@ -17,11 +18,14 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitQueueServiceHandler : Disposable, IRabbitQueueServiceHandler
     {
-        private readonly IBusFactory _busFactory;
+        private static readonly ConnectionStringParser ConnectionStringParser = new();
+
         private readonly ConnectionConfiguration _connectionConfiguration;
+        private readonly IBusFactory _busFactory;
         private readonly object _lock = new();
         private readonly QueueServiceOptions _options;
         private readonly Dictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
+        private QueueServiceEndpoint? _queueServiceEndpoint;
         private IBus _bus = default!;
         private bool _isInitialized;
 
@@ -29,9 +33,9 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(connectionString, nameof(connectionString));
 
-            _options = new QueueServiceOptions { ConnectionString = connectionString};
+            _options = new QueueServiceOptions {ConnectionString = connectionString};
             _busFactory = new BusFactory();
-            _connectionConfiguration = new ConnectionStringParser().Parse(connectionString);
+            _connectionConfiguration = ConnectionStringParser.Parse(connectionString);
         }
 
         public RabbitQueueServiceHandler(QueueServiceOptions options)
@@ -40,7 +44,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _options = options;
             _busFactory = new BusFactory();
-            _connectionConfiguration = new ConnectionStringParser().Parse(options.ConnectionString);
+            _connectionConfiguration = ConnectionStringParser.Parse(options.ConnectionString);
         }
 
         public RabbitQueueServiceHandler(IOptions<QueueServiceOptions> options, IBusFactory busFactory)
@@ -49,7 +53,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
             _options = options.Value;
-            _connectionConfiguration = new ConnectionStringParser().Parse(_options.ConnectionString);
+            _connectionConfiguration = ConnectionStringParser.Parse(_options.ConnectionString);
             _busFactory = busFactory;
         }
 
@@ -62,12 +66,18 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public ConnectionConfiguration ConnectionConfiguration
+        public QueueServiceEndpoint QueueServiceEndpoint
         {
             get
             {
                 Preconditions.CheckNotDisposed(this);
-                return _connectionConfiguration;
+                return _queueServiceEndpoint ??=
+                    new QueueServiceEndpoint
+                    {
+                        Transport = "amqp",
+                        Host = _connectionConfiguration.Hosts.FirstOrDefault()?.Host!,
+                        Port = _connectionConfiguration.Hosts.FirstOrDefault()?.Port.ToString()
+                    };
             }
         }
 

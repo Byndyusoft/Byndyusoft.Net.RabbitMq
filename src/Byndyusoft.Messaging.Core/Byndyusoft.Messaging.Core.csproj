@@ -7,10 +7,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Byndyusoft.Net.Http" Version="0.2.0" />
 		<PackageReference Include="Byndyusoft.Net.Http.Json" Version="0.2.1" />
-		<PackageReference Include="EasyNetQ" Version="6.3.1" />
-		<PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
 		<PackageReference Include="OpenTelemetry.API" Version="1.2.0-rc3" />
 	</ItemGroup>
 

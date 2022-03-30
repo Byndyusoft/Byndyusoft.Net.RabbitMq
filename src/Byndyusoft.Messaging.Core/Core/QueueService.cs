@@ -47,7 +47,7 @@ namespace Byndyusoft.Messaging.Core
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(_handler, nameof(QueueService), "Handler should be provided");
 
-            var activity = QueueServiceActivitySource.StartGet(_handler.ConnectionConfiguration, queueName);
+            var activity = QueueServiceActivitySource.StartGet(_handler, queueName);
             return await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 var message = await _handler.GetAsync(queueName, cancellationToken)
@@ -64,7 +64,7 @@ namespace Byndyusoft.Messaging.Core
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(_handler, nameof(QueueService), "Handler should be provided");
 
-            var activity = QueueServiceActivitySource.StartAck(_handler.ConnectionConfiguration, message);
+            var activity = QueueServiceActivitySource.StartAck(_handler, message);
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.AckAsync(message, cancellationToken).ConfigureAwait(false);
@@ -79,7 +79,7 @@ namespace Byndyusoft.Messaging.Core
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(_handler, nameof(QueueService), "Handler should be provided");
 
-            var activity = QueueServiceActivitySource.StartReject(_handler.ConnectionConfiguration, message, requeue);
+            var activity = QueueServiceActivitySource.StartReject(_handler, message, requeue);
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.RejectAsync(message, requeue, cancellationToken).ConfigureAwait(false);
@@ -95,7 +95,7 @@ namespace Byndyusoft.Messaging.Core
 
             SetPublishingMessageProperties(message);
 
-            var activity = QueueServiceActivitySource.StartPublish(_handler.ConnectionConfiguration, message);
+            var activity = QueueServiceActivitySource.StartPublish(_handler, message);
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.PublishAsync(message, cancellationToken).ConfigureAwait(false);
@@ -112,7 +112,7 @@ namespace Byndyusoft.Messaging.Core
 
             foreach (var message in messages) SetPublishingMessageProperties(message);
 
-            var activity = QueueServiceActivitySource.StartBatchPublish(_handler.ConnectionConfiguration, messages);
+            var activity = QueueServiceActivitySource.StartBatchPublish(_handler, messages);
             await QueueServiceActivitySource.ExecuteAsync(activity, async () =>
             {
                 await _handler.PublishBatchAsync(messages, cancellationToken).ConfigureAwait(false);

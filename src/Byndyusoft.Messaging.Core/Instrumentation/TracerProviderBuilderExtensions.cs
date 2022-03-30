@@ -1,9 +1,8 @@
-// ReSharper disable CheckNamespace
-
 using System;
 using Byndyusoft.Messaging.Core;
 using Byndyusoft.Messaging.Instrumentation;
 
+// ReSharper disable CheckNamespace
 namespace OpenTelemetry.Trace
 {
     /// <summary>

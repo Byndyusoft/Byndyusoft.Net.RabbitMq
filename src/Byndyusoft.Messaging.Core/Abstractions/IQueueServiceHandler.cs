@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Byndyusoft.Messaging.Abstractions
 {
-    public interface IQueueServiceHandler : IDisposable, IConnectionConfigurationContainer
+    public interface IQueueServiceHandler : IDisposable, IQueueServiceEndpointContainer
     {
         QueueServiceOptions Options { get; }
 

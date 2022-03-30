@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.Abstractions;
 using Byndyusoft.Messaging.Propagation;
 using Byndyusoft.Messaging.Serialization;
-using EasyNetQ;
 
 namespace Byndyusoft.Messaging.Core
 {
@@ -26,27 +24,27 @@ namespace Byndyusoft.Messaging.Core
 
         //internal static bool IsEnabled => Source.HasListeners();
 
-        internal static Activity? StartPublish(ConnectionConfiguration connectionConfiguration, QueueMessage message)
+        internal static Activity? StartPublish(IQueueServiceEndpointContainer endpointContainer, QueueMessage message)
         {
             var activity = Source.StartActivity(nameof(QueueService.PublishAsync), ActivityKind.Client);
             if (activity is not {IsAllDataRequested: true})
                 return activity;
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
             SetMessageTags(activity, message);
             ActivityContextPropagation.SetContext(activity, message);
 
             return activity;
         }
 
-        internal static Activity? StartBatchPublish(ConnectionConfiguration connectionConfiguration,
+        internal static Activity? StartBatchPublish(IQueueServiceEndpointContainer endpointContainer,
             IEnumerable<QueueMessage> messages)
         {
             var activity = Source.StartActivity(nameof(QueueService.PublishBatchAsync), ActivityKind.Client);
             if (activity is not {IsAllDataRequested: true})
                 return activity;
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
 
             var index = 0;
             foreach (var message in messages)
@@ -58,46 +56,46 @@ namespace Byndyusoft.Messaging.Core
             return activity;
         }
 
-        internal static Activity? StartGet(ConnectionConfiguration connectionConfiguration, string queueName)
+        internal static Activity? StartGet(IQueueServiceEndpointContainer endpointContainer, string queueName)
         {
             var activity = Source.StartActivity(nameof(QueueService.GetAsync), ActivityKind.Client);
             if (activity is not {IsAllDataRequested: true})
                 return activity;
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
             SetQueueNameTags(activity, queueName);
 
             return activity;
         }
 
-        internal static Activity? StartAck(ConnectionConfiguration connectionConfiguration,
+        internal static Activity? StartAck(IQueueServiceEndpointContainer endpointContainer,
             ConsumedQueueMessage message)
         {
             var activity = Source.StartActivity(nameof(QueueService.AckAsync), ActivityKind.Client);
             if (activity is not {IsAllDataRequested: true})
                 return activity;
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
             activity.SetTag("message_bus.message.delivery_tag", message.DeliveryTag);
 
             return activity;
         }
 
-        internal static Activity? StartReject(ConnectionConfiguration connectionConfiguration,
+        internal static Activity? StartReject(IQueueServiceEndpointContainer endpointContainer,
             ConsumedQueueMessage message, bool requeue)
         {
             var activity = Source.StartActivity(nameof(QueueService.RejectAsync), ActivityKind.Client);
             if (activity is not {IsAllDataRequested: true})
                 return activity;
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
             activity.SetTag("message_bus.message.delivery_tag", message.DeliveryTag);
             activity.SetTag("message_bus.message.requeue", requeue);
 
             return activity;
         }
 
-        internal static Activity? StartConsume(ConnectionConfiguration connectionConfiguration,
+        internal static Activity? StartConsume(IQueueServiceEndpointContainer endpointContainer,
             ConsumedQueueMessage message)
         {
             var activity = Source.StartActivity(nameof(IQueueServiceHandler.Consume), ActivityKind.Server);
@@ -107,7 +105,7 @@ namespace Byndyusoft.Messaging.Core
 
             ActivityContextPropagation.ExtractContext(activity, message);
 
-            SetConnectionTags(activity, connectionConfiguration);
+            SetConnectionTags(activity, endpointContainer);
 
             var tags = GetConsumedMessageEventTags(message);
             var activityEvent = new ActivityEvent("message.got", tags: tags);
@@ -180,17 +178,14 @@ namespace Byndyusoft.Messaging.Core
             activity.SetTag($"{prefix}.properties", JsonConvert.Serialize(message.Properties));
         }
 
-        private static void SetConnectionTags(Activity activity, ConnectionConfiguration connectionConfiguration)
+        private static void SetConnectionTags(Activity activity, IQueueServiceEndpointContainer endpointContainer)
         {
-            activity.SetTag("message_bus.transport", "amqp");
+            var queueServiceEndpoint = endpointContainer.QueueServiceEndpoint;
+            activity.SetTag("message_bus.transport", queueServiceEndpoint.Transport);
+            activity.SetTag("message_bus.peer.name", queueServiceEndpoint.Host);
 
-            var host = connectionConfiguration.Hosts.FirstOrDefault();
-            if (host != null)
-            {
-                activity.SetTag("message_bus.peer.name", host.Host);
-                if (host.Port != ConnectionConfiguration.DefaultPort)
-                    activity.SetTag("message_bus.peer.port", host.Port);
-            }
+            if (queueServiceEndpoint.Port is not null)
+                activity.SetTag("message_bus.peer.port", queueServiceEndpoint.Port);
         }
 
         private static void SetQueueNameTags(Activity activity, string queueName)
@@ -215,6 +210,7 @@ namespace Byndyusoft.Messaging.Core
                 tags.Add("message.delivery_tag", message.DeliveryTag);
                 tags.Add("message.redelivered", message.Redelivered);
                 tags.Add("message.consumer_tag", message.ConsumerTag);
+                tags.Add("message.retry_count", message.RetryCount);
                 tags.Add("message.properties", JsonConvert.Serialize(message.Properties));
             }
 

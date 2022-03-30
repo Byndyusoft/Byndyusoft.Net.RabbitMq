@@ -39,7 +39,7 @@ namespace Byndyusoft.Messaging.Core
                 return _service;
             }
         }
-        
+
         /// <inheritdoc />
         public string QueueName
         {
@@ -115,7 +115,7 @@ namespace Byndyusoft.Messaging.Core
 
         private async Task<ConsumeResult> OnMessage(ConsumedQueueMessage message, CancellationToken cancellationToken)
         {
-            var activity = QueueServiceActivitySource.StartConsume(_handler.ConnectionConfiguration, message);
+            var activity = QueueServiceActivitySource.StartConsume(_handler, message);
 
             return await QueueServiceActivitySource.ExecuteAsync(activity,
                 async () =>
