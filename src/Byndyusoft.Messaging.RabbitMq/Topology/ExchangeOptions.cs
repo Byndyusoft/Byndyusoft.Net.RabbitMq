@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Byndyusoft.Messaging.Utils;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Topology
 {

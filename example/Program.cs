@@ -3,10 +3,8 @@ using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.Abstractions;
-using Byndyusoft.Messaging.Core;
-using Byndyusoft.Messaging.OpenTracing;
 using Byndyusoft.Messaging.RabbitMq;
+using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using OpenTelemetry;
@@ -36,19 +34,18 @@ namespace Byndyusoft.Net.RabbitMq
                     jaeger.AgentHost = "localhost";
                     jaeger.AgentPort = 6831;
                 })
-                .AddOpenTracingExporter(QueueServiceActivitySource.Name)
-                .AddQueueServiceInstrumentation()
+                .AddRabbitMqClientInstrumentation()
                 .Build();
 
             var service = new ServiceCollection()
-                //.AddRabbitQueueService(options =>
-                //{
-                //    options.ConnectionString = "host=localhost;username=guest;password=guest";
-                //    options.ApplicationName = "Byndyusoft.Net.RabbitMq";
-                //})
-                .AddInMemoryRabbitQueueService()
+                .AddRabbitMqClient(options =>
+                {
+                    options.ConnectionString = "host=localhost;username=rabbitmq;password=rabbitmq";
+                    //options.ApplicationName = "Byndyusoft.Net.RabbitMq";
+                })
+                .AddInMemoryRabbitMqClient()
                 .BuildServiceProvider()
-                .GetRequiredService<IRabbitQueueService>();
+                .GetRequiredService<IRabbitMqClient>();
 
             await SubscribeExchangeExample(service);
             await SubscribeAsJsonExample(service);
@@ -58,7 +55,7 @@ namespace Byndyusoft.Net.RabbitMq
             Console.ReadKey();
         }
 
-        public static async Task SubscribeExchangeExample(IRabbitQueueService service)
+        public static async Task SubscribeExchangeExample(IRabbitMqClient service)
         {
             await service.CreateExchangeIfNotExistsAsync("exchange", ex => ex.AsAutoDelete(true));
 
@@ -86,13 +83,14 @@ namespace Byndyusoft.Net.RabbitMq
             });
         }
 
-        public static async Task PullingExample(IRabbitQueueService service)
+        public static async Task PullingExample(IRabbitMqClient service)
         {
             var queueName = "pulling-example";
             await service.CreateQueueAsync(queueName, options => options.AsAutoDelete(true));
 
             var getTask = Task.Run(async () =>
             {
+                var rand = new Random();
                 while (true)
                 {
                     using var message = await service.GetAsync(queueName);
@@ -104,7 +102,7 @@ namespace Byndyusoft.Net.RabbitMq
                     }
                     else
                     {
-                        await Task.Delay(TimeSpan.FromSeconds(5));
+                        await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                     }
                 }
             });
@@ -121,7 +119,7 @@ namespace Byndyusoft.Net.RabbitMq
             });
         }
 
-        public static async Task SubscribeAsJsonExample(IRabbitQueueService service)
+        public static async Task SubscribeAsJsonExample(IRabbitMqClient service)
         {
             var queueName = "json-example";
 
@@ -148,7 +146,7 @@ namespace Byndyusoft.Net.RabbitMq
             });
         }
 
-        public static async Task RetryAndErrorExample(IRabbitQueueService service)
+        public static async Task RetryAndErrorExample(IRabbitMqClient service)
         {
             var queueName = "retry-example";
 
@@ -168,7 +166,7 @@ namespace Byndyusoft.Net.RabbitMq
                 .WithRetryQueue(TimeSpan.FromSeconds(10), options => options.AsAutoDelete(true))
                 .Start();
 
-            var message = new QueueMessage
+            var message = new RabbitMqMessage
             {
                 RoutingKey = queueName,
                 Content = JsonContent.Create(new Message {Property = "retry-example"})
