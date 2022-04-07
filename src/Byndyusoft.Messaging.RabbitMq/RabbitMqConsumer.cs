@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -184,47 +183,21 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         private async Task<ConsumeResult> HandleConsumeResultAsync(ReceivedRabbitMqMessage consumedMessage,
-            ConsumeResult consumeResult,
-            Exception? exception,
-            CancellationToken cancellationToken)
+            ConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
         {
-            async Task CreateQueueIfNotExistAsync(string queueName, QueueOptions options)
+            switch (consumeResult)
             {
-                if (await _handler.QueueExistsAsync(queueName, cancellationToken).ConfigureAwait(false) == false)
-                    await _handler.CreateQueueAsync(queueName, options, cancellationToken)
+                case ConsumeResult.Retry:
+                    await _handler.PublishMessageToRetryQueueAsync(consumedMessage, cancellationToken)
                         .ConfigureAwait(false);
+                    return ConsumeResult.Ack;
+                case ConsumeResult.Error:
+                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, exception, cancellationToken)
+                        .ConfigureAwait(false);
+                    return ConsumeResult.Ack;
+                default:
+                    return consumeResult;
             }
-
-            if (consumeResult == ConsumeResult.Retry)
-            {
-                var retryQueueName = _handler.Options.NamingConventions.RetryQueueName(consumedMessage.Queue);
-                await CreateQueueIfNotExistAsync(retryQueueName,
-                    QueueOptions.Default
-                        .AsDurable(true)
-                        .WithMessageTtl(TimeSpan.FromMinutes(1))
-                        .WithDeadLetterExchange(null)
-                        .WithDeadLetterRoutingKey(consumedMessage.Queue)).ConfigureAwait(false);
-
-                var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(consumedMessage, retryQueueName);
-                await _handler.PublishAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-
-                return ConsumeResult.Ack;
-            }
-
-            if (consumeResult == ConsumeResult.Error)
-            {
-                var errorQueueName = _handler.Options.NamingConventions.ErrorQueueName(consumedMessage.Queue);
-                await CreateQueueIfNotExistAsync(errorQueueName, QueueOptions.Default.AsDurable(true))
-                    .ConfigureAwait(false);
-
-                var errorMessage =
-                    RabbitMqMessageFactory.CreateErrorMessage(consumedMessage, errorQueueName, exception);
-                await _handler.PublishAsync(errorMessage, cancellationToken).ConfigureAwait(false);
-
-                return ConsumeResult.Ack;
-            }
-
-            return consumeResult;
         }
     }
 }

@@ -28,7 +28,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 Persistent = true,
                 Mandatory = true
             };
-            await client.PublishAsync(message, cancellationToken).ConfigureAwait(false);
+            await client.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
         }
 
         public static Task PublishAsJsonAsync<T>(this IRabbitMqClient client,

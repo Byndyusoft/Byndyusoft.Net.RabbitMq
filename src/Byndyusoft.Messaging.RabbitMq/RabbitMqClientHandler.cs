@@ -80,7 +80,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public async Task<ReceivedRabbitMqMessage?> GetAsync(string queueName, CancellationToken cancellationToken)
+        public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
+            CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
@@ -94,7 +95,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             return ReceivedRabbitMqMessageFactory.CreateConsumedMessage(pullingResult);
         }
 
-        public async Task AckAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+        public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotNull(message.Queue,
@@ -109,7 +110,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task RejectAsync(ReceivedRabbitMqMessage message, bool requeue,
+        public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
             CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
@@ -125,7 +126,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task PublishAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
@@ -230,6 +231,17 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 return false;
             }
+        }
+
+        public async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotDisposed(this);
+
+            Initialize();
+
+            await _bus.Advanced.QueuePurgeAsync(new Queue(queueName), cancellationToken)
+                .ConfigureAwait(false);
         }
 
         public async Task DeleteQueueAsync(string queueName,

@@ -74,7 +74,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             }
         }
 
-        public Task<ReceivedRabbitMqMessage?> GetAsync(string queueName, CancellationToken cancellationToken)
+        public Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
@@ -83,7 +83,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.FromResult(consumedMessage);
         }
 
-        public Task AckAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+        public Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
@@ -92,7 +92,8 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
-        public Task RejectAsync(ReceivedRabbitMqMessage message, bool requeue, CancellationToken cancellationToken)
+        public Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
+            CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
@@ -101,7 +102,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
-        public Task PublishAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        public Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
@@ -170,6 +171,17 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
                 queue.Dispose();
                 _queues.Remove(queueName);
             }
+
+            return Task.CompletedTask;
+        }
+
+        public Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotDisposed(this);
+
+            var queue = GetRequiredQueue(queueName);
+            queue.Clear();
 
             return Task.CompletedTask;
         }

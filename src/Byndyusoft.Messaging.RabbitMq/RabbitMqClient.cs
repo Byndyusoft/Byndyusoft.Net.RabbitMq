@@ -21,7 +21,17 @@ namespace Byndyusoft.Messaging.RabbitMq
         private RabbitMqClient()
         {
         }
-        
+
+        public RabbitMqClient(string connectionString)
+            : this(new RabbitMqClientOptions {ConnectionString = connectionString})
+        {
+        }
+
+        public RabbitMqClient(RabbitMqClientOptions options)
+            : this(new RabbitMqClientHandler(options), true)
+        {
+        }
+
         public RabbitMqClient(IRabbitMqClientHandler handler, bool disposeHandler = false)
             : this()
         {
@@ -34,17 +44,17 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public RabbitMqClientOptions Options => _handler.Options;
 
-        public virtual async Task<ReceivedRabbitMqMessage?> GetAsync(string queueName,
+        public virtual async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            var activity = _activitySource.Activities.StartGet(_handler.Endpoint, queueName);
+            var activity = _activitySource.Activities.StartGetMessage(_handler.Endpoint, queueName);
             return await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    var message = await _handler.GetAsync(queueName, cancellationToken)
+                    var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
                     SetConsumedMessageProperties(message);
                     _activitySource.Events.MessageGot(activity, message);
@@ -58,42 +68,68 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
-            var activity = _activitySource.Activities.StartAck(_handler.Endpoint, message);
+            var activity = _activitySource.Activities.StartAckMessage(_handler.Endpoint, message);
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    await _handler.AckAsync(message, cancellationToken).ConfigureAwait(false);
+                    await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                     message.Dispose();
                 });
         }
 
-        public virtual async Task RejectAsync(ReceivedRabbitMqMessage message,
+        public virtual async Task NackAsync(ReceivedRabbitMqMessage message,
             bool requeue = false,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
-            var activity = _activitySource.Activities.StartReject(_handler.Endpoint, message, requeue);
+            var activity = _activitySource.Activities.StartNackMessage(_handler.Endpoint, message, requeue);
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    await _handler.RejectAsync(message, requeue, cancellationToken).ConfigureAwait(false);
+                    await _handler.RejectMessageAsync(message, requeue, cancellationToken).ConfigureAwait(false);
                     message.Dispose();
                 });
         }
 
-        public virtual async Task PublishAsync(RabbitMqMessage message, CancellationToken cancellationToken = default)
+        public virtual async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
+            CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
+            var activity = _activitySource.Activities.StartCompleteMessage(_handler.Endpoint, message, consumeResult);
+            await _activitySource.ExecuteAsync(activity,
+                async () =>
+                {
+                    var task = consumeResult switch
+                    {
+                        ConsumeResult.Ack => _handler.AckMessageAsync(message, cancellationToken),
+                        ConsumeResult.RejectWithRequeue =>
+                            _handler.RejectMessageAsync(message, true, cancellationToken),
+                        ConsumeResult.RejectWithoutRequeue => _handler.RejectMessageAsync(message, false,
+                            cancellationToken),
+                        ConsumeResult.Error => _handler.PublishMessageToErrorQueueAsync(message, null,
+                            cancellationToken),
+                        ConsumeResult.Retry => _handler.PublishMessageToRetryQueueAsync(message, cancellationToken),
+                        _ => throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null)
+                    };
+                    await task.ConfigureAwait(false);
+                });
+        }
+
+        public virtual async Task PublishMessageAsync(RabbitMqMessage message,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(message, nameof(message));
+            Preconditions.CheckNotDisposed(this);
 
             SetPublishingMessageProperties(message);
 
-            var activity = _activitySource.Activities.StartPublish(_handler.Endpoint, message);
+            var activity = _activitySource.Activities.StartPublishMessage(_handler.Endpoint, message);
             await _activitySource.ExecuteAsync(activity,
-                async () => { await _handler.PublishAsync(message, cancellationToken).ConfigureAwait(false); });
+                async () => { await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false); });
         }
 
         public async Task CreateQueueAsync(string queueName,
@@ -104,6 +140,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(options, nameof(options));
 
             await _handler.CreateQueueAsync(queueName, options, cancellationToken).ConfigureAwait(false);
+        }
+
+        public async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+
+            await _handler.PurgeQueueAsync(queueName, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)

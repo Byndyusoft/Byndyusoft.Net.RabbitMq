@@ -93,12 +93,12 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    using var message = await service.GetAsync(queueName);
+                    using var message = await service.GetMessageAsync(queueName);
                     if (message is not null)
                     {
                         var model = await message.Content.ReadFromJsonAsync<Message>();
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        await service.AckAsync(message);
+                        await service.CompleteMessageAsync(message, ConsumeResult.Ack);
                     }
                     else
                     {
@@ -171,7 +171,7 @@ namespace Byndyusoft.Net.RabbitMq
                 RoutingKey = queueName,
                 Content = JsonContent.Create(new Message {Property = "retry-example"})
             };
-            await service.PublishAsync(message);
+            await service.PublishMessageAsync(message);
         }
     }
 }

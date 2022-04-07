@@ -15,7 +15,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 _activitySource = activitySource;
             }
 
-            public Activity? StartPublish(RabbitMqEndpoint endpoint, RabbitMqMessage message)
+            public Activity? StartPublishMessage(RabbitMqEndpoint endpoint, RabbitMqMessage message)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));
@@ -30,7 +30,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 return activity;
             }
 
-            public Activity? StartGet(RabbitMqEndpoint endpoint, string queueName)
+            public Activity? StartGetMessage(RabbitMqEndpoint endpoint, string queueName)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -44,7 +44,35 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 return activity;
             }
 
-            public Activity? StartAck(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
+            public Activity? StartCompleteMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message,
+                ConsumeResult consumeResult)
+            {
+                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
+                Preconditions.CheckNotNull(message, nameof(message));
+
+                var activity = _activitySource.StartActivity("Complete", endpoint, ActivityKind.Consumer);
+                if (activity is null)
+                    return activity;
+
+                activity.SetTag("amqp.message.consume_result", consumeResult.ToString());
+                activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
+
+                return activity;
+            }
+
+            public Activity? StartConsume(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
+            {
+                var activity = _activitySource.StartActivity("Consume", endpoint, ActivityKind.Consumer);
+
+                if (activity is not {IsAllDataRequested: true})
+                    return activity;
+
+                _activitySource.Events.MessageGot(activity, message);
+
+                return activity;
+            }
+
+            public Activity? StartAckMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));
@@ -60,12 +88,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 return activity;
             }
 
-            public Activity? StartReject(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message, bool requeue)
+            public Activity? StartNackMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message, bool requeue)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));
 
-                var activity = _activitySource.StartActivity("Reject", endpoint, ActivityKind.Consumer);
+                var activity = _activitySource.StartActivity("Nack", endpoint, ActivityKind.Consumer);
                 if (activity is null)
                     return activity;
 
@@ -73,18 +101,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
                 activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
                 activity.SetTag("amqp.message.requeue", requeue);
-
-                return activity;
-            }
-
-            public Activity? StartConsume(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
-            {
-                var activity = _activitySource.StartActivity("Consume", endpoint, ActivityKind.Consumer);
-
-                if (activity is not { IsAllDataRequested: true })
-                    return activity;
-
-                _activitySource.Events.MessageGot(activity, message);
 
                 return activity;
             }

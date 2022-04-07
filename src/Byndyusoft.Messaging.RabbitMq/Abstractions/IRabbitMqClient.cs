@@ -9,15 +9,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
     {
         RabbitMqClientOptions Options { get; }
 
-        Task<ReceivedRabbitMqMessage?> GetAsync(string queueName, CancellationToken cancellationToken = default);
+        Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task AckAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        Task RejectAsync(ReceivedRabbitMqMessage message,
-            bool requeue = false,
+        Task NackAsync(ReceivedRabbitMqMessage message, bool requeue = false,
             CancellationToken cancellationToken = default);
 
-        Task PublishAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
+        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
+            CancellationToken cancellationToken = default);
+
+        Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
         Task CreateQueueAsync(string queueName,
             QueueOptions options,
@@ -29,6 +31,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
             bool ifUnused = false,
             bool ifEmpty = false,
             CancellationToken cancellationToken = default);
+
+        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task<ulong> GetMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 

@@ -10,14 +10,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             var result = new ByteArrayContent(body);
 
             if (properties.ContentType is not null)
-            {
-                result.Headers.ContentType = MediaTypeHeaderValue.Parse(properties.ContentType);
-            }
+                result.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
 
-            if (properties.ContentEncoding is not null)
-            {
-                result.Headers.ContentEncoding.Add(properties.ContentEncoding);
-            }
+            if (properties.ContentEncoding is not null) result.Headers.ContentEncoding.Add(properties.ContentEncoding);
 
             return result;
         }

@@ -9,13 +9,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
     {
         RabbitMqClientOptions Options { get; }
 
-        Task<ReceivedRabbitMqMessage?> GetAsync(string queueName, CancellationToken cancellationToken);
+        Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken);
 
-        Task AckAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
+        Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
 
-        Task RejectAsync(ReceivedRabbitMqMessage message, bool requeue, CancellationToken cancellationToken);
+        Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue, CancellationToken cancellationToken);
 
-        Task PublishAsync(RabbitMqMessage message, CancellationToken cancellationToken);
+        Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken);
 
         Task CreateQueueAsync(string queueName, QueueOptions options, CancellationToken cancellationToken);
 
@@ -23,7 +23,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
         Task DeleteQueueAsync(string queueName, bool ifUnused, bool ifEmpty, CancellationToken cancellationToken);
 
-        Task<ulong> GetMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
+        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
+
+        Task<ulong> GetMessageCountAsync(string queueName, CancellationToken cancellationToken);
 
         Task CreateExchangeAsync(string exchangeName, ExchangeOptions options, CancellationToken cancellationToken);
 
