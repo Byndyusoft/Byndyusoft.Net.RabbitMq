@@ -388,6 +388,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             pullingResult.IsAvailable.Should().BeTrue();
             pullingResult.Body.Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
+
+            _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(0);
         }
 
         [Fact]
@@ -416,6 +418,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             pullingResult.IsAvailable.Should().BeTrue();
             pullingResult.Body.Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
+
+            _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(0);
         }
 
         [Fact]

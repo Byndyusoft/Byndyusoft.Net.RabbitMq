@@ -34,7 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             }
         }
 
-        public static void RemovedRetryData(this IDictionary<string, object?> headers)
+        public static void RemoveRetryData(this IDictionary<string, object?> headers)
         {
             headers.Remove("x-death");
             headers.Remove("x-first-death-exchange");

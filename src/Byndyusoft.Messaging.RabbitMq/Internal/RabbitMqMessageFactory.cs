@@ -63,7 +63,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         {
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
             headers.SetException(exception);
-            headers.RemovedRetryData();
+            headers.RemoveRetryData();
 
             return new RabbitMqMessage
             {

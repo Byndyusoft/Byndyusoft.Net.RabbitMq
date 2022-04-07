@@ -103,19 +103,30 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    var task = consumeResult switch
+                    switch (consumeResult)
                     {
-                        ConsumeResult.Ack => _handler.AckMessageAsync(message, cancellationToken),
-                        ConsumeResult.RejectWithRequeue =>
-                            _handler.RejectMessageAsync(message, true, cancellationToken),
-                        ConsumeResult.RejectWithoutRequeue => _handler.RejectMessageAsync(message, false,
-                            cancellationToken),
-                        ConsumeResult.Error => _handler.PublishMessageToErrorQueueAsync(message, null,
-                            cancellationToken),
-                        ConsumeResult.Retry => _handler.PublishMessageToRetryQueueAsync(message, cancellationToken),
-                        _ => throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null)
-                    };
-                    await task.ConfigureAwait(false);
+                        case ConsumeResult.Ack:
+                            await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                            break;
+                        case ConsumeResult.RejectWithRequeue:
+                            await _handler.RejectMessageAsync(message, true, cancellationToken).ConfigureAwait(false);
+                            break;
+                        case ConsumeResult.RejectWithoutRequeue:
+                            await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
+                            break;
+                        case ConsumeResult.Error:
+                            await _handler.PublishMessageToErrorQueueAsync(message, null, cancellationToken)
+                                .ConfigureAwait(false);
+                            await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                            break;
+                        case ConsumeResult.Retry:
+                            await _handler.PublishMessageToRetryQueueAsync(message, cancellationToken)
+                                .ConfigureAwait(false);
+                            await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
+                    }
                 });
         }
 
