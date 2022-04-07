@@ -54,6 +54,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.Tests.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq", "src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj", "{1A2D6501-C140-41A5-A1C5-38635585DCB8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9A56E15A-F70B-423C-AEE1-A4587BFC9D09}"
+	ProjectSection(SolutionItems) = preProject
+		build\build.cake = build\build.cake
+		build\build.ps1 = build\build.ps1
+		build\build.sh = build\build.sh
+		build\NuGet.config = build\NuGet.config
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -96,6 +104,7 @@ Global
 		{F426D8EA-57F9-4A74-B22B-2274B85DA77B} = {9EA25630-88D1-4A52-B339-141C8B8720B8}
 		{94967F85-C024-4E4D-9A8A-6FEB25FC03E1} = {91AB4082-CA49-4DB5-879F-6A897728BB9B}
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
+		{9A56E15A-F70B-423C-AEE1-A4587BFC9D09} = {F021E742-6A0A-469D-A6CE-68AB0F50DD52}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F40608D2-7FC3-4557-9A87-5A76C4E0B531}

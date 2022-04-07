@@ -1,32 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+	<PropertyGroup>
+		<TargetFramework>net6.0</TargetFramework>
+		<IsPackable>false</IsPackable>
+		<RootNamespace>Byndyusoft.Messaging.Tests.Functional</RootNamespace>
+		<AssemblyName>Byndyusoft.Messaging.Tests.Functional</AssemblyName>
+	</PropertyGroup>
 
-    <IsPackable>false</IsPackable>
-	  <RootNamespace>Byndyusoft.Messaging.Tests.Functional</RootNamespace>
+	<ItemGroup>
+		<Content Include="appsettings.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 
-    <AssemblyName>Byndyusoft.Messaging.Tests.Functional</AssemblyName>
-  </PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="FluentAssertions" Version="6.6.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+		<PackageReference Include="xunit" Version="2.4.1" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="3.1.2">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="FluentAssertions" Version="6.6.0" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
-    <PackageReference Include="xunit" Version="2.4.1" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj" />
-    <ProjectReference Include="..\..\src\RabbitMq\RabbitMq.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj" />
+		<ProjectReference Include="..\..\src\RabbitMq\RabbitMq.csproj" />
+	</ItemGroup>
 
 </Project>
