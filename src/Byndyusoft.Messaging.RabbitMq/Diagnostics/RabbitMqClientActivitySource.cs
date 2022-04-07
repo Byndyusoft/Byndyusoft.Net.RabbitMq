@@ -15,8 +15,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         private static readonly string? Version = typeof(RabbitMqClientActivitySource)
             .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
 
-        private readonly ActivitySource _source;
         private readonly RabbitMqDiagnosticsOptions _options;
+
+        private readonly ActivitySource _source;
 
         public RabbitMqClientActivitySource(RabbitMqDiagnosticsOptions options)
         {
@@ -25,9 +26,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             _source = new ActivitySource(Name, Version);
             _options = options;
 
-            Events = new(this);
-            Activities = new(this);
+            Events = new RabbitMqClientActivitySourceEvents(this);
+            Activities = new RabbitMqClientActivitySourceActivities(this);
         }
+
+        public RabbitMqClientActivitySourceActivities Activities { get; }
+
+        public RabbitMqClientActivitySourceEvents Events { get; }
 
         private Activity? StartActivity(string name, RabbitMqEndpoint endpoint, ActivityKind kind)
         {
@@ -128,9 +133,5 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 throw;
             }
         }
-
-        public RabbitMqClientActivitySourceActivities Activities { get; }
-
-        public RabbitMqClientActivitySourceEvents Events { get; }
     }
 }

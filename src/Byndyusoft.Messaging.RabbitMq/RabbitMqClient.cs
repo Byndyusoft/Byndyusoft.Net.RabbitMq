@@ -243,16 +243,15 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeCore()
         {
-            if (disposing)
-                if (_disposeHandler)
-                {
-                    _handler.Dispose();
-                    _handler = null!;
-                }
+            if (_disposeHandler)
+            {
+                _handler.Dispose();
+                _handler = null!;
+            }
 
-            base.Dispose(disposing);
+            base.DisposeCore();
         }
 
         protected void SetPublishingMessageProperties(RabbitMqMessage message)

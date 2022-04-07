@@ -1,4 +1,4 @@
-namespace Byndyusoft.Messaging.Tests.Functional
+namespace Byndyusoft.Messaging.Tests.Functional.Models
 {
     public class Message
     {

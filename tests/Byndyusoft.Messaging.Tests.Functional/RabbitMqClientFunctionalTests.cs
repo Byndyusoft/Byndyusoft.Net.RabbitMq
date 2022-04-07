@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.Tests.Functional.Models;
 using EasyNetQ;
 using EasyNetQ.Topology;
 using FluentAssertions;
@@ -23,9 +24,9 @@ namespace Byndyusoft.Messaging.Tests.Functional
     public class RabbitMqClientFunctionalTests : IDisposable
     {
         private readonly IBus _bus;
-        private readonly IAdvancedBus _rabbit;
         private readonly IRabbitMqClient _client;
         private readonly RabbitMqClientOptions _options;
+        private readonly IAdvancedBus _rabbit;
 
         public RabbitMqClientFunctionalTests()
         {
@@ -52,7 +53,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             // arrange
             var queueName = $"{nameof(PublishToQueue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
-            
+
             var serializationOptions = new JsonSerializerOptions();
             var data = new Message {Content = "content"};
 
@@ -486,9 +487,10 @@ namespace Byndyusoft.Messaging.Tests.Functional
             // arrange
             var queueName = $"{nameof(PurgeQueue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(), Array.Empty<byte>());
+            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+                Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
-            
+
             // act
             await _client.PurgeQueueAsync(queueName);
 
@@ -503,7 +505,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             // arrange
             var queueName = $"{nameof(GetMessageCount_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(), Array.Empty<byte>());
+            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+                Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
@@ -518,7 +521,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
         {
             // arrange
             var exchangeName = $"{nameof(CreateExchange_Test)}.exchange";
-            
+
             // act
             await _client.CreateExchangeAsync(exchangeName, ExchangeOptions.Default);
 
@@ -585,7 +588,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _client.BindQueueAsync(exchangeName, routingKey, queueName);
 
             // assert
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(), Array.Empty<byte>());
+            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+                Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(1);
@@ -673,9 +677,11 @@ namespace Byndyusoft.Messaging.Tests.Functional
             actual.UserId.Should().Be(expected.UserId);
         }
 
-        private Task WaitForMessageAsync(string queueName, TimeSpan timeout) =>
-            WaitForAsync(() => _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount != 0, timeout);
-        
+        private Task WaitForMessageAsync(string queueName, TimeSpan timeout)
+        {
+            return WaitForAsync(() => _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount != 0, timeout);
+        }
+
         private static async Task WaitForAsync(Func<bool> condition, TimeSpan timeout)
         {
             var cts = new CancellationTokenSource(timeout);

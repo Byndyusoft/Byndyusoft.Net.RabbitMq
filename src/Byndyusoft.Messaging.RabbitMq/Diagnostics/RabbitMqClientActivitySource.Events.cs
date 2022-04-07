@@ -8,7 +8,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         public class RabbitMqClientActivitySourceEvents
         {
             private readonly RabbitMqClientActivitySource _activitySource;
-            
+
             public RabbitMqClientActivitySourceEvents(RabbitMqClientActivitySource activitySource)
             {
                 _activitySource = activitySource;
@@ -31,12 +31,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return;
 
-                var tags = new ActivityTagsCollection { { "result", result.ToString() } };
+                var tags = new ActivityTagsCollection {{"result", result.ToString()}};
                 var activityEvent = new ActivityEvent("message.consumed", tags: tags);
                 activity.AddEvent(activityEvent);
             }
 
-           private ActivityTagsCollection GetConsumedMessageEventTags(ReceivedRabbitMqMessage? message)
+            private ActivityTagsCollection GetConsumedMessageEventTags(ReceivedRabbitMqMessage? message)
             {
                 var tags = new ActivityTagsCollection();
 
@@ -54,7 +54,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                     tags.Add("amqp.message.redelivered", message.Redelivered);
                     tags.Add("amqp.message.consumer_tag", message.ConsumerTag);
                     tags.Add("amqp.message.retry_count", message.RetryCount);
-                    tags.Add("amqp.message.properties", JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                    tags.Add("amqp.message.properties",
+                        JsonSerializer.Serialize(message.Properties, _activitySource._options));
                 }
 
                 return tags;

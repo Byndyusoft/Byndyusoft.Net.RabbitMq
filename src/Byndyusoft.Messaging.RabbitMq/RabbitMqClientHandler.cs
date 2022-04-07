@@ -353,15 +353,14 @@ namespace Byndyusoft.Messaging.RabbitMq
             _isInitialized = true;
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeCore()
         {
-            if (disposing == false)
-                return;
-
             MultiDispose(_pullingConsumers.Values);
 
             _pullingConsumers.Clear();
             _bus.Dispose();
+
+            base.DisposeCore();
         }
 
         private IPullingConsumer<PullResult> GetPullingConsumer(string queueName)

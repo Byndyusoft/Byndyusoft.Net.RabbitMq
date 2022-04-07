@@ -46,10 +46,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             activity.SetParentId(activityContext.TraceId, activityContext.SpanId, activityContext.TraceFlags);
             activity.TraceStateString = activityContext.TraceState;
 
-            foreach (var item in propagationContext.Baggage)
-            {
-                activity.SetBaggage(item.Key, item.Value);
-            }
+            foreach (var item in propagationContext.Baggage) activity.SetBaggage(item.Key, item.Value);
         }
     }
 }

@@ -65,7 +65,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Serialization
             if (_lengthLimit != null && inner.Length + count > _lengthLimit)
             {
                 _oversized = true;
-                count = _lengthLimit.Value - (int)inner.Length;
+                count = _lengthLimit.Value - (int) inner.Length;
             }
 
             Inner.Write(buffer, offset, count);

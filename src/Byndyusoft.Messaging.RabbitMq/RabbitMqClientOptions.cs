@@ -8,8 +8,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqClientOptions
     {
-        private QueueNamingConventions _namingConventions = new();
         private RabbitMqDiagnosticsOptions _diagnosticsOptions = new();
+        private QueueNamingConventions _namingConventions = new();
 
         public string ApplicationName { get; set; } =
             Assembly.GetEntryAssembly()?.GetName().Name ?? Process.GetCurrentProcess().ProcessName;

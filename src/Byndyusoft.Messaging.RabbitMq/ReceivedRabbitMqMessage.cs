@@ -116,11 +116,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        protected override void Dispose(bool disposing)
+        protected override void DisposeCore()
         {
-            base.Dispose(disposing);
+            base.DisposeCore();
 
-            if (disposing) _content?.Dispose();
+            _content?.Dispose();
         }
     }
 }

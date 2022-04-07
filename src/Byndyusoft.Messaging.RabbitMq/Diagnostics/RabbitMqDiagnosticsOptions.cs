@@ -13,7 +13,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
         public RabbitMqDiagnosticsOptions()
         {
-            _jsonSerializerOptions = new() {DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};
+            _jsonSerializerOptions = new JsonSerializerOptions()
+                {DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};
             _jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             _valueMaxStringLength = DefaultValueMaxStringLength;
         }

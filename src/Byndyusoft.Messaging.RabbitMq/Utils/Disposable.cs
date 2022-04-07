@@ -14,16 +14,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Utils
 
             IsDisposed = true;
 
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            DisposeCore();
         }
 
-        ~Disposable()
-        {
-            Dispose(false);
-        }
-
-        protected virtual void Dispose(bool disposing)
+        protected virtual void DisposeCore()
         {
         }
 
