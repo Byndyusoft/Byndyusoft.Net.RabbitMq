@@ -34,7 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task<ulong> GetMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
+        Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task CreateExchangeAsync(string exchangeName,
             ExchangeOptions options,

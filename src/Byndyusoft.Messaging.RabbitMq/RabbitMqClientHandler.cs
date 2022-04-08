@@ -92,7 +92,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return ReceivedRabbitMqMessageFactory.CreateConsumedMessage(pullingResult);
+            return ReceivedRabbitMqMessageFactory.CreateReceivedMessage(pullingResult);
         }
 
         public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
@@ -168,7 +168,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
-                    var consumedMessage = ReceivedRabbitMqMessageFactory.CreateConsumedMessage(body, properties, info)!;
+                    var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info)!;
                     var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
                         .ConfigureAwait(false);
 
@@ -258,7 +258,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task<ulong> GetMessageCountAsync(string queueName,
+        public async Task<ulong> GetQueueMessageCountAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));

@@ -32,8 +32,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return consumer.OnStarting(async (_, cancellationToken) =>
             {
-                var rabbitService = consumer.QueueService;
-                await rabbitService.BindQueueAsync(exchangeName, routingKey, consumer.QueueName, cancellationToken)
+                await consumer.Client.BindQueueAsync(exchangeName, routingKey, consumer.QueueName, cancellationToken)
                     .ConfigureAwait(false);
             });
         }
@@ -57,13 +56,12 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return consumer.OnStarting(async (_, cancellationToken) =>
             {
-                var rabbitService = consumer.QueueService;
-                var retryQueueName = rabbitService.Options.NamingConventions.RetryQueueName(consumer.QueueName);
+                var retryQueueName = consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
                 options = options
                     .WithMessageTtl(delay)
                     .WithDeadLetterExchange(null)
                     .WithDeadLetterRoutingKey(consumer.QueueName);
-                await rabbitService.CreateQueueIfNotExistsAsync(retryQueueName, options, cancellationToken)
+                await consumer.Client.CreateQueueIfNotExistsAsync(retryQueueName, options, cancellationToken)
                     .ConfigureAwait(false);
             });
         }
@@ -88,9 +86,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return consumer.OnStarting(async (_, cancellationToken) =>
             {
-                var rabbitService = consumer.QueueService;
-                var errorQueueName = rabbitService.Options.NamingConventions.ErrorQueueName(consumer.QueueName);
-                await rabbitService.CreateQueueIfNotExistsAsync(errorQueueName, options, cancellationToken)
+                var errorQueueName = consumer.Client.Options.NamingConventions.ErrorQueueName(consumer.QueueName);
+                await consumer.Client.CreateQueueIfNotExistsAsync(errorQueueName, options, cancellationToken)
                     .ConfigureAwait(false);
             });
         }

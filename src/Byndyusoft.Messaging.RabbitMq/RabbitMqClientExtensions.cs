@@ -57,7 +57,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             return client.SubscribeAs<T>(queueName, OnMessage);
         }
 
-
         public static RabbitMqConsumer Subscribe(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,

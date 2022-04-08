@@ -177,12 +177,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _handler.DeleteQueueAsync(queueName, ifUnused, ifEmpty, cancellationToken).ConfigureAwait(false);
         }
 
-        public async Task<ulong> GetMessageCountAsync(string queueName,
+        public async Task<ulong> GetQueueMessageCountAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
 
-            return await _handler.GetMessageCountAsync(queueName, cancellationToken).ConfigureAwait(false);
+            return await _handler.GetQueueMessageCountAsync(queueName, cancellationToken).ConfigureAwait(false);
         }
 
         public async Task CreateExchangeAsync(string exchangeName,

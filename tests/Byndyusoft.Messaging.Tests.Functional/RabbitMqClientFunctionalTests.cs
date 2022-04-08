@@ -500,17 +500,17 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
-        public async Task GetMessageCount_Test()
+        public async Task GetQueueMessageCount_Test()
         {
             // arrange
-            var queueName = $"{nameof(GetMessageCount_Test)}.queue";
+            var queueName = $"{nameof(GetQueueMessageCount_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
             await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
-            var messageCount = await _client.GetMessageCountAsync(queueName);
+            var messageCount = await _client.GetQueueMessageCountAsync(queueName);
 
             // assert
             messageCount.Should().Be(1);

@@ -25,12 +25,12 @@ namespace Byndyusoft.Messaging.RabbitMq
         private bool? _exclusive;
         private ushort? _prefetchCount;
 
-        public RabbitMqConsumer(IRabbitMqClient service,
+        public RabbitMqConsumer(IRabbitMqClient client,
             IRabbitMqClientHandler handler,
             string queueName,
             Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
-            QueueService = service;
+            Client = client;
             _handler = handler;
             _onMessage = onMessage;
             _queueName = queueName;
@@ -77,7 +77,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public IRabbitMqClient QueueService { get; }
+        public IRabbitMqClient Client { get; }
 
         public async Task StartAsync(CancellationToken cancellationToken = default)
         {
@@ -133,7 +133,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             async Task EventHandler(RabbitMqConsumer _, CancellationToken cancellationToken)
             {
-                await QueueService.CreateQueueIfNotExistsAsync(QueueName, options, cancellationToken)
+                await Client.CreateQueueIfNotExistsAsync(QueueName, options, cancellationToken)
                     .ConfigureAwait(false);
             }
 

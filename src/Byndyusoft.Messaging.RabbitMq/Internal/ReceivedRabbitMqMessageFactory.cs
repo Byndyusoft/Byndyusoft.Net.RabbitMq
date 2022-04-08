@@ -6,7 +6,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
-        public static ReceivedRabbitMqMessage CreateConsumedMessage(byte[] body,
+        public static ReceivedRabbitMqMessage CreateReceivedMessage(byte[] body,
             MessageProperties messageProperties,
             MessageReceivedInfo info)
         {
@@ -70,12 +70,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             };
         }
 
-        public static ReceivedRabbitMqMessage? CreateConsumedMessage(PullResult pullResult)
+        public static ReceivedRabbitMqMessage? CreateReceivedMessage(PullResult pullResult)
         {
             if (pullResult.IsAvailable == false)
                 return null;
 
-            return CreateConsumedMessage(pullResult.Body, pullResult.Properties, pullResult.ReceivedInfo);
+            return CreateReceivedMessage(pullResult.Body, pullResult.Properties, pullResult.ReceivedInfo);
         }
     }
 }

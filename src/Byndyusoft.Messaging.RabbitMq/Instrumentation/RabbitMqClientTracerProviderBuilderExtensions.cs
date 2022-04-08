@@ -8,7 +8,7 @@ namespace OpenTelemetry.Trace
     /// <summary>
     ///     Extension method for setting up RabbitMqClient OpenTelemetry tracing.
     /// </summary>
-    public static class QueueServiceTracerProviderBuilderExtensions
+    public static class RabbitMqClientTracerProviderBuilderExtensions
     {
         /// <summary>
         ///     Subscribes to the RabbitMqClient activity source to enable OpenTelemetry tracing.
