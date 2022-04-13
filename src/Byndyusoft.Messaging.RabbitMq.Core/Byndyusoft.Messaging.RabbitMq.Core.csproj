@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <Nullable>enable</Nullable>
+    <LangVersion>9</LangVersion>
+    <RootNamespace>Byndyusoft.Messaging.RabbitMq.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
+    <PackageReference Include="OpenTelemetry.API" Version="1.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Abstractions\Byndyusoft.Messaging.RabbitMq.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Abstractions\" />
+  </ItemGroup>
+
+</Project>

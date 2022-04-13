@@ -15,7 +15,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\src\Byndyusoft.Messaging.OpenTracing\Byndyusoft.Messaging.OpenTracing.csproj" />
 	  <ProjectReference Include="..\src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj" />
 	</ItemGroup>
 </Project>

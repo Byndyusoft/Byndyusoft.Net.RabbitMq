@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 
 namespace Byndyusoft.Messaging.RabbitMq.InMemory
 {

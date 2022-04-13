@@ -1,7 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Utils;
+using Byndyusoft.Messaging.RabbitMq.Abstractions;
+using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.InMemory
 {

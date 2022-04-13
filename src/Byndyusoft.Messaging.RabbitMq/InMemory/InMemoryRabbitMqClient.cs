@@ -1,3 +1,6 @@
+using Byndyusoft.Messaging.RabbitMq.Abstractions;
+using Byndyusoft.Messaging.RabbitMq.Core;
+
 namespace Byndyusoft.Messaging.RabbitMq.InMemory
 {
     public class InMemoryRabbitMqClient : RabbitMqClient

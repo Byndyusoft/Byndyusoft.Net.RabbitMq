@@ -8,7 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
+using Byndyusoft.Messaging.RabbitMq.Core;
 using Byndyusoft.Messaging.Tests.Functional.Models;
 using EasyNetQ;
 using EasyNetQ.Topology;
@@ -35,7 +36,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 ConnectionString = "host=localhost;username=guest;password=guest"
             };
 
-            _client = new RabbitMqClient(_options);
+            _client = new RabbitMqClient(new RabbitMqClientHandler(_options));
             _bus = RabbitHutch.CreateBus(_options.ConnectionString, _ => { });
             _rabbit = _bus.Advanced;
         }

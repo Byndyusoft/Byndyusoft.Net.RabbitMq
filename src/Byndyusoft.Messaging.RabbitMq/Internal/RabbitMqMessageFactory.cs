@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using EasyNetQ;
 
 namespace Byndyusoft.Messaging.RabbitMq.Internal
@@ -39,41 +40,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
                 properties.Expiration = $"{(int) message.Properties.Expiration.Value.TotalMilliseconds}";
 
             return properties;
-        }
-
-        public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
-        {
-            var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
-            headers.SetRetryCount(consumedMessage.RetryCount);
-
-            return new RabbitMqMessage
-            {
-                Content = RabbitMqMessageContent.Create(consumedMessage.Content),
-                Properties = consumedMessage.Properties,
-                Mandatory = true,
-                Persistent = consumedMessage.Persistent,
-                Headers = headers,
-                RoutingKey = retryQueueName
-            };
-        }
-
-        public static RabbitMqMessage CreateErrorMessage(ReceivedRabbitMqMessage consumedMessage,
-            string errorQueueName,
-            Exception? exception = null)
-        {
-            var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
-            headers.SetException(exception);
-            headers.RemoveRetryData();
-
-            return new RabbitMqMessage
-            {
-                Content = RabbitMqMessageContent.Create(consumedMessage.Content),
-                Properties = consumedMessage.Properties,
-                Mandatory = true,
-                Persistent = consumedMessage.Persistent,
-                Headers = headers,
-                RoutingKey = errorQueueName
-            };
         }
     }
 }

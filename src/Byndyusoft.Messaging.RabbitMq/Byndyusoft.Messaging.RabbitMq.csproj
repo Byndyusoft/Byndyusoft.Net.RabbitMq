@@ -16,4 +16,8 @@
 		<PackageReference Include="EasyNetQ" Version="6.3.1" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj" />
+	</ItemGroup>
+
 </Project>

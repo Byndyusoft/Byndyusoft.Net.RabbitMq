@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net5.0</TargetFramework>
 		<IsPackable>false</IsPackable>
 		<RootNamespace>Byndyusoft.Messaging.Tests.Functional</RootNamespace>
 		<AssemblyName>Byndyusoft.Messaging.Tests.Functional</AssemblyName>

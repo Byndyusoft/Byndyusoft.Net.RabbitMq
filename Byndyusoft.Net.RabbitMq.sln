@@ -62,6 +62,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9A56E15A
 		build\NuGet.config = build\NuGet.config
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq.Core", "src\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj", "{BC596626-CD4F-4F1D-8A24-3F4671C9D273}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Messaging.RabbitMq.Abstractions", "src\Byndyusoft.Messaging.RabbitMq.Abstractions\Byndyusoft.Messaging.RabbitMq.Abstractions.csproj", "{942D1F91-3517-4C92-A21A-E58107BD9954}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -92,6 +96,14 @@ Global
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC596626-CD4F-4F1D-8A24-3F4671C9D273}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC596626-CD4F-4F1D-8A24-3F4671C9D273}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC596626-CD4F-4F1D-8A24-3F4671C9D273}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC596626-CD4F-4F1D-8A24-3F4671C9D273}.Release|Any CPU.Build.0 = Release|Any CPU
+		{942D1F91-3517-4C92-A21A-E58107BD9954}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{942D1F91-3517-4C92-A21A-E58107BD9954}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{942D1F91-3517-4C92-A21A-E58107BD9954}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{942D1F91-3517-4C92-A21A-E58107BD9954}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -105,6 +117,8 @@ Global
 		{94967F85-C024-4E4D-9A8A-6FEB25FC03E1} = {91AB4082-CA49-4DB5-879F-6A897728BB9B}
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 		{9A56E15A-F70B-423C-AEE1-A4587BFC9D09} = {F021E742-6A0A-469D-A6CE-68AB0F50DD52}
+		{BC596626-CD4F-4F1D-8A24-3F4671C9D273} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
+		{942D1F91-3517-4C92-A21A-E58107BD9954} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F40608D2-7FC3-4557-9A87-5A76C4E0B531}

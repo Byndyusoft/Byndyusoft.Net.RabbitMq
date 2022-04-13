@@ -1,5 +1,7 @@
 using System;
 using System.Text;
+using Byndyusoft.Messaging.RabbitMq.Abstractions;
+using Byndyusoft.Messaging.RabbitMq.Core.Messages;
 using EasyNetQ;
 
 namespace Byndyusoft.Messaging.RabbitMq.Internal
@@ -12,7 +14,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         {
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
-            var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
+            var retryCount = RabbitMqMessageHeadersExtensions.GetRetryCount(messageProperties.Headers) ?? 0;
 
             return new ReceivedRabbitMqMessage
             {

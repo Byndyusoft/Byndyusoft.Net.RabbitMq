@@ -3,10 +3,11 @@
 using System;
 using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Core;
+using Byndyusoft.Messaging.RabbitMq.Core.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.InMemory;
 using Byndyusoft.Messaging.RabbitMq.Internal;
-using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.Options;
 
 // ReSharper disable once CheckNamespace

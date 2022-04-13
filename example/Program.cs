@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
+using Byndyusoft.Messaging.RabbitMq.Core;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
