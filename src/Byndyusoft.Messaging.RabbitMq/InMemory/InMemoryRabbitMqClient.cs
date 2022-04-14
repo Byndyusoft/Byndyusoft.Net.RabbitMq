@@ -6,11 +6,12 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
     public class InMemoryRabbitMqClient : RabbitMqClient
     {
         public InMemoryRabbitMqClient(RabbitMqClientOptions options)
-            : base(new InMemoryRabbitMqClientHandler(options))
+            : this(new InMemoryRabbitMqClientHandler(), options)
         {
         }
 
-        public InMemoryRabbitMqClient(InMemoryRabbitMqClientHandler handler) : base(handler)
+        public InMemoryRabbitMqClient(InMemoryRabbitMqClientHandler handler, RabbitMqClientOptions options) 
+            : base(handler, options)
         {
         }
     }

@@ -16,10 +16,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 await handler.CreateQueueAsync(queueName, options, cancellationToken).ConfigureAwait(false);
         }
 
-        public static async Task PublishMessageToRetryQueueAsync(this IRabbitMqClientHandler handler,
-            ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+        public static async Task PublishMessageToRetryQueueAsync(this IRabbitMqClientHandler handler, 
+            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, CancellationToken cancellationToken)
         {
-            var retryQueueName = handler.Options.NamingConventions.RetryQueueName(message.Queue);
+            var retryQueueName = queueNamingConventions.RetryQueueName(message.Queue);
             await handler.CreateQueueIfNotExistAsync(retryQueueName, QueueOptions.Default
                 .AsDurable(true)
                 .WithMessageTtl(TimeSpan.FromMinutes(1))
@@ -30,10 +30,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             await handler.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
         }
 
-        public static async Task PublishMessageToErrorQueueAsync(this IRabbitMqClientHandler handler,
-            ReceivedRabbitMqMessage message, Exception? exception, CancellationToken cancellationToken)
+        public static async Task PublishMessageToErrorQueueAsync(this IRabbitMqClientHandler handler, 
+             ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, Exception? exception, CancellationToken cancellationToken)
         {
-            var errorQueueName = handler.Options.NamingConventions.ErrorQueueName(message.Queue);
+            var errorQueueName = queueNamingConventions.ErrorQueueName(message.Queue);
             await handler
                 .CreateQueueIfNotExistAsync(errorQueueName, QueueOptions.Default.AsDurable(true), cancellationToken)
                 .ConfigureAwait(false);

@@ -36,7 +36,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 ConnectionString = "host=localhost;username=guest;password=guest"
             };
 
-            _client = new RabbitMqClient(new RabbitMqClientHandler(_options));
+            _client = new RabbitMqClient(new RabbitMqClientHandler(_options.ConnectionString), _options);
             _bus = RabbitHutch.CreateBus(_options.ConnectionString, _ => { });
             _rabbit = _bus.Advanced;
         }

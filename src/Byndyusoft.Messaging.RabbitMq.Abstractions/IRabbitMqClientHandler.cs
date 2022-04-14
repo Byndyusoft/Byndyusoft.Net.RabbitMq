@@ -7,8 +7,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 {
     public interface IRabbitMqClientHandler : IDisposable, IRabbitMqEndpointContainer
     {
-        RabbitMqClientOptions Options { get; }
-
         Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken);
 
         Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);

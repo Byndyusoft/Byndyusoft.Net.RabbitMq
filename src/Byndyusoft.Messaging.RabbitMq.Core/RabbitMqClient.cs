@@ -19,16 +19,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         private IRabbitMqClientHandler _handler;
 
 
-        public RabbitMqClient(IRabbitMqClientHandler handler, bool disposeHandler = false)
+        public RabbitMqClient(IRabbitMqClientHandler handler, RabbitMqClientOptions options, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
 
+            Options = options;
             _handler = handler;
-            _activitySource = new RabbitMqClientActivitySource(handler.Options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
         }
 
-        public RabbitMqClientOptions Options => _handler.Options;
+        public RabbitMqClientOptions Options { get; }
 
         public virtual async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
@@ -101,12 +102,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                             await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
                             break;
                         case ConsumeResult.Error:
-                            await _handler.PublishMessageToErrorQueueAsync(message, null, cancellationToken)
+                            await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions, null, cancellationToken)
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
                         case ConsumeResult.Retry:
-                            await _handler.PublishMessageToRetryQueueAsync(message, cancellationToken)
+                            await _handler.PublishMessageToRetryQueueAsync( message, Options.NamingConventions, cancellationToken)
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;

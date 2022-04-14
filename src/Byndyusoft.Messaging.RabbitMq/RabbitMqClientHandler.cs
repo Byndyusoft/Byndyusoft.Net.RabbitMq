@@ -11,7 +11,6 @@ using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -22,47 +21,23 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly object _lock = new();
-        private readonly RabbitMqClientOptions _options;
         private readonly Dictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus _bus = default!;
         private RabbitMqEndpoint? _endPoint;
         private bool _isInitialized;
 
         public RabbitMqClientHandler(string connectionString)
+            :this(connectionString, new BusFactory())
+        {
+        }
+
+        public RabbitMqClientHandler(string connectionString, IBusFactory busFactory)
         {
             Preconditions.CheckNotNull(connectionString, nameof(connectionString));
-
-            _options = new RabbitMqClientOptions {ConnectionString = connectionString};
-            _busFactory = new BusFactory();
-            _connectionConfiguration = ConnectionStringParser.Parse(connectionString);
-        }
-
-        public RabbitMqClientHandler(RabbitMqClientOptions options)
-        {
-            Preconditions.CheckNotNull(options, nameof(options));
-
-            _options = options;
-            _busFactory = new BusFactory();
-            _connectionConfiguration = ConnectionStringParser.Parse(options.ConnectionString);
-        }
-
-        public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
-        {
-            Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
-            _options = options.Value;
-            _connectionConfiguration = ConnectionStringParser.Parse(_options.ConnectionString);
+            _connectionConfiguration = ConnectionStringParser.Parse(connectionString);
             _busFactory = busFactory;
-        }
-
-        public RabbitMqClientOptions Options
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _options;
-            }
         }
 
         RabbitMqEndpoint IRabbitMqEndpointContainer.Endpoint
@@ -168,7 +143,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
-                    var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info)!;
+                    var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info);
                     var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
                         .ConfigureAwait(false);
 

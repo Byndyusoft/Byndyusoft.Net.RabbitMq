@@ -16,8 +16,4 @@
     <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Abstractions\Byndyusoft.Messaging.RabbitMq.Abstractions.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Abstractions\" />
-  </ItemGroup>
-
 </Project>

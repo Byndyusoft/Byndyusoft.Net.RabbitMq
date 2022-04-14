@@ -179,11 +179,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             switch (consumeResult)
             {
                 case ConsumeResult.Retry:
-                    await _handler.PublishMessageToRetryQueueAsync(consumedMessage, cancellationToken)
+                    await _handler.PublishMessageToRetryQueueAsync(consumedMessage, Client.Options.NamingConventions, cancellationToken)
                         .ConfigureAwait(false);
                     return ConsumeResult.Ack;
                 case ConsumeResult.Error:
-                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, exception, cancellationToken)
+                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, exception, cancellationToken)
                         .ConfigureAwait(false);
                     return ConsumeResult.Ack;
                 default:

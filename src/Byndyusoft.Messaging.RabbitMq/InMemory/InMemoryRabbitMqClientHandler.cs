@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Microsoft.Extensions.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq.InMemory
 {
@@ -15,25 +14,11 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         private readonly RabbitMqEndpoint _endpoint;
         private readonly Dictionary<string, InMemoryRabbitMqExchange> _exchanges = new();
         private readonly object _lock = new();
-        private readonly RabbitMqClientOptions _options;
         private readonly Dictionary<string, InMemoryRabbitMqQueue> _queues = new();
         private readonly Timer _timer;
 
         public InMemoryRabbitMqClientHandler()
-            : this(new RabbitMqClientOptions())
         {
-        }
-
-        public InMemoryRabbitMqClientHandler(RabbitMqClientOptions options)
-            : this(Microsoft.Extensions.Options.Options.Create(options))
-        {
-        }
-
-        public InMemoryRabbitMqClientHandler(IOptions<RabbitMqClientOptions> options)
-        {
-            Preconditions.CheckNotNull(options, nameof(options));
-
-            _options = options.Value;
             _timer = new Timer(DoService, null, 0, 1000);
             _endpoint = new RabbitMqEndpoint {Host = "in-memory"};
         }
@@ -62,15 +47,6 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             {
                 Preconditions.CheckNotDisposed(this);
                 return _endpoint;
-            }
-        }
-
-        public RabbitMqClientOptions Options
-        {
-            get
-            {
-                Preconditions.CheckNotDisposed(this);
-                return _options;
             }
         }
 
