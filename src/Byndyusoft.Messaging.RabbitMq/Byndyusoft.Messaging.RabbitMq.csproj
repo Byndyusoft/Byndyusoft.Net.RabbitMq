@@ -10,7 +10,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Byndyusoft.Net.Http.Json" Version="0.2.1" />
-		<PackageReference Include="OpenTelemetry.API" Version="1.1.0" />
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="2.0.0" />
 		<PackageReference Include="EasyNetQ" Version="6.3.1" />
