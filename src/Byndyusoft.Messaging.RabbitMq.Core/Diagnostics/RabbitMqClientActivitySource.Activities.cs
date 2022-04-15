@@ -45,7 +45,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
             }
 
             public Activity? StartCompleteMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message,
-                ConsumeResult consumeResult)
+                ClientConsumeResult consumeResult)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));
@@ -68,39 +68,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
                     return activity;
 
                 _activitySource.Events.MessageGot(activity, message);
-
-                return activity;
-            }
-
-            public Activity? StartAckMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
-            {
-                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
-                Preconditions.CheckNotNull(message, nameof(message));
-
-                var activity = _activitySource.StartActivity("Ack", endpoint, ActivityKind.Consumer);
-                if (activity is null)
-                    return activity;
-
-                ActivityContextPropagation.ExtractContext(activity, message.Headers);
-
-                activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
-
-                return activity;
-            }
-
-            public Activity? StartNackMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message, bool requeue)
-            {
-                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
-                Preconditions.CheckNotNull(message, nameof(message));
-
-                var activity = _activitySource.StartActivity("Nack", endpoint, ActivityKind.Consumer);
-                if (activity is null)
-                    return activity;
-
-                ActivityContextPropagation.ExtractContext(activity, message.Headers);
-
-                activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
-                activity.SetTag("amqp.message.requeue", requeue);
 
                 return activity;
             }

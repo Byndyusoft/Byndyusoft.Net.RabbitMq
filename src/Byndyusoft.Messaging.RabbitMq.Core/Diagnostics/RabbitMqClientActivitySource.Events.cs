@@ -27,7 +27,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
                 activity.AddEvent(activityEvent);
             }
 
-            public void MessageConsumed(Activity? activity, ReceivedRabbitMqMessage _, ConsumeResult result)
+            public void MessageConsumed(Activity? activity, ReceivedRabbitMqMessage _, ClientConsumeResult result)
             {
                 if (activity is null)
                     return;

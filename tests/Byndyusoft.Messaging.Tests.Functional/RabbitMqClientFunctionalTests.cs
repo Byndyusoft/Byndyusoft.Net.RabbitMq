@@ -229,74 +229,6 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
-        public async Task Ack_Test()
-        {
-            // arrange
-            var queueName = $"{nameof(Ack_Test)}.queue";
-            await using var queue = await QueueDeclareAsync(queueName);
-
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
-            await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
-
-            var message = await _client.GetMessageAsync(queueName);
-
-            // act
-            await _client.AckAsync(message!);
-
-            // assert
-            var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
-            stats.MessagesCount.Should().Be(0);
-        }
-
-        [Fact]
-        public async Task Nack_WithoutRequeue_Test()
-        {
-            // arrange
-            var queueName = $"{nameof(Nack_WithoutRequeue_Test)}.queue";
-            await using var queue = await QueueDeclareAsync(queueName);
-
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
-            await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
-
-            var message = await _client.GetMessageAsync(queueName);
-
-            // act
-            await _client.NackAsync(message!);
-
-            // assert
-            var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
-            stats.MessagesCount.Should().Be(0);
-        }
-
-        [Fact]
-        public async Task Nack_WithRequeue_Test()
-        {
-            // arrange
-            var queueName = $"{nameof(Nack_WithRequeue_Test)}.queue";
-            await using var queue = await QueueDeclareAsync(queueName);
-
-            var body = Array.Empty<byte>();
-            var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, body);
-            await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
-
-            var message = await _client.GetMessageAsync(queueName);
-
-            // act
-            await _client.NackAsync(message!, true);
-
-            // assert
-            using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
-
-            pullingResult.IsAvailable.Should().BeTrue();
-            pullingResult.Body.Should().BeEquivalentTo(body);
-            pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
-        }
-
-        [Fact]
         public async Task CompleteMessage_Ack_Test()
         {
             // arrange
@@ -310,7 +242,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
+            await _client.CompleteMessageAsync(message!, ClientConsumeResult.Ack);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -331,7 +263,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
+            await _client.CompleteMessageAsync(message!, ClientConsumeResult.RejectWithoutRequeue);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -353,7 +285,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
+            await _client.CompleteMessageAsync(message!, ClientConsumeResult.RejectWithRequeue);
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
@@ -380,41 +312,11 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Error);
+            await _client.CompleteMessageAsync(message!, ClientConsumeResult.Error);
             await WaitForMessageAsync(errorQueueName, TimeSpan.FromSeconds(5));
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(errorQueueName));
-            var pullingResult = await consumer.PullAsync();
-
-            pullingResult.IsAvailable.Should().BeTrue();
-            pullingResult.Body.Should().BeEquivalentTo(body);
-            pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
-
-            _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(0);
-        }
-
-        [Fact]
-        public async Task CompleteMessage_Retry_Test()
-        {
-            // arrange
-            var queueName = $"{nameof(CompleteMessage_Retry_Test)}.queue";
-            var retryQueueName = _options.NamingConventions.RetryQueueName(queueName);
-            await using var queue = await QueueDeclareAsync(queueName);
-
-            var body = Array.Empty<byte>();
-            var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, body);
-            await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
-
-            var message = await _client.GetMessageAsync(queueName);
-
-            // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Retry);
-            await WaitForMessageAsync(retryQueueName, TimeSpan.FromSeconds(5));
-
-            // assert
-            using var consumer = _rabbit.CreatePullingConsumer(new Queue(retryQueueName));
             var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();

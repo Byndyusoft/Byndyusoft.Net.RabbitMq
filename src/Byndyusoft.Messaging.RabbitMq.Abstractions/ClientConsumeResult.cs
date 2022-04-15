@@ -1,9 +1,10 @@
 namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 {
-    public enum ConsumeResult
+    public enum ClientConsumeResult
     {
         Ack,
         RejectWithRequeue,
-        RejectWithoutRequeue
+        RejectWithoutRequeue,
+        Error
     }
 }

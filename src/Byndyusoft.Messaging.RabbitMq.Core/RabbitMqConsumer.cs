@@ -11,7 +11,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
     public class RabbitMqConsumer : Disposable, IRabbitMqConsumer
     {
         private readonly IRabbitMqClientHandler _handler;
-        private readonly Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> _onMessage;
+        private readonly Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> _onMessage;
         private readonly List<BeforeRabbitQueueConsumerStartEventHandler> _onStartingActions = new();
         private readonly List<AfterRabbitQueueConsumerStopEventHandler> _onStoppedActions = new();
         private readonly string _queueName;
@@ -22,7 +22,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         public RabbitMqConsumer(IRabbitMqClient client,
             IRabbitMqClientHandler handler,
             string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> onMessage)
         {
             Client = client;
             _handler = handler;
@@ -88,15 +88,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 {
                     try
                     {
-                        var consumeResult = await _onMessage(message, token)
-                            .ConfigureAwait(false);
-                        return await HandleConsumeResultAsync(message, consumeResult, null, token)
-                            .ConfigureAwait(false);
+                        var consumeResult = await _onMessage(message, token).ConfigureAwait(false);
+                        return await HandleConsumeResultAsync(message, consumeResult, null, token).ConfigureAwait(false);
                     }
                     catch (Exception exception)
                     {
-                        return await HandleConsumeResultAsync(message, ConsumeResult.Error, exception, token)
-                            .ConfigureAwait(false);
+                        return await HandleConsumeResultAsync(message, ClientConsumeResult.Error, exception, token).ConfigureAwait(false);
                     }
                 }
                 catch
@@ -115,7 +112,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if (IsRunning == false)
                 return;
 
-            foreach (var action in _onStoppedActions) await action(this, cancellationToken).ConfigureAwait(false);
+            foreach (var action in _onStoppedActions) 
+                await action(this, cancellationToken).ConfigureAwait(false);
 
             _consumer?.Dispose();
             _consumer = null;
@@ -174,20 +172,26 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         }
 
         private async Task<ConsumeResult> HandleConsumeResultAsync(ReceivedRabbitMqMessage consumedMessage,
-            ConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
+            ClientConsumeResult consumeResult, Exception? exception, CancellationToken cancellationToken)
         {
             switch (consumeResult)
             {
-                case ConsumeResult.Retry:
-                    await _handler.PublishMessageToRetryQueueAsync(consumedMessage, Client.Options.NamingConventions, cancellationToken)
-                        .ConfigureAwait(false);
+
+
+                case ClientConsumeResult.Ack:
                     return ConsumeResult.Ack;
-                case ConsumeResult.Error:
+
+                case ClientConsumeResult.RejectWithRequeue:
+                    return ConsumeResult.RejectWithRequeue;
+
+                case ClientConsumeResult.RejectWithoutRequeue:
+                    return ConsumeResult.RejectWithoutRequeue;
+                
+                case ClientConsumeResult.Error:
+                default:
                     await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, exception, cancellationToken)
                         .ConfigureAwait(false);
                     return ConsumeResult.Ack;
-                default:
-                    return consumeResult;
             }
         }
     }

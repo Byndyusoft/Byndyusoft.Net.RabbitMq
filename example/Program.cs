@@ -68,7 +68,6 @@ namespace Byndyusoft.Net.RabbitMq
                         return ConsumeResult.Ack;
                     })
                 .WithPrefetchCount(20)
-                .WithQueue(options => options.AsAutoDelete(true))
                 .WithErrorQueue(option => option.AsAutoDelete(true))
                 .Start();
 
@@ -99,7 +98,7 @@ namespace Byndyusoft.Net.RabbitMq
                     {
                         var model = await message.Content.ReadFromJsonAsync<Message>();
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        await service.CompleteMessageAsync(message, ConsumeResult.Ack);
+                        await service.CompleteMessageAsync(message, ClientConsumeResult.Ack);
                     }
                     else
                     {
@@ -158,8 +157,8 @@ namespace Byndyusoft.Net.RabbitMq
                         Console.WriteLine($"{JsonConvert.SerializeObject(model)}, Retried: {queueMessage.RetryCount}");
 
                         if (queueMessage.RetryCount == 5)
-                            return ConsumeResult.Error;
-                        return ConsumeResult.Retry;
+                            return ClientConsumeResult.Error;
+                        return ClientConsumeResult.Error;
                     })
                 .WithPrefetchCount(20)
                 .WithQueue(options => options.AsAutoDelete(true))

@@ -9,21 +9,25 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
     {
         RabbitMqClientOptions Options { get; }
 
+        #region Работа с сообщениями
+
         Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task AckAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken = default);
+        Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task NackAsync(ReceivedRabbitMqMessage message, bool requeue = false,
-            CancellationToken cancellationToken = default);
-
-        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
-            CancellationToken cancellationToken = default);
+        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ClientConsumeResult consumeResult, CancellationToken cancellationToken = default);
 
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        Task CreateQueueAsync(string queueName,
-            QueueOptions options,
-            CancellationToken cancellationToken = default);
+        IRabbitMqConsumer Subscribe(string queueName, Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> onMessage);
+
+        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
+
+        #endregion
+
+        #region Управление очередями и обменниками
+
+        Task CreateQueueAsync(string queueName, QueueOptions options, CancellationToken cancellationToken = default);
 
         Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default);
 
@@ -31,10 +35,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
             bool ifUnused = false,
             bool ifEmpty = false,
             CancellationToken cancellationToken = default);
-
-        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
-
-        Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
         Task CreateExchangeAsync(string exchangeName,
             ExchangeOptions options,
@@ -51,7 +51,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
             string queueName,
             CancellationToken cancellationToken = default);
 
-        IRabbitMqConsumer Subscribe(string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
+        #endregion
     }
 }
