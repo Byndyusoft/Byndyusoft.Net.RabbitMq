@@ -10,13 +10,14 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
     public interface IRabbitMqConsumer : IDisposable
     {
-        bool IsRunning { get; }
         string QueueName { get; }
         IRabbitMqClient Client { get; }
         bool? Exclusive { get; set; }
         ushort? PrefetchCount { get; set; }
         event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
         event AfterRabbitQueueConsumerStopEventHandler OnStopped;
+
+        bool IsRunning { get; }
         Task StartAsync(CancellationToken cancellationToken = default);
         Task StopAsync(CancellationToken cancellationToken = default);
     }

@@ -321,7 +321,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private void Initialize()
         {
-            if (_isInitialized) return;
+            if (_isInitialized) 
+                return;
 
             _bus = _busFactory.CreateBus(_connectionConfiguration);
 

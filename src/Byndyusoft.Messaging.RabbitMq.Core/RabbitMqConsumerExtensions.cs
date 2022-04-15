@@ -1,6 +1,4 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
@@ -51,7 +49,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             return consumer;
         }
-        
+
+        public static IRabbitMqConsumer WithExclusive(this IRabbitMqConsumer consumer,
+            bool exclusive)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+
+            consumer.Exclusive = exclusive;
+
+            return consumer;
+        }
+
         public static IRabbitMqConsumer WithQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
