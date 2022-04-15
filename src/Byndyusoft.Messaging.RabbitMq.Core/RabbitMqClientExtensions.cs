@@ -14,10 +14,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             string queueName,
             Func<ReceivedRabbitMqMessage, CancellationToken, Task> onMessage)
         {
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<ClientConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 await onMessage(message, token);
-                return ConsumeResult.Ack;
+                return ClientConsumeResult.Ack;
             }
 
             return client.Subscribe(queueName, OnMessage);
