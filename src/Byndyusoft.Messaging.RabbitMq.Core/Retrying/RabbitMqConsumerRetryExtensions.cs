@@ -27,41 +27,39 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             var retryQueueName = consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
 
-            consumer.AddHandler(handler =>
+            //Без локальной переменной будет рекурсия
+            var onMessage = consumer.OnMessage;
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
-                async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+                try
                 {
+                    Exception? handleException = null;
                     try
                     {
-                        Exception? handleException = null;
-                        try
-                        {
-                            var result = await handler(message, cancellationToken);
-                            if (result is not RetryConsumeResult)
-                                return result;
-                        }
-                        catch (Exception exception)
-                        {
-                            handleException = exception;
-                        }
-
-                        if (maxRetryCount != null && message.RetryCount >= maxRetryCount)
-                            return ConsumeResult.Error(handleException);
-
-                        var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName);
-                        retryMessage.Headers.SetException(handleException);
-
-                        await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-                        return ConsumeResult.Ack();
+                        var result = await onMessage(message, cancellationToken);
+                        if (result is not RetryConsumeResult)
+                            return result;
                     }
                     catch (Exception exception)
                     {
-                        return ConsumeResult.Error(exception);
+                        handleException = exception;
                     }
-                }
 
-                return OnMessage;
-            });
+                    if (maxRetryCount != null && message.RetryCount >= maxRetryCount)
+                        return ConsumeResult.Error(handleException);
+
+                    var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName);
+                    retryMessage.Headers.SetException(handleException);
+
+                    await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
+                    return ConsumeResult.Ack();
+                }
+                catch (Exception exception)
+                {
+                    return ConsumeResult.Error(exception);
+                }
+            }
+            consumer.OnMessage = OnMessage;
 
             if (options is not null)
             {

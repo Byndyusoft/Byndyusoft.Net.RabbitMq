@@ -77,6 +77,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
         public IRabbitMqClient Client { get; }
 
+        public ReceivedRabbitMqMessageHandler OnMessage
+        {
+            get => _onMessage;
+            set => _onMessage = Preconditions.CheckNotNull(value, nameof(OnMessage));
+        }
+
         public async Task StartAsync(CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
@@ -110,12 +116,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             }
 
             _consumer = _handler.StartConsume(QueueName, _exclusive, _prefetchCount, OnMessage);
-        }
-
-        public void AddHandler(Func<ReceivedRabbitMqMessageHandler, ReceivedRabbitMqMessageHandler> handler)
-        {
-            //TODO так нельзя, т.к. порядок вызовов будет обратный подрядку декларации
-            _onMessage = handler(_onMessage);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken = default)

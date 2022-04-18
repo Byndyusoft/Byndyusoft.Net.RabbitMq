@@ -19,7 +19,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         ushort? PrefetchCount { get; set; }
         event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
         event AfterRabbitQueueConsumerStopEventHandler OnStopped;
-        void AddHandler(Func<ReceivedRabbitMqMessageHandler, ReceivedRabbitMqMessageHandler> handler);
+        ReceivedRabbitMqMessageHandler OnMessage { get; set; }
         bool IsRunning { get; }
         Task StartAsync(CancellationToken cancellationToken = default);
         Task StopAsync(CancellationToken cancellationToken = default);
