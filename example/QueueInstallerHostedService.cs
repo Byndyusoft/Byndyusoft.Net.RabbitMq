@@ -24,9 +24,18 @@ namespace Byndyusoft.Net.RabbitMq
                 try
                 {
                     using var consumer = _rabbitMqClient
-                        .Subscribe("test", (message, token) => Task.FromResult(ConsumeResult.Error))
-                        .WithCreatingSubscribeQueue()
-                        .WithSingleQueueRetry(TimeSpan.FromSeconds(10), QueueOptions.Default)
+                        .Subscribe("test", async (message, token) =>
+                        {
+                            Console.WriteLine($"Retry count {message.RetryCount}");
+
+                            if (message.RetryCount >= 0)
+                                return ConsumeResult.Retry();
+
+                            throw new Exception("first retry");
+                        })
+                        .WithDeclareSubscribingQueue(QueueOptions.Default)
+                        .WithDeclareErrorQueue(QueueOptions.Default)
+                        .WithConstantTimeoutRetryStrategy(TimeSpan.FromSeconds(10), 5, QueueOptions.Default)
                         .Start();
 
 

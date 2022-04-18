@@ -17,7 +17,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 await onMessage(message, token);
-                return ConsumeResult.Ack;
+                return ConsumeResult.Ack();
             }
 
             return client.Subscribe(queueName, OnMessage);

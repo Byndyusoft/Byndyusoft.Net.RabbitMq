@@ -103,7 +103,7 @@ namespace Byndyusoft.Net.RabbitMq
                         return HandlerConsumeResult.Ack;
                     })
                 .WithPrefetchCount(20)
-                .WithErrorQueue(option => option.AsAutoDelete(true))
+                .WithDeclareErrorQueue(option => option.AsAutoDelete(true))
                 .Start();
 
             var publishTask = Task.Run(async () =>
@@ -133,7 +133,7 @@ namespace Byndyusoft.Net.RabbitMq
                     {
                         var model = await message.Content.ReadFromJsonAsync<Message>();
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        await service.CompleteMessageAsync(message, ConsumeResult.Ack);
+                        await service.CompleteMessageAsync(message, ConsumeResult.Ack());
                     }
                     else
                     {
@@ -165,7 +165,7 @@ namespace Byndyusoft.Net.RabbitMq
                         return Task.CompletedTask;
                     })
                 .WithPrefetchCount(20)
-                .WithCreatingSubscribeQueue(options => options.AsAutoDelete(true))
+                .WithDeclareQueue(queueName, options => options.AsAutoDelete(true))
                 .Start();
 
 
@@ -192,13 +192,13 @@ namespace Byndyusoft.Net.RabbitMq
                         Console.WriteLine($"{JsonConvert.SerializeObject(model)}, Retried: {queueMessage.RetryCount}");
 
                         if (queueMessage.RetryCount == 5)
-                            return ConsumeResult.Error;
-                        return ConsumeResult.Error;
+                            return ConsumeResult.Ack();
+                        return ConsumeResult.Error();
                     })
                 .WithPrefetchCount(20)
-                .WithCreatingSubscribeQueue(options => options.AsAutoDelete(true))
-                .WithErrorQueue(option => option.AsAutoDelete(true))
-                .WithSingleQueueRetry(TimeSpan.FromSeconds(10), options => options.AsAutoDelete(true))
+                .WithDeclareQueue(queueName, options => options.AsAutoDelete(true))
+                .WithDeclareErrorQueue(option => option.AsAutoDelete(true))
+                .WithConstantTimeoutRetryStrategy(TimeSpan.FromSeconds(10), 6, options => options.AsAutoDelete(true))
                 .Start();
 
             var message = new RabbitMqMessage

@@ -32,6 +32,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
                 headers["exception-type"] = exception.GetType().FullName;
                 headers["exception-message"] = exception.Message;
             }
+            else
+            {
+                headers.Remove("exception-type");
+                headers.Remove("exception-message");
+            }
         }
 
         public static void RemoveRetryData(this IDictionary<string, object?> headers)

@@ -145,20 +145,22 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         {
             switch (consumeResult)
             {
-                case ConsumeResult.Ack:
+                case AckConsumeResult:
                     return HandlerConsumeResult.Ack;
 
-                case ConsumeResult.RejectWithRequeue:
+                case RejectWithRequeueConsumeResult:
                     return HandlerConsumeResult.RejectWithRequeue;
 
-                case ConsumeResult.RejectWithoutRequeue:
+                case RejectWithoutRequeueConsumeResult:
                     return HandlerConsumeResult.RejectWithoutRequeue;
                 
-                case ConsumeResult.Error:
-                default:
-                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, null, cancellationToken)
+                case ErrorConsumeResult error:
+                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, error.Exception, cancellationToken)
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
             }
         }
     }

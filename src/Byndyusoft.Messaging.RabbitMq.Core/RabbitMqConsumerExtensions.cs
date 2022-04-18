@@ -63,92 +63,18 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer;
         }
 
-        public static IRabbitMqConsumer WithCreatingSubscribeQueue(this IRabbitMqConsumer consumer, Action<QueueOptions>? optionsSetup = null)
+        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
-
-            var options = QueueOptions.Default;
-            optionsSetup?.Invoke(options);
-
-            consumer.OnStarting += async (_, cancellationToken) =>
-            {
-                await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
-                    .ConfigureAwait(false);
-            };
-
-            return consumer;
-        }
-
-        public static IRabbitMqConsumer WithSingleQueueRetry(this IRabbitMqConsumer consumer, TimeSpan delay, Action<QueueOptions>? optionsSetup = null)
-        {
-            Preconditions.CheckNotNull(consumer, nameof(consumer));
-
-            var options = QueueOptions.Default;
-            optionsSetup?.Invoke(options);
-
-            return consumer.WithSingleQueueRetry(delay, options);
-        }
-
-        public static IRabbitMqConsumer WithSingleQueueRetry(this IRabbitMqConsumer consumer, TimeSpan delay, QueueOptions options)
-        {
-            Preconditions.CheckNotNull(consumer, nameof(consumer));
-            Preconditions.CheckNotNull(options, nameof(options));
-
-            var retryQueueName = consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
-            options = options
-                .WithMessageTtl(delay)
-                .WithDeadLetterExchange(null)
-                .WithDeadLetterRoutingKey(consumer.QueueName);
-
-            consumer.AddHandler(handler => 
-            {
-                async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
-                {
-                    try
-                    {
-                        Exception? handleException = null;
-                        try
-                        {
-                            var result = await handler(message, cancellationToken);
-                            if (result == ConsumeResult.Ack)
-                                return ConsumeResult.Ack;
-                        }
-                        catch (Exception exception)
-                        {
-                            handleException = exception;
-                        }
-                        var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName);
-                        if(handleException != null)
-                            retryMessage.Headers.SetException(handleException);
-
-                        await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-                        return ConsumeResult.Ack;
-                    }
-                    catch (Exception exception)
-                    {
-                        //TODO передавать исключение с Error
-                        return ConsumeResult.Error;
-                    }
-                }
-
-                return OnMessage;
-            });
-
-
-            return consumer.WithQueue(retryQueueName, options);
-        }
-
-        public static IRabbitMqConsumer WithQueue(this IRabbitMqConsumer consumer, string queueName, Action<QueueOptions> optionsSetup)
-        {
-            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
 
             var options = QueueOptions.Default;
             optionsSetup(options);
 
-            return consumer.WithQueue(queueName, options);
+            return consumer.WithDeclareQueue(queueName, options);
         }
         
-        public static IRabbitMqConsumer WithQueue(this IRabbitMqConsumer consumer, string queueName, QueueOptions options)
+        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName, QueueOptions options)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));
@@ -163,7 +89,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         }
 
 
-        public static IRabbitMqConsumer WithErrorQueue(this IRabbitMqConsumer consumer, QueueOptions options)
+        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer, QueueOptions options)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));
@@ -178,14 +104,45 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer;
         }
 
-        public static IRabbitMqConsumer WithErrorQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
+        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
+
+            var options = QueueOptions.Default;
+            optionsSetup(options);
+
+            consumer.OnStarting += async (_, cancellationToken) =>
+            {
+                await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
+                    .ConfigureAwait(false);
+            };
+
+            return consumer;
+        }
+
+        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, QueueOptions options)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            consumer.OnStarting += async (_, cancellationToken) =>
+            {
+                await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
+                    .ConfigureAwait(false);
+            };
+
+            return consumer;
+        }
+
+        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
             var options = QueueOptions.Default;
             optionsSetup(options);
 
-            return WithErrorQueue(consumer, options);
+            return WithDeclareErrorQueue(consumer, options);
         }
     }
 }

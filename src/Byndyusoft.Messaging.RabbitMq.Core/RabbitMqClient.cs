@@ -1,9 +1,7 @@
 using System;
 using System.Linq;
-using System.Net.Http;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Net.Http.Json.Formatting;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,17 +66,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 {
                     switch (consumeResult)
                     {
-                        case ConsumeResult.Ack:
+                        case AckConsumeResult:
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ConsumeResult.RejectWithRequeue:
+                        case RejectWithRequeueConsumeResult:
                             await _handler.RejectMessageAsync(message, true, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ConsumeResult.RejectWithoutRequeue:
+                        case RejectWithoutRequeueConsumeResult:
                             await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ConsumeResult.Error:
-                            await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions, null, cancellationToken)
+                        case ErrorConsumeResult error:
+                            await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions, error.Exception, cancellationToken)
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
@@ -222,14 +220,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             message.Properties.ContentEncoding ??= message.Content.Headers.ContentEncoding?.FirstOrDefault();
             message.Properties.ContentType ??= message.Content.Headers.ContentType?.MediaType;
             message.Properties.AppId ??= Options.ApplicationName;
-
-            if (message.Properties.Type is null)
-            {
-                var objectType = (message.Content as ObjectContent)?.ObjectType ??
-                                 (message.Content as JsonContent)?.ObjectType;
-                if (objectType is not null)
-                    message.Properties.Type = $"{objectType.FullName}, {objectType.Assembly.GetName().Name}";
-            }
         }
 
         protected void SetConsumedMessageProperties(ReceivedRabbitMqMessage? message)
@@ -243,7 +233,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if (properties.ContentType is not null)
                 content.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
 
-            if (properties.ContentEncoding is not null) content.Headers.ContentEncoding.Add(properties.ContentEncoding);
+            if (properties.ContentEncoding is not null) 
+                content.Headers.ContentEncoding.Add(properties.ContentEncoding);
         }
     }
 }
