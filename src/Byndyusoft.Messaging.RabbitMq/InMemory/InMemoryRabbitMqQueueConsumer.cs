@@ -19,7 +19,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         {
             _queue = queue;
             _onMessage = onMessage;
-            _timer = new Timer(DoWork, null, 0, 1000);
+            _timer = new Timer(DoWork, null, 0, 100);
             _semaphore = new SemaphoreSlim(prefetchCount);
             Tag = Guid.NewGuid().ToString();
         }
