@@ -5,7 +5,7 @@ using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Microsoft.Extensions.Hosting;
 
-namespace Byndyusoft.Net.RabbitMq
+namespace Byndyusoft.Net.RabbitMq.HostedServices
 {
     public class QueueInstallerHostedService : BackgroundService
     {
