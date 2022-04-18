@@ -53,6 +53,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return activity;
 
+                ActivityContextPropagation.ExtractContext(activity, message.Headers);
+                
                 activity.SetTag("amqp.message.consume_result", consumeResult.ToString());
                 activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
 
