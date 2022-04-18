@@ -41,11 +41,12 @@ namespace Byndyusoft.Net.RabbitMq
                 .Build();
 
             var serviceProvider = new ServiceCollection()
-                .AddRabbitMqClient("host=localhost;username=guest;password=guest",
+                .AddRabbitMqClient(
                     options =>
-                {
-                    options.ApplicationName = "Sample";
-                })
+                    {
+                        options.ConnectionString = "host=localhost;username=guest;password=guest";
+                        options.ApplicationName = "Sample";
+                    })
                 .AddHostedService<QueueInstallerHostedService>()
                 //.AddInMemoryRabbitMqClient()
                 .BuildServiceProvider();
@@ -74,11 +75,12 @@ namespace Byndyusoft.Net.RabbitMq
                 .Build();
 
             var service = new ServiceCollection()
-                .AddRabbitMqClient("host=localhost;username=guest;password=guest", 
+                .AddRabbitMqClient(
                     options =>
-                {
-                    //options.ApplicationName = "Byndyusoft.Net.RabbitMq";
-                })
+                    {
+                        options.ConnectionString = "host=localhost;username=guest;password=guest";
+                        //options.ApplicationName = "Byndyusoft.Net.RabbitMq";
+                    })
                 .AddInMemoryRabbitMqClient()
                 .BuildServiceProvider()
                 .GetRequiredService<IRabbitMqClient>();
@@ -111,7 +113,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var message = new Message {Property = "exchange-example"};
+                    var message = new Message { Property = "exchange-example" };
                     await service.PublishAsJsonAsync("exchange", "routingKey", message);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -147,7 +149,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var model = new Message {Property = "pulling-example"};
+                    var model = new Message { Property = "pulling-example" };
                     await service.PublishAsJsonAsync(null, queueName, model);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -174,7 +176,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var message = new Message {Property = "json-example"};
+                    var message = new Message { Property = "json-example" };
                     await service.PublishAsJsonAsync(null, queueName, message);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -204,7 +206,7 @@ namespace Byndyusoft.Net.RabbitMq
             var message = new RabbitMqMessage
             {
                 RoutingKey = queueName,
-                Content = JsonContent.Create(new Message {Property = "retry-example"})
+                Content = JsonContent.Create(new Message { Property = "retry-example" })
             };
             await service.PublishMessageAsync(message);
         }

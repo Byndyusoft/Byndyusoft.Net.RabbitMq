@@ -1,5 +1,3 @@
-// ReSharper disable once CheckNamespace
-
 using System;
 using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
@@ -19,7 +17,19 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             Preconditions.CheckNotNull(services, nameof(services));
 
-            AddRabbitMqCoreServices(services);
+            return services.AddInMemoryRabbitMqClient(_ => { });
+        }
+
+        public static IServiceCollection AddInMemoryRabbitMqClient(this IServiceCollection services,
+            Action<RabbitMqClientOptions> setupOptions)
+        {
+            services.Configure(setupOptions);
+
+            services.AddSingleton(sp =>
+            {
+                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientOptions>>();
+                return new RabbitMqClientActivitySource(clientOptions.Value.DiagnosticsOptions);
+            });
 
             services.AddSingleton<InMemoryRabbitMqClient>();
             services.AddSingleton<InMemoryRabbitMqClientHandler>();
@@ -28,41 +38,34 @@ namespace Microsoft.Extensions.DependencyInjection
             return services;
         }
 
-        public static IServiceCollection AddInMemoryRabbitMqClient(this IServiceCollection services,
-            Action<RabbitMqClientOptions> setupOptions)
-        {
-            services.Configure(setupOptions);
-
-            return services.AddInMemoryRabbitMqClient();
-        }
-
-        public static IServiceCollection AddRabbitMqClient(this IServiceCollection services,
-            string connectionString,
-            Action<RabbitMqClientOptions> setupOptions)
+        public static IServiceCollection AddRabbitMqClient(this IServiceCollection services, Action<RabbitMqClientHandlerOptions> setupOptions)
         {
             Preconditions.CheckNotNull(services, nameof(services));
             Preconditions.CheckNotNull(setupOptions, nameof(setupOptions));
 
-            AddRabbitMqCoreServices(services);
+            services.AddSingleton(sp =>
+            {
+                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientHandlerOptions>>();
+                return new RabbitMqClientActivitySource(clientOptions.Value.DiagnosticsOptions);
+            });
 
-            services.Configure<RabbitMqClientOptions>(setupOptions);
-            services.Configure<RabbitMqClientHandlerOptions>(x => x.ConnectionString = connectionString);
+            services.Configure(setupOptions);
             services.AddSingleton<IBusFactory, BusFactory>();
-            services.AddSingleton<IRabbitMqClient, RabbitMqClient>();
+            services.AddSingleton<IRabbitMqClient, RabbitMqClientCore>();
             services.AddSingleton<IRabbitMqClientHandler, RabbitMqClientHandler>();
 
             return services;
         }
 
-        private static IServiceCollection AddRabbitMqCoreServices(this IServiceCollection services)
+        public static IServiceCollection AddRabbitMqClient(this IServiceCollection services, string connectionString)
         {
-            services.AddSingleton(sp =>
-            {
-                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientOptions>>();
-                return new RabbitMqClientActivitySource(clientOptions.Value.DiagnosticsOptions);
-            });
+            Preconditions.CheckNotNull(services, nameof(services));
 
-            return services;
+            return services.AddRabbitMqClient(
+                options =>
+                {
+                    options.ConnectionString = connectionString;
+                });
         }
     }
 }

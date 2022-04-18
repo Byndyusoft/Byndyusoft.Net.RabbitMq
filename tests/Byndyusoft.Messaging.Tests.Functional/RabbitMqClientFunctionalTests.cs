@@ -10,14 +10,13 @@ using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 using Byndyusoft.Messaging.RabbitMq.Core;
-using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.Tests.Functional.Models;
 using EasyNetQ;
 using EasyNetQ.Topology;
 using FluentAssertions;
 using FluentAssertions.Execution;
 using FluentAssertions.Extensions;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.DependencyInjection;
 using RabbitMQ.Client.Exceptions;
 using Xunit;
 using JsonSerializer = System.Text.Json.JsonSerializer;
@@ -34,14 +33,13 @@ namespace Byndyusoft.Messaging.Tests.Functional
         public RabbitMqClientFunctionalTests()
         {
             var connectionString = "host=localhost;username=guest;password=guest";
-            _options = new RabbitMqClientOptions();
+            _options = new RabbitMqClientHandlerOptions();
 
-            _client = new RabbitMqClient(
-                new RabbitMqClientHandler(new OptionsWrapper<RabbitMqClientHandlerOptions>(new RabbitMqClientHandlerOptions
-                {
-                    ConnectionString = connectionString
-                }), new BusFactory()), 
-                new OptionsWrapper<RabbitMqClientOptions>(_options));
+            _client = new ServiceCollection()
+                .AddRabbitMqClient(connectionString)
+                .BuildServiceProvider()
+                .GetRequiredService<IRabbitMqClient>();
+
 
             _bus = RabbitHutch.CreateBus(connectionString, _ => { });
             _rabbit = _bus.Advanced;

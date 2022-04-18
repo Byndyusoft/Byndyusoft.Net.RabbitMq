@@ -13,24 +13,25 @@ using Microsoft.Extensions.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq.Core
 {
-    public class RabbitMqClient : Disposable, IRabbitMqClient
+    public class RabbitMqClientCore : Disposable, IRabbitMqClient
     {
         private readonly RabbitMqClientActivitySource _activitySource;
         private readonly bool _disposeHandler;
         private IRabbitMqClientHandler _handler;
 
-        static RabbitMqClient()
+        static RabbitMqClientCore()
         {
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
         }
 
-        public RabbitMqClient(IRabbitMqClientHandler handler, IOptions<RabbitMqClientOptions> options, bool disposeHandler = false)
+        public RabbitMqClientCore(IRabbitMqClientHandler handler, RabbitMqClientOptions options, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
+            Preconditions.CheckNotNull(options, nameof(options));
 
-            Options = options.Value;
+            Options = options;
             _handler = handler;
-            _activitySource = new RabbitMqClientActivitySource(Options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
         }
 
