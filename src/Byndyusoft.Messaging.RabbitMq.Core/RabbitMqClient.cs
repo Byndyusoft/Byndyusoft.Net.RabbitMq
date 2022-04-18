@@ -1,8 +1,10 @@
 using System;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Net.Http.Json.Formatting;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
@@ -18,6 +20,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         private readonly bool _disposeHandler;
         private IRabbitMqClientHandler _handler;
 
+        static RabbitMqClient()
+        {
+            MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
+        }
 
         public RabbitMqClient(IRabbitMqClientHandler handler, RabbitMqClientOptions options, bool disposeHandler = false)
         {
