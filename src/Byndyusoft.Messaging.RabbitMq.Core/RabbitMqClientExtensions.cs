@@ -10,28 +10,15 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 {
     public static class RabbitMqClientExtensions
     {
-        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
-            string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task> onMessage)
-        {
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
-            {
-                await onMessage(message, token);
-                return ConsumeResult.Ack();
-            }
-
-            return client.Subscribe(queueName, OnMessage);
-        }
-
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string queueName,
-            Func<T?, CancellationToken, Task<HandlerConsumeResult>> onMessage)
+            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadAsAsync<T>(token).ConfigureAwait(false);
                 return await onMessage(model, token).ConfigureAwait(false);
@@ -40,27 +27,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return client.Subscribe(queueName, OnMessage);
         }
 
-        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
-            string queueName,
-            Func<T?, CancellationToken, Task> onMessage)
-        {
-            Preconditions.CheckNotNull(client, nameof(client));
-            Preconditions.CheckNotNull(queueName, nameof(queueName));
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            async Task<HandlerConsumeResult> OnMessage(T? model, CancellationToken token)
-            {
-                await onMessage(model, token).ConfigureAwait(false);
-                return HandlerConsumeResult.Ack;
-            }
-
-            return client.SubscribeAs<T>(queueName, OnMessage);
-        }
-
         public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));

@@ -43,18 +43,18 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
         public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
             string queueName,
-            Func<T?, CancellationToken, Task> onMessage,
+            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
             JsonSerializerOptions? options = null)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
-                await onMessage(model, token).ConfigureAwait(false);
-                return HandlerConsumeResult.Ack;
+                var result = await onMessage(model, token).ConfigureAwait(false);
+                return result;
             }
 
             return client.Subscribe(queueName, OnMessage);
@@ -63,7 +63,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,
-            Func<T?, CancellationToken, Task> onMessage,
+            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
             JsonSerializerOptions? options = null)
         {
             Preconditions.CheckNotNull(client, nameof(client));
@@ -71,11 +71,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
-                await onMessage(model, token).ConfigureAwait(false);
-                return HandlerConsumeResult.Ack;
+                var result = await onMessage(model, token).ConfigureAwait(false);
+                return result;
             }
 
             return client.Subscribe(exchangeName, routingKey, OnMessage);

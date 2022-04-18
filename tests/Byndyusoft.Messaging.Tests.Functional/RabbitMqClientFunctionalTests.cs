@@ -516,7 +516,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             using var consumer = _client.Subscribe(queueName, (message, _) =>
             {
                 receivedMessage = message;
-                return Task.CompletedTask;
+                return Task.FromResult(ConsumeResult.Ack());
             }).Start();
 
             // act

@@ -100,7 +100,7 @@ namespace Byndyusoft.Net.RabbitMq
                     {
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        return HandlerConsumeResult.Ack;
+                        return ConsumeResult.Ack();
                     })
                 .WithPrefetchCount(20)
                 .WithDeclareErrorQueue(option => option.AsAutoDelete(true))
@@ -162,7 +162,7 @@ namespace Byndyusoft.Net.RabbitMq
                     (model, _) =>
                     {
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        return Task.CompletedTask;
+                        return Task.FromResult(ConsumeResult.Ack());
                     })
                 .WithPrefetchCount(20)
                 .WithDeclareQueue(queueName, options => options.AsAutoDelete(true))
