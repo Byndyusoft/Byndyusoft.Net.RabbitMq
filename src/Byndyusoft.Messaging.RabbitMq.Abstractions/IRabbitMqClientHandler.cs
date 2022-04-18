@@ -20,7 +20,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         IDisposable StartConsume(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage);
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
 

@@ -15,11 +15,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
         Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ClientConsumeResult consumeResult, CancellationToken cancellationToken = default);
+        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult, CancellationToken cancellationToken = default);
 
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        IRabbitMqConsumer Subscribe(string queueName, Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> onMessage);
+        IRabbitMqConsumer Subscribe(string queueName, Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
 

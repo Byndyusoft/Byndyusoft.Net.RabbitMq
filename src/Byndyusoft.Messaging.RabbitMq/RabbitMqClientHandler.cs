@@ -121,7 +121,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public IDisposable StartConsume(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
@@ -145,9 +145,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                     return consumeResult switch
                     {
-                        ConsumeResult.RejectWithRequeue => AckStrategies.NackWithRequeue,
-                        ConsumeResult.RejectWithoutRequeue => AckStrategies.NackWithoutRequeue,
-                        ConsumeResult.Ack => AckStrategies.Ack,
+                        HandlerConsumeResult.RejectWithRequeue => AckStrategies.NackWithRequeue,
+                        HandlerConsumeResult.RejectWithoutRequeue => AckStrategies.NackWithoutRequeue,
+                        HandlerConsumeResult.Ack => AckStrategies.Ack,
                         _ => throw new InvalidOperationException(
                             $"Unexpected ConsumeResult Value={consumeResult}, Retry or Error value should be handled previously")
                     };

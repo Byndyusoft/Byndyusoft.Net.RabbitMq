@@ -87,7 +87,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if(OnStarting != null)
                 await OnStarting(this, cancellationToken).ConfigureAwait(false);
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 try
                 {
@@ -100,12 +100,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                     {
                         await _handler.PublishMessageToErrorQueueAsync(message, Client.Options.NamingConventions, exception, cancellationToken)
                             .ConfigureAwait(false);
-                        return ConsumeResult.Ack;
+                        return HandlerConsumeResult.Ack;
                     }
                 }
                 catch
                 {
-                    return ConsumeResult.RejectWithRequeue;
+                    return HandlerConsumeResult.RejectWithRequeue;
                 }
             }
 
@@ -140,25 +140,25 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             base.DisposeCore();
         }
 
-        private async Task<ConsumeResult> HandleConsumeResultAsync(ReceivedRabbitMqMessage consumedMessage,
-            ClientConsumeResult consumeResult, CancellationToken cancellationToken)
+        private async Task<HandlerConsumeResult> HandleConsumeResultAsync(ReceivedRabbitMqMessage consumedMessage,
+            ConsumeResult consumeResult, CancellationToken cancellationToken)
         {
             switch (consumeResult)
             {
-                case ClientConsumeResult.Ack:
-                    return ConsumeResult.Ack;
+                case ConsumeResult.Ack:
+                    return HandlerConsumeResult.Ack;
 
-                case ClientConsumeResult.RejectWithRequeue:
-                    return ConsumeResult.RejectWithRequeue;
+                case ConsumeResult.RejectWithRequeue:
+                    return HandlerConsumeResult.RejectWithRequeue;
 
-                case ClientConsumeResult.RejectWithoutRequeue:
-                    return ConsumeResult.RejectWithoutRequeue;
+                case ConsumeResult.RejectWithoutRequeue:
+                    return HandlerConsumeResult.RejectWithoutRequeue;
                 
-                case ClientConsumeResult.Error:
+                case ConsumeResult.Error:
                 default:
                     await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, null, cancellationToken)
                         .ConfigureAwait(false);
-                    return ConsumeResult.Ack;
+                    return HandlerConsumeResult.Ack;
             }
         }
     }

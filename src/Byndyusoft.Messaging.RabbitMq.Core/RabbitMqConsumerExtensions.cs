@@ -102,7 +102,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             consumer.AddHandler(handler => 
             {
-                async Task<ClientConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+                async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
                 {
                     try
                     {
@@ -110,8 +110,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                         try
                         {
                             var result = await handler(message, cancellationToken);
-                            if (result == ClientConsumeResult.Ack)
-                                return ClientConsumeResult.Ack;
+                            if (result == ConsumeResult.Ack)
+                                return ConsumeResult.Ack;
                         }
                         catch (Exception exception)
                         {
@@ -122,12 +122,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                             retryMessage.Headers.SetException(handleException);
 
                         await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-                        return ClientConsumeResult.Ack;
+                        return ConsumeResult.Ack;
                     }
                     catch (Exception exception)
                     {
                         //TODO передавать исключение с Error
-                        return ClientConsumeResult.Error;
+                        return ConsumeResult.Error;
                     }
                 }
 

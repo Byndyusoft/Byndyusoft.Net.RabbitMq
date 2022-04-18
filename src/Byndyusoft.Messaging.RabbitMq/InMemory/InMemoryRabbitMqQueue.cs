@@ -111,7 +111,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         }
 
         public IDisposable Consume(ushort prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
         {
             var consumer = new InMemoryRabbitMqQueueConsumer(this, onMessage, prefetchCount);
             Consumers.Add(consumer);

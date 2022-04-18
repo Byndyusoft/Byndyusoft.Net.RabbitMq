@@ -9,13 +9,13 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
     internal class InMemoryRabbitMqQueueConsumer : Disposable
     {
         private readonly CancellationTokenSource _cancellationTokenSource = new();
-        private readonly Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> _onMessage;
+        private readonly Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> _onMessage;
         private readonly InMemoryRabbitMqQueue _queue;
         private readonly SemaphoreSlim _semaphore;
         private readonly Timer _timer;
 
         public InMemoryRabbitMqQueueConsumer(InMemoryRabbitMqQueue queue,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage,
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
             int prefetchCount)
         {
             _queue = queue;
@@ -63,11 +63,11 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             {
                 var consumeResult = await _onMessage(message, cancellationToken)
                     .ConfigureAwait(false);
-                if (consumeResult == ConsumeResult.Ack)
+                if (consumeResult == HandlerConsumeResult.Ack)
                     _queue.Ack(message);
-                else if (consumeResult == ConsumeResult.RejectWithRequeue)
+                else if (consumeResult == HandlerConsumeResult.RejectWithRequeue)
                     _queue.Reject(message, true);
-                else if (consumeResult == ConsumeResult.RejectWithoutRequeue)
+                else if (consumeResult == HandlerConsumeResult.RejectWithoutRequeue)
                     _queue.Reject(message, false);
                 else throw new InMemoryRabbitMqException($"Unsupported consume result: {consumeResult}");
             }

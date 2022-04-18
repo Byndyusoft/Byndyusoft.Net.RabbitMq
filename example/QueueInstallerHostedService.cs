@@ -24,7 +24,7 @@ namespace Byndyusoft.Net.RabbitMq
                 try
                 {
                     using var consumer = _rabbitMqClient
-                        .Subscribe("test", (message, token) => Task.FromResult(ClientConsumeResult.Error))
+                        .Subscribe("test", (message, token) => Task.FromResult(ConsumeResult.Error))
                         .WithCreatingSubscribeQueue()
                         .WithSingleQueueRetry(TimeSpan.FromSeconds(10), QueueOptions.Default)
                         .Start();

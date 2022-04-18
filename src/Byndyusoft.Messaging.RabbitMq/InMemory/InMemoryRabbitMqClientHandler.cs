@@ -100,7 +100,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         public IDisposable StartConsume(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
         {
             Preconditions.CheckNotDisposed(this);
 

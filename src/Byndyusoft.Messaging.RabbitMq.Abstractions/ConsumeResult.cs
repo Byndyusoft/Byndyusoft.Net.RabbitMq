@@ -4,6 +4,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
     {
         Ack,
         RejectWithRequeue,
-        RejectWithoutRequeue
+        RejectWithoutRequeue,
+        Error
     }
 }

@@ -50,11 +50,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
                 await onMessage(model, token).ConfigureAwait(false);
-                return ConsumeResult.Ack;
+                return HandlerConsumeResult.Ack;
             }
 
             return client.Subscribe(queueName, OnMessage);
@@ -71,11 +71,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
                 await onMessage(model, token).ConfigureAwait(false);
-                return ConsumeResult.Ack;
+                return HandlerConsumeResult.Ack;
             }
 
             return client.Subscribe(exchangeName, routingKey, OnMessage);

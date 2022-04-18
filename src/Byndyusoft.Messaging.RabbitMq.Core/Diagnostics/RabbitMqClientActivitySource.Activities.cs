@@ -45,7 +45,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
             }
 
             public Activity? StartCompleteMessage(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message,
-                ClientConsumeResult consumeResult)
+                ConsumeResult consumeResult)
             {
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));

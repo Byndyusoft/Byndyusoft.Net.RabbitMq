@@ -8,7 +8,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
     public delegate Task BeforeRabbitQueueConsumerStartEventHandler(IRabbitMqConsumer consumer, CancellationToken cancellationToken);
 
-    public delegate Task<ClientConsumeResult>
+    public delegate Task<ConsumeResult>
         ReceivedRabbitMqMessageHandler(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
 
     public interface IRabbitMqConsumer : IDisposable

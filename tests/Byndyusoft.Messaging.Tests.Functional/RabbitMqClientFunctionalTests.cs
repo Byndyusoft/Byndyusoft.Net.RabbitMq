@@ -248,7 +248,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ClientConsumeResult.Ack);
+            await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -269,7 +269,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ClientConsumeResult.RejectWithoutRequeue);
+            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -291,7 +291,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ClientConsumeResult.RejectWithRequeue);
+            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
@@ -318,7 +318,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ClientConsumeResult.Error);
+            await _client.CompleteMessageAsync(message!, ConsumeResult.Error);
             await WaitForMessageAsync(errorQueueName, TimeSpan.FromSeconds(5));
 
             // assert

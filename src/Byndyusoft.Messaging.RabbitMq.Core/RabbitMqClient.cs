@@ -56,7 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 });
         }
 
-        public virtual async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ClientConsumeResult consumeResult,
+        public virtual async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
@@ -68,16 +68,16 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 {
                     switch (consumeResult)
                     {
-                        case ClientConsumeResult.Ack:
+                        case ConsumeResult.Ack:
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ClientConsumeResult.RejectWithRequeue:
+                        case ConsumeResult.RejectWithRequeue:
                             await _handler.RejectMessageAsync(message, true, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ClientConsumeResult.RejectWithoutRequeue:
+                        case ConsumeResult.RejectWithoutRequeue:
                             await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
                             break;
-                        case ClientConsumeResult.Error:
+                        case ConsumeResult.Error:
                             await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions, null, cancellationToken)
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
@@ -188,9 +188,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         }
 
         public IRabbitMqConsumer Subscribe(string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
         {
-            async Task<ClientConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken ct)
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken ct)
             {
                 var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
                 return await _activitySource.ExecuteAsync(activity,
