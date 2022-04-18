@@ -24,7 +24,5 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
             get => _diagnosticsOptions;
             set => _diagnosticsOptions = Preconditions.CheckNotNull(value, nameof(RabbitMqDiagnosticsOptions));
         }
-
-        public string ConnectionString { get; set; } = default!;
     }
 }

@@ -6,10 +6,12 @@ using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Core
 {
+
+
     public class RabbitMqConsumer : Disposable, IRabbitMqConsumer
     {
         private readonly IRabbitMqClientHandler _handler;
-        private readonly Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> _onMessage;
+        private ReceivedRabbitMqMessageHandler _onMessage;
         private readonly string _queueName;
 
         private IDisposable? _consumer;
@@ -19,7 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         public RabbitMqConsumer(IRabbitMqClient client,
             IRabbitMqClientHandler handler,
             string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ClientConsumeResult>> onMessage)
+            ReceivedRabbitMqMessageHandler onMessage)
         {
             Client = client;
             _handler = handler;
@@ -108,6 +110,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             }
 
             _consumer = _handler.StartConsume(QueueName, _exclusive, _prefetchCount, OnMessage);
+        }
+
+        public void AddHandler(Func<ReceivedRabbitMqMessageHandler, ReceivedRabbitMqMessageHandler> handler)
+        {
+            //TODO так нельзя, т.к. порядок вызовов будет обратный подрядку декларации
+            _onMessage = handler(_onMessage);
         }
 
         public async Task StopAsync(CancellationToken cancellationToken = default)

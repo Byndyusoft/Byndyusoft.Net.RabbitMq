@@ -37,12 +37,7 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         public static IServiceCollection AddRabbitMqClient(this IServiceCollection services,
-            string connectionString)
-        {
-            return services.AddRabbitMqClient(options => { options.ConnectionString = connectionString; });
-        }
-
-        public static IServiceCollection AddRabbitMqClient(this IServiceCollection services,
+            string connectionString,
             Action<RabbitMqClientOptions> setupOptions)
         {
             Preconditions.CheckNotNull(services, nameof(services));
@@ -50,11 +45,10 @@ namespace Microsoft.Extensions.DependencyInjection
 
             AddRabbitMqCoreServices(services);
 
-            services.Configure(setupOptions);
+            services.Configure<RabbitMqClientOptions>(setupOptions);
+            services.Configure<RabbitMqClientHandlerOptions>(x => x.ConnectionString = connectionString);
             services.AddSingleton<IBusFactory, BusFactory>();
-            services.AddSingleton<RabbitMqClient>();
             services.AddSingleton<IRabbitMqClient, RabbitMqClient>();
-            services.AddSingleton<RabbitMqClientHandler>();
             services.AddSingleton<IRabbitMqClientHandler, RabbitMqClientHandler>();
 
             return services;

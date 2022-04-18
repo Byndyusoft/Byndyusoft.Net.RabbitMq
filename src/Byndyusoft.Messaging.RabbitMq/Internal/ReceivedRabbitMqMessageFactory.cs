@@ -14,7 +14,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         {
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
-            var retryCount = RabbitMqMessageHeadersExtensions.GetRetryCount(messageProperties.Headers) ?? 0;
+            var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
 
             return new ReceivedRabbitMqMessage
             {

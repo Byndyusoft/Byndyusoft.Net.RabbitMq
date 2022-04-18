@@ -8,6 +8,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
     public delegate Task BeforeRabbitQueueConsumerStartEventHandler(IRabbitMqConsumer consumer, CancellationToken cancellationToken);
 
+    public delegate Task<ClientConsumeResult>
+        ReceivedRabbitMqMessageHandler(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
+
     public interface IRabbitMqConsumer : IDisposable
     {
         string QueueName { get; }
@@ -16,7 +19,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         ushort? PrefetchCount { get; set; }
         event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
         event AfterRabbitQueueConsumerStopEventHandler OnStopped;
-
+        void AddHandler(Func<ReceivedRabbitMqMessageHandler, ReceivedRabbitMqMessageHandler> handler);
         bool IsRunning { get; }
         Task StartAsync(CancellationToken cancellationToken = default);
         Task StopAsync(CancellationToken cancellationToken = default);

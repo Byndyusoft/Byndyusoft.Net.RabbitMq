@@ -11,6 +11,7 @@ using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
+using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -26,17 +27,12 @@ namespace Byndyusoft.Messaging.RabbitMq
         private RabbitMqEndpoint? _endPoint;
         private bool _isInitialized;
 
-        public RabbitMqClientHandler(string connectionString)
-            :this(connectionString, new BusFactory())
+        public RabbitMqClientHandler(IOptions<RabbitMqClientHandlerOptions> options, IBusFactory busFactory)
         {
-        }
-
-        public RabbitMqClientHandler(string connectionString, IBusFactory busFactory)
-        {
-            Preconditions.CheckNotNull(connectionString, nameof(connectionString));
+            Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(options.Value.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
-            _connectionConfiguration = ConnectionStringParser.Parse(connectionString);
+            _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
             _busFactory = busFactory;
         }
 

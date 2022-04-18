@@ -2,11 +2,12 @@ using System;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Core;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
@@ -23,6 +24,7 @@ namespace Byndyusoft.Net.RabbitMq
     {
         private static readonly ActivitySource ActivitySource = new(nameof(Program));
 
+
         public static async Task Main()
         {
             using var tracerProvider = Sdk.CreateTracerProviderBuilder()
@@ -38,10 +40,43 @@ namespace Byndyusoft.Net.RabbitMq
                 .AddRabbitMqClientInstrumentation()
                 .Build();
 
-            var service = new ServiceCollection()
-                .AddRabbitMqClient(options =>
+            var serviceProvider = new ServiceCollection()
+                .AddRabbitMqClient("host=localhost;username=guest;password=guest",
+                    options =>
                 {
-                    options.ConnectionString = "host=localhost;username=rabbitmq;password=rabbitmq";
+                    options.ApplicationName = "Sample";
+                })
+                .AddHostedService<QueueInstallerHostedService>()
+                //.AddInMemoryRabbitMqClient()
+                .BuildServiceProvider();
+
+            foreach (var hostedService in serviceProvider.GetServices<IHostedService>())
+            {
+                await hostedService.StartAsync(CancellationToken.None);
+            }
+
+            await Task.Delay(TimeSpan.FromDays(1));
+        }
+
+        public static async Task Main2()
+        {
+            using var tracerProvider = Sdk.CreateTracerProviderBuilder()
+                .SetResourceBuilder(ResourceBuilder.CreateDefault()
+                    .AddService("Byndyusoft.Net.RabbitMq"))
+                .SetSampler(new AlwaysOnSampler())
+                .AddSource(ActivitySource.Name)
+                .AddJaegerExporter(jaeger =>
+                {
+                    jaeger.AgentHost = "localhost";
+                    jaeger.AgentPort = 6831;
+                })
+                .AddRabbitMqClientInstrumentation()
+                .Build();
+
+            var service = new ServiceCollection()
+                .AddRabbitMqClient("host=localhost;username=guest;password=guest", 
+                    options =>
+                {
                     //options.ApplicationName = "Byndyusoft.Net.RabbitMq";
                 })
                 .AddInMemoryRabbitMqClient()
@@ -130,7 +165,7 @@ namespace Byndyusoft.Net.RabbitMq
                         return Task.CompletedTask;
                     })
                 .WithPrefetchCount(20)
-                .WithQueue(options => options.AsAutoDelete(true))
+                .WithCreatingSubscribeQueue(options => options.AsAutoDelete(true))
                 .Start();
 
 
@@ -161,9 +196,9 @@ namespace Byndyusoft.Net.RabbitMq
                         return ClientConsumeResult.Error;
                     })
                 .WithPrefetchCount(20)
-                .WithQueue(options => options.AsAutoDelete(true))
+                .WithCreatingSubscribeQueue(options => options.AsAutoDelete(true))
                 .WithErrorQueue(option => option.AsAutoDelete(true))
-                .WithRetryQueue(TimeSpan.FromSeconds(10), options => options.AsAutoDelete(true))
+                .WithSingleQueueRetry(TimeSpan.FromSeconds(10), options => options.AsAutoDelete(true))
                 .Start();
 
             var message = new RabbitMqMessage

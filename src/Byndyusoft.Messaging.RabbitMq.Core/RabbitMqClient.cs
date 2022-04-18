@@ -9,6 +9,7 @@ using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 using Byndyusoft.Messaging.RabbitMq.Core.Diagnostics;
+using Microsoft.Extensions.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq.Core
 {
@@ -19,13 +20,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
         private IRabbitMqClientHandler _handler;
 
 
-        public RabbitMqClient(IRabbitMqClientHandler handler, RabbitMqClientOptions options, bool disposeHandler = false)
+        public RabbitMqClient(IRabbitMqClientHandler handler, IOptions<RabbitMqClientOptions> options, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
 
-            Options = options;
+            Options = options.Value;
             _handler = handler;
-            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource(Options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
         }
 
