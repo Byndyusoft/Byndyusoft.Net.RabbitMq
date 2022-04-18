@@ -5,15 +5,13 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json.Formatting;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Byndyusoft.Messaging.RabbitMq.Core.Diagnostics;
-using Microsoft.Extensions.Options;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core
+namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqClientCore : Disposable, IRabbitMqClient
+    public abstract class RabbitMqClientCore : Disposable, IRabbitMqClient
     {
         private readonly RabbitMqClientActivitySource _activitySource;
         private readonly bool _disposeHandler;
@@ -24,7 +22,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
         }
 
-        public RabbitMqClientCore(IRabbitMqClientHandler handler, RabbitMqClientOptions options, bool disposeHandler = false)
+        protected RabbitMqClientCore(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options,
+            bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
             Preconditions.CheckNotNull(options, nameof(options));
@@ -35,7 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             _disposeHandler = disposeHandler;
         }
 
-        public RabbitMqClientOptions Options { get; }
+        public RabbitMqClientCoreOptions Options { get; }
 
         public virtual async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
@@ -77,7 +76,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                             await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
                             break;
                         case ErrorConsumeResult error:
-                            await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions, error.Exception, cancellationToken)
+                            await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions,
+                                    error.Exception, cancellationToken)
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
@@ -234,7 +234,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if (properties.ContentType is not null)
                 content.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
 
-            if (properties.ContentEncoding is not null) 
+            if (properties.ContentEncoding is not null)
                 content.Headers.ContentEncoding.Add(properties.ContentEncoding);
         }
     }

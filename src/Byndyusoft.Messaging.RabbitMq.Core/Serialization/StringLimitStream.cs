@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
+namespace Byndyusoft.Messaging.RabbitMq.Serialization
 {
     [ExcludeFromCodeCoverage]
     internal class StringLimitStream : Stream
@@ -33,7 +33,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
         }
 
         private MemoryStream Inner => _memory ?? throw new ObjectDisposedException(nameof(StringLimitStream));
-        
+
         public override void Flush()
         {
             Inner.Flush();
@@ -48,7 +48,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
         {
             return Inner.Seek(offset, origin);
         }
-        
+
         public override void SetLength(long value)
         {
             Inner.SetLength(value);

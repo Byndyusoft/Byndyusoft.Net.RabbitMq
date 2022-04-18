@@ -1,9 +1,8 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Core;
+using Byndyusoft.Messaging.RabbitMq;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Microsoft.Extensions.Hosting;
 
 namespace Byndyusoft.Net.RabbitMq

@@ -1,13 +1,14 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqClientHandler : IDisposable, IRabbitMqEndpointContainer
     {
         #region Работа с сообщениями
+
         Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken);
 
         Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken);
@@ -17,6 +18,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue, CancellationToken cancellationToken);
 
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken);
+
         IDisposable StartConsume(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
@@ -39,7 +41,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken);
 
         Task DeleteExchangeAsync(string exchangeName, bool ifUnused, CancellationToken cancellationToken);
-        
+
         Task BindQueueAsync(string exchangeName,
             string routingKey,
             string queueName,

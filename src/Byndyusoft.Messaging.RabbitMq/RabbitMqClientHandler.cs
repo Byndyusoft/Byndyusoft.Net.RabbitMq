@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 using Byndyusoft.Messaging.RabbitMq.Internal;
+using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
@@ -27,7 +27,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private RabbitMqEndpoint? _endPoint;
         private bool _isInitialized;
 
-        public RabbitMqClientHandler(IOptions<RabbitMqClientHandlerOptions> options, IBusFactory busFactory)
+        public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
         {
             Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(options.Value.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
@@ -317,7 +317,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private void Initialize()
         {
-            if (_isInitialized) 
+            if (_isInitialized)
                 return;
 
             _bus = _busFactory.CreateBus(_connectionConfiguration);

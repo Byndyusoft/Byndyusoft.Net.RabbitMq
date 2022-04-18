@@ -1,11 +1,11 @@
 using System.Diagnostics;
 using System.Reflection;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqClientOptions
+    public class RabbitMqClientCoreOptions
     {
         private RabbitMqDiagnosticsOptions _diagnosticsOptions = new();
         private QueueNamingConventions _namingConventions = new();

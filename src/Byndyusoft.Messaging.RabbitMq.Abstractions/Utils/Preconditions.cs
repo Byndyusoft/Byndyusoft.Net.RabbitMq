@@ -1,7 +1,7 @@
 using System;
 using System.Diagnostics;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions.Utils
+namespace Byndyusoft.Messaging.RabbitMq.Utils
 {
     [DebuggerStepThrough]
     public static class Preconditions

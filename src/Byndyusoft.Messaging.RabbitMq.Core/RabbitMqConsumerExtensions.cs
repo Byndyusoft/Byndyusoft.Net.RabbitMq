@@ -1,9 +1,8 @@
 using System;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitMqConsumerExtensions
     {
@@ -31,11 +30,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
-            consumer.OnStarting += (async (_, cancellationToken) =>
+            consumer.OnStarting += async (_, cancellationToken) =>
             {
                 await consumer.Client.BindQueueAsync(exchangeName, routingKey, consumer.QueueName, cancellationToken)
                     .ConfigureAwait(false);
-            });
+            };
 
             return consumer;
         }
@@ -60,7 +59,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer;
         }
 
-        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName, Action<QueueOptions> optionsSetup)
+        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName,
+            Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
@@ -70,8 +70,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             return consumer.WithDeclareQueue(queueName, options);
         }
-        
-        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName, QueueOptions options)
+
+        public static IRabbitMqConsumer WithDeclareQueue(this IRabbitMqConsumer consumer, string queueName,
+            QueueOptions options)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));
@@ -84,8 +85,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             return consumer;
         }
-        
-        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
+
+        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer,
+            Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
@@ -96,7 +98,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer.WithDeclareSubscribingQueue(options);
         }
 
-        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, QueueOptions options)
+        public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer,
+            QueueOptions options)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));
@@ -125,7 +128,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer;
         }
 
-        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
+        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer,
+            Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 

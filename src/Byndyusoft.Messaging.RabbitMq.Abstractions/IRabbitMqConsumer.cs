@@ -2,11 +2,13 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
-    public delegate Task AfterRabbitQueueConsumerStopEventHandler(IRabbitMqConsumer consumer, CancellationToken cancellationToken);
+    public delegate Task AfterRabbitQueueConsumerStopEventHandler(IRabbitMqConsumer consumer,
+        CancellationToken cancellationToken);
 
-    public delegate Task BeforeRabbitQueueConsumerStartEventHandler(IRabbitMqConsumer consumer, CancellationToken cancellationToken);
+    public delegate Task BeforeRabbitQueueConsumerStartEventHandler(IRabbitMqConsumer consumer,
+        CancellationToken cancellationToken);
 
     public delegate Task<ConsumeResult>
         ReceivedRabbitMqMessageHandler(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
@@ -17,10 +19,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         IRabbitMqClient Client { get; }
         bool? Exclusive { get; set; }
         ushort? PrefetchCount { get; set; }
-        event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
-        event AfterRabbitQueueConsumerStopEventHandler OnStopped;
         ReceivedRabbitMqMessageHandler OnMessage { get; set; }
         bool IsRunning { get; }
+        event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
+        event AfterRabbitQueueConsumerStopEventHandler OnStopped;
         Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default);
         Task<IRabbitMqConsumer> StopAsync(CancellationToken cancellationToken = default);
     }

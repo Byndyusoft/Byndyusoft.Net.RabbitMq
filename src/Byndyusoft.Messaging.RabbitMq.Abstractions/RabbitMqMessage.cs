@@ -1,7 +1,7 @@
 using System.Net.Http;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqMessage : Disposable
     {

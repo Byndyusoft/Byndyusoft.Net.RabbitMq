@@ -1,7 +1,6 @@
 using System;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
+namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageFactory
     {

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions.Utils
+namespace Byndyusoft.Messaging.RabbitMq.Utils
 {
     public abstract class Disposable : IDisposable
     {

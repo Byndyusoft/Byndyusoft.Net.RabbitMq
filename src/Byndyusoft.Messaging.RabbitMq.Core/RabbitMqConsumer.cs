@@ -1,21 +1,18 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core
+namespace Byndyusoft.Messaging.RabbitMq
 {
-
-
     public class RabbitMqConsumer : Disposable, IRabbitMqConsumer
     {
         private readonly IRabbitMqClientHandler _handler;
-        private ReceivedRabbitMqMessageHandler _onMessage;
         private readonly string _queueName;
 
         private IDisposable? _consumer;
         private bool? _exclusive;
+        private ReceivedRabbitMqMessageHandler _onMessage;
         private ushort? _prefetchCount;
 
         public RabbitMqConsumer(IRabbitMqClient client,
@@ -90,7 +87,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if (IsRunning)
                 return this;
 
-            if(OnStarting != null)
+            if (OnStarting != null)
                 await OnStarting(this, cancellationToken).ConfigureAwait(false);
 
             async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
@@ -104,7 +101,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                     }
                     catch (Exception exception)
                     {
-                        await _handler.PublishMessageToErrorQueueAsync(message, Client.Options.NamingConventions, exception, cancellationToken)
+                        await _handler.PublishMessageToErrorQueueAsync(message, Client.Options.NamingConventions,
+                                exception, cancellationToken)
                             .ConfigureAwait(false);
                         return HandlerConsumeResult.Ack;
                     }
@@ -127,7 +125,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             if (IsRunning == false)
                 return this;
 
-            if(OnStopped != null)
+            if (OnStopped != null)
                 await OnStopped(this, cancellationToken).ConfigureAwait(false);
 
             _consumer?.Dispose();
@@ -157,9 +155,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
                 case RejectWithoutRequeueConsumeResult:
                     return HandlerConsumeResult.RejectWithoutRequeue;
-                
+
                 case ErrorConsumeResult error:
-                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions, error.Exception, cancellationToken)
+                    await _handler.PublishMessageToErrorQueueAsync(consumedMessage, Client.Options.NamingConventions,
+                            error.Exception, cancellationToken)
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
 

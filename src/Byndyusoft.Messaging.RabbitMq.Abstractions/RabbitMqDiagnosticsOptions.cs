@@ -1,8 +1,8 @@
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqDiagnosticsOptions
     {
@@ -13,7 +13,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
         public RabbitMqDiagnosticsOptions()
         {
-            _jsonSerializerOptions = new JsonSerializerOptions()
+            _jsonSerializerOptions = new JsonSerializerOptions
                 {DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};
             _jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             _valueMaxStringLength = DefaultValueMaxStringLength;

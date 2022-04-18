@@ -1,8 +1,7 @@
 using System.Diagnostics;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Core.Serialization;
+using Byndyusoft.Messaging.RabbitMq.Serialization;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
+namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
     public partial class RabbitMqClientActivitySource
     {

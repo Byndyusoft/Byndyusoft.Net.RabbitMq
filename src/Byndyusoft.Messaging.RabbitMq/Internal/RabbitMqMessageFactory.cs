@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using EasyNetQ;
 
 namespace Byndyusoft.Messaging.RabbitMq.Internal

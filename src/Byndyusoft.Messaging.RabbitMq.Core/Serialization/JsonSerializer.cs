@@ -1,6 +1,4 @@
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-
-namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
+namespace Byndyusoft.Messaging.RabbitMq.Serialization
 {
     internal static class JsonSerializer
     {

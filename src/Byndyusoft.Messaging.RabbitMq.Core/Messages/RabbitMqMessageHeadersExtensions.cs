@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
+namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageHeadersExtensions
     {

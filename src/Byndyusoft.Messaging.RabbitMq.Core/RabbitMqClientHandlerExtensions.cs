@@ -1,11 +1,10 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Core.Messages;
+using Byndyusoft.Messaging.RabbitMq.Messages;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitMqClientHandlerExtensions
     {
@@ -16,8 +15,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                 await handler.CreateQueueAsync(queueName, options, cancellationToken).ConfigureAwait(false);
         }
 
-        public static async Task PublishMessageToRetryQueueAsync(this IRabbitMqClientHandler handler, 
-            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, CancellationToken cancellationToken)
+        public static async Task PublishMessageToRetryQueueAsync(this IRabbitMqClientHandler handler,
+            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions,
+            CancellationToken cancellationToken)
         {
             var retryQueueName = queueNamingConventions.RetryQueueName(message.Queue);
             await handler.CreateQueueIfNotExistAsync(retryQueueName, QueueOptions.Default
@@ -30,8 +30,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             await handler.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
         }
 
-        public static async Task PublishMessageToErrorQueueAsync(this IRabbitMqClientHandler handler, 
-             ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, Exception? exception, CancellationToken cancellationToken)
+        public static async Task PublishMessageToErrorQueueAsync(this IRabbitMqClientHandler handler,
+            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, Exception? exception,
+            CancellationToken cancellationToken)
         {
             var errorQueueName = queueNamingConventions.ErrorQueueName(message.Queue);
             await handler

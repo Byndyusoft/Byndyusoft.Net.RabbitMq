@@ -7,9 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Core;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.Tests.Functional.Models;
 using EasyNetQ;
 using EasyNetQ.Topology;
@@ -27,19 +25,18 @@ namespace Byndyusoft.Messaging.Tests.Functional
     {
         private readonly IBus _bus;
         private readonly IRabbitMqClient _client;
-        private readonly RabbitMqClientOptions _options;
+        private readonly RabbitMqClientCoreOptions _options;
         private readonly IAdvancedBus _rabbit;
 
         public RabbitMqClientFunctionalTests()
         {
             var connectionString = "host=localhost;username=guest;password=guest";
-            _options = new RabbitMqClientHandlerOptions();
+            _options = new RabbitMqClientOptions();
 
             _client = new ServiceCollection()
                 .AddRabbitMqClient(connectionString)
                 .BuildServiceProvider()
                 .GetRequiredService<IRabbitMqClient>();
-
 
             _bus = RabbitHutch.CreateBus(connectionString, _ => { });
             _rabbit = _bus.Advanced;

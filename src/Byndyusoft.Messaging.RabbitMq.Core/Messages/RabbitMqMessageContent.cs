@@ -1,8 +1,7 @@
 using System.Net.Http;
 using System.Net.Http.Headers;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
+namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageContent
     {
@@ -13,7 +12,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
             if (properties.ContentType is not null)
                 result.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
 
-            if (properties.ContentEncoding is not null) 
+            if (properties.ContentEncoding is not null)
                 result.Headers.ContentEncoding.Add(properties.ContentEncoding);
 
             return result;
@@ -24,7 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Messages
             var body = content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
 
             var result = new ByteArrayContent(body);
-            foreach ((string? key, var value) in content.Headers) 
+            foreach ((var key, var value) in content.Headers)
                 result.Headers.Add(key, value);
 
             return result;

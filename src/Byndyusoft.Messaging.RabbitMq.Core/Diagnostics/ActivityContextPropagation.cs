@@ -1,9 +1,8 @@
 using System.Diagnostics;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core.Diagnostics
+namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
     internal static class ActivityContextPropagation
     {

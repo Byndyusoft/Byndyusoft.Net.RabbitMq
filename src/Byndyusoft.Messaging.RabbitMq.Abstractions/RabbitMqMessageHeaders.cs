@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqMessageHeaders : Dictionary<string, object?>
     {

@@ -1,4 +1,4 @@
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqEndpointContainer
     {

@@ -1,7 +1,7 @@
 using System.Net.Http;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public class ReceivedRabbitMqMessage : Disposable
     {
@@ -10,8 +10,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         private readonly RabbitMqMessageHeaders _headers = new();
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
-        private readonly string _routingKey = default!;
         private readonly long _retryCount;
+        private readonly string _routingKey = default!;
 
         public bool Persistent { get; init; }
 
@@ -20,7 +20,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
             get => _retryCount;
             init
             {
-                Preconditions.Check(_retryCount>=0, $"{nameof(RetryCount)} should be positive number");
+                Preconditions.Check(_retryCount >= 0, $"{nameof(RetryCount)} should be positive number");
                 _retryCount = value;
             }
         }

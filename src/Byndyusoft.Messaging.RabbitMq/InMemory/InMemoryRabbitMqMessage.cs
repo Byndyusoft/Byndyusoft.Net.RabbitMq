@@ -1,8 +1,7 @@
 using System;
 using System.Net.Http;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Byndyusoft.Messaging.RabbitMq.Core.Messages;
+using Byndyusoft.Messaging.RabbitMq.Messages;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.InMemory
 {

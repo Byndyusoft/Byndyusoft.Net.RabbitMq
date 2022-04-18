@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class QueueOptions
     {

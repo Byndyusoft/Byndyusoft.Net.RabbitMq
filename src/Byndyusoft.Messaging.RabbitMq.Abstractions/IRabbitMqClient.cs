@@ -1,13 +1,13 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqClient : IDisposable
     {
-        RabbitMqClientOptions Options { get; }
+        RabbitMqClientCoreOptions Options { get; }
 
         #region Работа с сообщениями
 
@@ -15,11 +15,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 
         Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken = default);
 
-        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult, CancellationToken cancellationToken = default);
+        Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
+            CancellationToken cancellationToken = default);
 
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        IRabbitMqConsumer Subscribe(string queueName, Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
+        IRabbitMqConsumer Subscribe(string queueName,
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
 

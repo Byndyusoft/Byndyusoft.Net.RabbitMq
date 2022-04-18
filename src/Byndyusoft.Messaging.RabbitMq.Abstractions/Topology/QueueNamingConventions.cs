@@ -1,7 +1,7 @@
 using System;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions.Topology
+namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class QueueNamingConventions
     {

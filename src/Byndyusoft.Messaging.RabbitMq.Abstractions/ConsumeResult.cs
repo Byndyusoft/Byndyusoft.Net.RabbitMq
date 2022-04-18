@@ -1,43 +1,62 @@
 using System;
 
-namespace Byndyusoft.Messaging.RabbitMq.Abstractions
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public class ConsumeResult
     {
-        public static ConsumeResult Ack() => AckConsumeResult.Instance;
-        public static ConsumeResult RejectWithRequeue() => RejectWithRequeueConsumeResult.Instance;
-        public static ConsumeResult RejectWithoutRequeue() => RejectWithoutRequeueConsumeResult.Instance;
-        public static ConsumeResult Retry() => RetryConsumeResult.Instance;
-        public static ConsumeResult Error(Exception? e = null) => new ErrorConsumeResult(e);
+        public static ConsumeResult Ack()
+        {
+            return AckConsumeResult.Instance;
+        }
+
+        public static ConsumeResult RejectWithRequeue()
+        {
+            return RejectWithRequeueConsumeResult.Instance;
+        }
+
+        public static ConsumeResult RejectWithoutRequeue()
+        {
+            return RejectWithoutRequeueConsumeResult.Instance;
+        }
+
+        public static ConsumeResult Retry()
+        {
+            return RetryConsumeResult.Instance;
+        }
+
+        public static ConsumeResult Error(Exception? e = null)
+        {
+            return new ErrorConsumeResult(e);
+        }
     }
 
     public sealed class AckConsumeResult : ConsumeResult
     {
-        public static readonly AckConsumeResult Instance = new AckConsumeResult();
+        public static readonly AckConsumeResult Instance = new();
     }
 
     public sealed class RejectWithRequeueConsumeResult : ConsumeResult
     {
-        public static readonly RejectWithRequeueConsumeResult Instance = new RejectWithRequeueConsumeResult();
+        public static readonly RejectWithRequeueConsumeResult Instance = new();
     }
 
     public sealed class RejectWithoutRequeueConsumeResult : ConsumeResult
     {
-        public static readonly RejectWithoutRequeueConsumeResult Instance = new RejectWithoutRequeueConsumeResult();
+        public static readonly RejectWithoutRequeueConsumeResult Instance = new();
     }
 
     public class RetryConsumeResult : ConsumeResult
     {
-        public static readonly RetryConsumeResult Instance = new RetryConsumeResult();
+        public static readonly RetryConsumeResult Instance = new();
     }
 
     public sealed class ErrorConsumeResult : ConsumeResult
     {
-        public Exception? Exception { get; }
-
         public ErrorConsumeResult(Exception? exception)
         {
             Exception = exception;
         }
+
+        public Exception? Exception { get; }
     }
 }

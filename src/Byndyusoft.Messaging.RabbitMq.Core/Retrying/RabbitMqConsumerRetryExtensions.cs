@@ -1,16 +1,18 @@
+// ReSharper disable CheckNamespace
+
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Byndyusoft.Messaging.RabbitMq.Core.Messages;
+using Byndyusoft.Messaging.RabbitMq.Messages;
+using Byndyusoft.Messaging.RabbitMq.Topology;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Core
+namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitMqConsumerRetryExtensions
     {
-        public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer, TimeSpan delay, int? maxRetryCount, Action<QueueOptions> optionsSetup)
+        public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
+            TimeSpan delay, int? maxRetryCount, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
@@ -21,7 +23,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             return consumer.WithConstantTimeoutRetryStrategy(delay, maxRetryCount, options);
         }
 
-        public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer, TimeSpan delay, int? maxRetryCount, QueueOptions? options = null)
+        public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
+            TimeSpan delay, int? maxRetryCount, QueueOptions? options = null)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
@@ -29,6 +32,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             //Без локальной переменной будет рекурсия
             var onMessage = consumer.OnMessage;
+
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
                 try
@@ -59,6 +63,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
                     return ConsumeResult.Error(exception);
                 }
             }
+
             consumer.OnMessage = OnMessage;
 
             if (options is not null)

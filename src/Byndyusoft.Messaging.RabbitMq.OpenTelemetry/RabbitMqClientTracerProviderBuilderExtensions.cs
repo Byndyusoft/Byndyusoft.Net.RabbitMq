@@ -1,7 +1,7 @@
 // ReSharper disable CheckNamespace
 
-using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Byndyusoft.Messaging.RabbitMq.Core.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace OpenTelemetry.Trace
 {

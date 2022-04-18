@@ -4,8 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Core;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
+using Byndyusoft.Messaging.RabbitMq;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Newtonsoft.Json;
@@ -52,9 +51,7 @@ namespace Byndyusoft.Net.RabbitMq
                 .BuildServiceProvider();
 
             foreach (var hostedService in serviceProvider.GetServices<IHostedService>())
-            {
                 await hostedService.StartAsync(CancellationToken.None);
-            }
 
             await Task.Delay(TimeSpan.FromDays(1));
         }
@@ -113,7 +110,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var message = new Message { Property = "exchange-example" };
+                    var message = new Message {Property = "exchange-example"};
                     await service.PublishAsJsonAsync("exchange", "routingKey", message);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -149,7 +146,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var model = new Message { Property = "pulling-example" };
+                    var model = new Message {Property = "pulling-example"};
                     await service.PublishAsJsonAsync(null, queueName, model);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -176,7 +173,7 @@ namespace Byndyusoft.Net.RabbitMq
                 var rand = new Random();
                 while (true)
                 {
-                    var message = new Message { Property = "json-example" };
+                    var message = new Message {Property = "json-example"};
                     await service.PublishAsJsonAsync(null, queueName, message);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()));
                 }
@@ -206,7 +203,7 @@ namespace Byndyusoft.Net.RabbitMq
             var message = new RabbitMqMessage
             {
                 RoutingKey = queueName,
-                Content = JsonContent.Create(new Message { Property = "retry-example" })
+                Content = JsonContent.Create(new Message {Property = "retry-example"})
             };
             await service.PublishMessageAsync(message);
         }

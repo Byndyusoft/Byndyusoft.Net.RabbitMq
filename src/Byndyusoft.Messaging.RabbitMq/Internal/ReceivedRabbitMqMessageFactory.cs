@@ -1,7 +1,6 @@
 using System;
 using System.Text;
-using Byndyusoft.Messaging.RabbitMq.Abstractions;
-using Byndyusoft.Messaging.RabbitMq.Core.Messages;
+using Byndyusoft.Messaging.RabbitMq.Messages;
 using EasyNetQ;
 
 namespace Byndyusoft.Messaging.RabbitMq.Internal
