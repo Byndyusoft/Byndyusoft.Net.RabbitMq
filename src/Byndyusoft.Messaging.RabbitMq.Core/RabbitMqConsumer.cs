@@ -83,12 +83,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             set => _onMessage = Preconditions.CheckNotNull(value, nameof(OnMessage));
         }
 
-        public async Task StartAsync(CancellationToken cancellationToken = default)
+        public async Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
 
             if (IsRunning)
-                return;
+                return this;
 
             if(OnStarting != null)
                 await OnStarting(this, cancellationToken).ConfigureAwait(false);
@@ -116,20 +116,24 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             }
 
             _consumer = _handler.StartConsume(QueueName, _exclusive, _prefetchCount, OnMessage);
+
+            return this;
         }
 
-        public async Task StopAsync(CancellationToken cancellationToken = default)
+        public async Task<IRabbitMqConsumer> StopAsync(CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
 
             if (IsRunning == false)
-                return;
+                return this;
 
             if(OnStopped != null)
                 await OnStopped(this, cancellationToken).ConfigureAwait(false);
 
             _consumer?.Dispose();
             _consumer = null;
+
+            return this;
         }
 
         protected override void DisposeCore()

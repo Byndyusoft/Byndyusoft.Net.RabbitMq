@@ -1,10 +1,7 @@
 using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Topology;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
-using Byndyusoft.Messaging.RabbitMq.Core.Messages;
 
 namespace Byndyusoft.Messaging.RabbitMq.Core
 {
@@ -87,23 +84,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
 
             return consumer;
         }
-
-
-        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer, QueueOptions options)
-        {
-            Preconditions.CheckNotNull(consumer, nameof(consumer));
-            Preconditions.CheckNotNull(options, nameof(options));
-
-            consumer.OnStarting += async (_, cancellationToken) =>
-            {
-                var errorQueueName = consumer.Client.Options.NamingConventions.ErrorQueueName(consumer.QueueName);
-                await consumer.Client.CreateQueueIfNotExistsAsync(errorQueueName, options, cancellationToken)
-                    .ConfigureAwait(false);
-            };
-
-            return consumer;
-        }
-
+        
         public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
@@ -112,13 +93,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             var options = QueueOptions.Default;
             optionsSetup(options);
 
-            consumer.OnStarting += async (_, cancellationToken) =>
-            {
-                await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
-                    .ConfigureAwait(false);
-            };
-
-            return consumer;
+            return consumer.WithDeclareSubscribingQueue(options);
         }
 
         public static IRabbitMqConsumer WithDeclareSubscribingQueue(this IRabbitMqConsumer consumer, QueueOptions options)
@@ -129,6 +104,21 @@ namespace Byndyusoft.Messaging.RabbitMq.Core
             consumer.OnStarting += async (_, cancellationToken) =>
             {
                 await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
+                    .ConfigureAwait(false);
+            };
+
+            return consumer;
+        }
+
+        public static IRabbitMqConsumer WithDeclareErrorQueue(this IRabbitMqConsumer consumer, QueueOptions options)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            consumer.OnStarting += async (_, cancellationToken) =>
+            {
+                var errorQueueName = consumer.Client.Options.NamingConventions.ErrorQueueName(consumer.QueueName);
+                await consumer.Client.CreateQueueIfNotExistsAsync(errorQueueName, options, cancellationToken)
                     .ConfigureAwait(false);
             };
 

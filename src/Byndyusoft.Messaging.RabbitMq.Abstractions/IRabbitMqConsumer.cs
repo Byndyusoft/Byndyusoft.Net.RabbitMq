@@ -21,7 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         event AfterRabbitQueueConsumerStopEventHandler OnStopped;
         ReceivedRabbitMqMessageHandler OnMessage { get; set; }
         bool IsRunning { get; }
-        Task StartAsync(CancellationToken cancellationToken = default);
-        Task StopAsync(CancellationToken cancellationToken = default);
+        Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default);
+        Task<IRabbitMqConsumer> StopAsync(CancellationToken cancellationToken = default);
     }
 }
