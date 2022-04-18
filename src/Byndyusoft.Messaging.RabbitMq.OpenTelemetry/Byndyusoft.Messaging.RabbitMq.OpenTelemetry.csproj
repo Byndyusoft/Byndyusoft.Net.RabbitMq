@@ -2,9 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>9</LangVersion>
-    <RootNamespace>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</RootNamespace>
+	  <RootNamespace>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
