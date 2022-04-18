@@ -1,7 +1,6 @@
-// ReSharper disable once CheckNamespace
-
 using System.ComponentModel;
 
+// ReSharper disable once CheckNamespace
 namespace System.Runtime.CompilerServices
 {
     /// <see
