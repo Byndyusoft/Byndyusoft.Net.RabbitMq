@@ -5,6 +5,7 @@ using System.Text;
 
 namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
 {
+    [ExcludeFromCodeCoverage]
     internal class StringLimitStream : Stream
     {
         private readonly int? _lengthLimit;
@@ -17,15 +18,14 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
             _memory = new MemoryStream();
         }
 
-        [ExcludeFromCodeCoverage] public override bool CanRead => Inner.CanRead;
+        public override bool CanRead => Inner.CanRead;
 
-        [ExcludeFromCodeCoverage] public override bool CanSeek => Inner.CanSeek;
+        public override bool CanSeek => Inner.CanSeek;
 
-        [ExcludeFromCodeCoverage] public override bool CanWrite => Inner.CanWrite;
+        public override bool CanWrite => Inner.CanWrite;
 
-        [ExcludeFromCodeCoverage] public override long Length => Inner.Length;
+        public override long Length => Inner.Length;
 
-        [ExcludeFromCodeCoverage]
         public override long Position
         {
             get => Inner.Position;
@@ -33,26 +33,22 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
         }
 
         private MemoryStream Inner => _memory ?? throw new ObjectDisposedException(nameof(StringLimitStream));
-
-        [ExcludeFromCodeCoverage]
+        
         public override void Flush()
         {
             Inner.Flush();
         }
 
-        [ExcludeFromCodeCoverage]
         public override int Read(byte[] buffer, int offset, int count)
         {
             return Inner.Read(buffer, offset, count);
         }
 
-        [ExcludeFromCodeCoverage]
         public override long Seek(long offset, SeekOrigin origin)
         {
             return Inner.Seek(offset, origin);
         }
-
-        [ExcludeFromCodeCoverage]
+        
         public override void SetLength(long value)
         {
             Inner.SetLength(value);
@@ -60,6 +56,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
 
         public override void Write(byte[] buffer, int offset, int count)
         {
+            if (_oversized)
+                return;
+
             var inner = Inner;
 
             if (_lengthLimit != null && inner.Length + count > _lengthLimit)
@@ -68,7 +67,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Core.Serialization
                 count = _lengthLimit.Value - (int) inner.Length;
             }
 
-            Inner.Write(buffer, offset, count);
+            inner.Write(buffer, offset, count);
         }
 
         protected override void Dispose(bool disposing)

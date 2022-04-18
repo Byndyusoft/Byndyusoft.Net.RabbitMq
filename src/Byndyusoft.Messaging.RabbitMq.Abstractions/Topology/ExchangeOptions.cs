@@ -5,7 +5,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions.Topology
 {
     public class ExchangeOptions
     {
-        public static ExchangeOptions Default => new();
+        public static ExchangeOptions Default => new ExchangeOptions().AsDurable(true);
 
         /// <summary>
         ///     Type of the exchange.

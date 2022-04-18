@@ -54,19 +54,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.Tests.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq", "src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj", "{1A2D6501-C140-41A5-A1C5-38635585DCB8}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{9A56E15A-F70B-423C-AEE1-A4587BFC9D09}"
-	ProjectSection(SolutionItems) = preProject
-		build\build.cake = build\build.cake
-		build\build.ps1 = build\build.ps1
-		build\build.sh = build\build.sh
-		build\NuGet.config = build\NuGet.config
-	EndProjectSection
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq.Core", "src\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj", "{BC596626-CD4F-4F1D-8A24-3F4671C9D273}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Messaging.RabbitMq.Abstractions", "src\Byndyusoft.Messaging.RabbitMq.Abstractions\Byndyusoft.Messaging.RabbitMq.Abstractions.csproj", "{942D1F91-3517-4C92-A21A-E58107BD9954}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq.Abstractions", "src\Byndyusoft.Messaging.RabbitMq.Abstractions\Byndyusoft.Messaging.RabbitMq.Abstractions.csproj", "{942D1F91-3517-4C92-A21A-E58107BD9954}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Byndyusoft.Messaging.RabbitMq.OpenTelemetry", "src\Byndyusoft.Messaging.RabbitMq.OpenTelemetry\Byndyusoft.Messaging.RabbitMq.OpenTelemetry.csproj", "{FE5CCD18-DB87-46DA-8065-D783D0E85494}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Byndyusoft.Messaging.RabbitMq.OpenTelemetry", "src\Byndyusoft.Messaging.RabbitMq.OpenTelemetry\Byndyusoft.Messaging.RabbitMq.OpenTelemetry.csproj", "{FE5CCD18-DB87-46DA-8065-D783D0E85494}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -122,7 +114,6 @@ Global
 		{F426D8EA-57F9-4A74-B22B-2274B85DA77B} = {9EA25630-88D1-4A52-B339-141C8B8720B8}
 		{94967F85-C024-4E4D-9A8A-6FEB25FC03E1} = {91AB4082-CA49-4DB5-879F-6A897728BB9B}
 		{1A2D6501-C140-41A5-A1C5-38635585DCB8} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
-		{9A56E15A-F70B-423C-AEE1-A4587BFC9D09} = {F021E742-6A0A-469D-A6CE-68AB0F50DD52}
 		{BC596626-CD4F-4F1D-8A24-3F4671C9D273} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 		{942D1F91-3517-4C92-A21A-E58107BD9954} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}
 		{FE5CCD18-DB87-46DA-8065-D783D0E85494} = {7C2F7117-324F-4BF3-BFEC-9B08E2C288CC}

@@ -1,6 +1,4 @@
 using System.Net.Http;
-using System.Net.Http.Formatting;
-using System.Net.Http.Json.Formatting;
 using Byndyusoft.Messaging.RabbitMq.Abstractions.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Abstractions
@@ -10,28 +8,22 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         private readonly string _consumerTag = default!;
         private readonly HttpContent? _content;
         private readonly RabbitMqMessageHeaders _headers = new();
-        private readonly bool _persistent;
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
         private readonly string _routingKey = default!;
+        private readonly long _retryCount;
 
-        static ReceivedRabbitMqMessage()
-        {
-            //TODO Почему здесь, а не в клиенте?
-            MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
-        }
+        public bool Persistent { get; init; }
 
-        public bool Persistent
+        public long RetryCount
         {
-            get
+            get => _retryCount;
+            init
             {
-                Preconditions.CheckNotDisposed(this);
-                return _persistent;
+                Preconditions.Check(_retryCount>=0, $"{nameof(RetryCount)} should be positive number");
+                _retryCount = value;
             }
-            init => _persistent = value;
         }
-
-        public long RetryCount { get; init; }
 
         /// <summary>
         ///     Consumer (subscription) identifier
@@ -39,11 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         public string ConsumerTag
         {
             get => _consumerTag;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(ConsumerTag));
-                _consumerTag = value;
-            }
+            init => _consumerTag = Preconditions.CheckNotNull(value, nameof(ConsumerTag));
         }
 
         /// <summary>
@@ -67,11 +55,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         public string RoutingKey
         {
             get => _routingKey;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(RoutingKey));
-                _routingKey = value;
-            }
+            init => _routingKey = Preconditions.CheckNotNull(value, nameof(RoutingKey));
         }
 
         /// <summary>
@@ -80,41 +64,25 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
         public string Queue
         {
             get => _queue;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(Queue));
-                _queue = value;
-            }
+            init => _queue = Preconditions.CheckNotNull(value, nameof(Queue));
         }
 
         public RabbitMqMessageProperties Properties
         {
             get => _properties;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(Properties));
-                _properties = value;
-            }
+            init => _properties = Preconditions.CheckNotNull(value, nameof(Properties));
         }
 
         public HttpContent Content
         {
             get => _content!;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(Content));
-                _content = value;
-            }
+            init => _content = Preconditions.CheckNotNull(value, nameof(Content));
         }
 
         public RabbitMqMessageHeaders Headers
         {
             get => _headers;
-            init
-            {
-                Preconditions.CheckNotNull(value, nameof(Headers));
-                _headers = value;
-            }
+            init => _headers = Preconditions.CheckNotNull(value, nameof(Headers));
         }
 
         protected override void DisposeCore()
