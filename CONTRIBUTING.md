@@ -1,4 +1,4 @@
-# Contributing to Byndyusoft.Net.RabbitMq
+# Contributing to Byndyusoft.Messaging.RabbitMq
 
 We'd love you to contribute to our source code and to make our project even better than it is
 today! Here are the guidelines we'd like you to follow:
@@ -25,14 +25,14 @@ Also first of all search GitHub for an open or closed Pull Request that relates 
 
 ## Working with the code
 
-If you want to fix, to add enhancement, or to improve documentation, you need to learn how to work with GitHub, Byndyusoft.Net.RabbitMq code base and contributing rules.
+If you want to fix, to add enhancement, or to improve documentation, you need to learn how to work with GitHub, Byndyusoft.Messaging.RabbitMq code base and contributing rules.
 
 ### Cloning
 
 You will need clone the repository to work on the code.
 
 ```shell
- git clone https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq.git
+ git clone https://github.com/Byndyusoft/Byndyusoft.Messaging.RabbitMq.git
 ```
 
 
