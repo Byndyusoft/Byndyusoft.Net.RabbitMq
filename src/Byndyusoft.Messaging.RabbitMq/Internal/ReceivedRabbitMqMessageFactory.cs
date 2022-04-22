@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Text;
 using Byndyusoft.Messaging.RabbitMq.Messages;
 using EasyNetQ;
@@ -8,27 +7,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
-        private static int _counter;
-        private static byte[]? _content;
-
         public static ReceivedRabbitMqMessage CreateReceivedMessage(byte[] body,
             MessageProperties messageProperties,
             MessageReceivedInfo info)
         {
-            if (info.Queue == "pulling-example")
-            {
-                _counter++;
-
-                if (_content == null)
-                {
-                    _content = body;
-                }
-                else if (body.SequenceEqual(_content) == false)
-                {
-                    var x = 10;
-                }
-            }
-
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
             var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
