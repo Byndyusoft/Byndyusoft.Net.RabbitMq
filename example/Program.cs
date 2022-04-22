@@ -32,8 +32,9 @@ namespace Byndyusoft.Net.RabbitMq
             await CreateHostBuilder(args).RunConsoleAsync();
         }
 
-        private static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
+        private static IHostBuilder CreateHostBuilder(string[] args)
+        {
+            return Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
                 .ConfigureServices((_, services) =>
                 {
@@ -47,5 +48,6 @@ namespace Byndyusoft.Net.RabbitMq
                     services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
                     //services.AddInMemoryRabbitMqClient();
                 });
+        }
     }
 }

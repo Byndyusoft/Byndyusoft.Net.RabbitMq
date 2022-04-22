@@ -19,14 +19,15 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            await _rabbitMqClient.CreateExchangeIfNotExistsAsync("exchange", ex => ex.AsAutoDelete(true), stoppingToken);
+            await _rabbitMqClient.CreateExchangeIfNotExistsAsync("exchange", ex => ex.AsAutoDelete(true),
+                stoppingToken);
 
             using var consumer = _rabbitMqClient.Subscribe("exchange", "routingKey",
                     async (queueMessage, cancellationToken) =>
                     {
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        return ConsumeResult.Ack();
+                        return ConsumeResult.Ack;
                     })
                 .WithPrefetchCount(20)
                 .WithDeclareSubscribingQueue(option => option.AsAutoDelete(true))
@@ -40,7 +41,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 {
                     var message = new Message {Property = "exchange-example"};
                     await _rabbitMqClient.PublishAsJsonAsync("exchange", "routingKey", message, stoppingToken);
-                    
+
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()), stoppingToken);
                 }
             }, stoppingToken);

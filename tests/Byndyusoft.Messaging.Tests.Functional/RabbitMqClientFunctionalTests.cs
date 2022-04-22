@@ -243,7 +243,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Ack());
+            await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -264,7 +264,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue());
+            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
@@ -286,7 +286,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var message = await _client.GetMessageAsync(queueName);
 
             // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue());
+            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
@@ -511,7 +511,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             using var consumer = _client.Subscribe(queueName, (message, _) =>
             {
                 receivedMessage = message;
-                return Task.FromResult(ConsumeResult.Ack());
+                return Task.FromResult(ConsumeResult.Ack);
             }).Start();
 
             // act

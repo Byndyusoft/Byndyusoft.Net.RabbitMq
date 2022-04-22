@@ -23,7 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             var body = content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
 
             var result = new ByteArrayContent(body);
-            foreach ((var key, var value) in content.Headers)
+            foreach (var (key, value) in content.Headers)
                 result.Headers.Add(key, value);
 
             return result;

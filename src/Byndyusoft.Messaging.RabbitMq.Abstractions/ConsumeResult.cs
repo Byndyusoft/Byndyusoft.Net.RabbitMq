@@ -4,25 +4,13 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class ConsumeResult
     {
-        public static ConsumeResult Ack()
-        {
-            return AckConsumeResult.Instance;
-        }
+        public static readonly ConsumeResult Ack = new AckConsumeResult();
 
-        public static ConsumeResult RejectWithRequeue()
-        {
-            return RejectWithRequeueConsumeResult.Instance;
-        }
+        public static readonly ConsumeResult RejectWithRequeue = new RejectWithRequeueConsumeResult();
 
-        public static ConsumeResult RejectWithoutRequeue()
-        {
-            return RejectWithoutRequeueConsumeResult.Instance;
-        }
+        public static readonly ConsumeResult RejectWithoutRequeue = new RejectWithoutRequeueConsumeResult();
 
-        public static ConsumeResult Retry()
-        {
-            return RetryConsumeResult.Instance;
-        }
+        public static readonly ConsumeResult Retry = new RetryConsumeResult();
 
         public static ConsumeResult Error(Exception? e = null)
         {
@@ -32,22 +20,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
     public sealed class AckConsumeResult : ConsumeResult
     {
-        public static readonly AckConsumeResult Instance = new();
     }
 
     public sealed class RejectWithRequeueConsumeResult : ConsumeResult
     {
-        public static readonly RejectWithRequeueConsumeResult Instance = new();
     }
 
     public sealed class RejectWithoutRequeueConsumeResult : ConsumeResult
     {
-        public static readonly RejectWithoutRequeueConsumeResult Instance = new();
     }
 
     public class RetryConsumeResult : ConsumeResult
     {
-        public static readonly RetryConsumeResult Instance = new();
     }
 
     public sealed class ErrorConsumeResult : ConsumeResult

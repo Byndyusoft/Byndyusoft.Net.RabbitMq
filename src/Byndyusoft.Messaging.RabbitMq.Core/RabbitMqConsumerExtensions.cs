@@ -13,16 +13,14 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
-            consumer.StartAsync().GetAwaiter().GetResult();
-            return consumer;
+            return consumer.StartAsync().GetAwaiter().GetResult();
         }
 
         public static IRabbitMqConsumer Stop(this IRabbitMqConsumer consumer)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
-            consumer.StopAsync().GetAwaiter().GetResult();
-            return consumer;
+            return consumer.StopAsync().GetAwaiter().GetResult();
         }
 
         public static IRabbitMqConsumer WithQueueBinding(this IRabbitMqConsumer consumer,

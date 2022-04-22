@@ -56,7 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     retryMessage.Headers.SetException(handleException);
 
                     await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-                    return ConsumeResult.Ack();
+                    return ConsumeResult.Ack;
                 }
                 catch (Exception exception)
                 {

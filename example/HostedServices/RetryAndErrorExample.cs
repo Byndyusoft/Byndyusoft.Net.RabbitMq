@@ -28,7 +28,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine($"{JsonConvert.SerializeObject(model)}, Retried: {queueMessage.RetryCount}");
 
-                        return ConsumeResult.Retry();
+                        return ConsumeResult.Retry;
                     })
                 .WithPrefetchCount(20)
                 .WithDeclareSubscribingQueue(options => options.AsAutoDelete(true))
@@ -39,7 +39,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
             var message = new RabbitMqMessage
             {
                 RoutingKey = queueName,
-                Content = JsonContent.Create(new Message { Property = "retry-example" })
+                Content = JsonContent.Create(new Message {Property = "retry-example"})
             };
 
             await _rabbitMqClient.PublishMessageAsync(message, stoppingToken);

@@ -28,7 +28,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                             Console.WriteLine($"Retry count {message.RetryCount}");
 
                             if (message.RetryCount >= 0)
-                                return ConsumeResult.Retry();
+                                return ConsumeResult.Retry;
 
                             throw new Exception("first retry");
                         })

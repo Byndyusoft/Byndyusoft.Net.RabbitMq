@@ -24,7 +24,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                     (model, _) =>
                     {
                         Console.WriteLine(JsonConvert.SerializeObject(model));
-                        return Task.FromResult(ConsumeResult.Ack());
+                        return Task.FromResult(ConsumeResult.Ack);
                     })
                 .WithPrefetchCount(20)
                 .WithDeclareSubscribingQueue(options => options.AsAutoDelete(true))
@@ -36,7 +36,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 while (stoppingToken.IsCancellationRequested == false)
                 {
                     var message = new Message {Property = "json-example"};
-                    await _rabbitMqClient.PublishAsJsonAsync(null, queueName, message, cancellationToken: stoppingToken);
+                    await _rabbitMqClient.PublishAsJsonAsync(null, queueName, message, stoppingToken);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()), stoppingToken);
                 }
             }, stoppingToken);
