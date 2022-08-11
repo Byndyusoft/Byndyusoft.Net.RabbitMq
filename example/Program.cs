@@ -42,10 +42,13 @@ namespace Byndyusoft.Net.RabbitMq
                     services.AddHostedService<RetryAndErrorExample>();
                     services.AddHostedService<SubscribeAsJsonExample>();
                     services.AddHostedService<SubscribeExchangeExample>();
+                    services.AddHostedService<ClientFactoryExample>();
 
                     //services.AddHostedService<QueueInstallerHostedService>();
 
                     services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
+
+                    services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
                     //services.AddInMemoryRabbitMqClient();
                 });
         }

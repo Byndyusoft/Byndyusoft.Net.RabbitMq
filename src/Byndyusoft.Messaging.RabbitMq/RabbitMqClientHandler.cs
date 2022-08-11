@@ -29,12 +29,16 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
         {
+            Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(options.Value.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
             _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
             _busFactory = busFactory;
+            Options = options.Value;
         }
+
+        internal RabbitMqClientOptions Options { get; }
 
         RabbitMqEndpoint IRabbitMqEndpointContainer.Endpoint
         {
@@ -104,7 +108,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            var exchange = message.Exchange is null ? Exchange.GetDefault() : new Exchange(message.Exchange);
+            var exchange = message.Exchange is null ? Exchange.Default : new Exchange(message.Exchange);
 
             var (body, properties) =
                 await RabbitMqMessageFactory.CreateEasyNetQMessageAsync(message).ConfigureAwait(false);
@@ -129,13 +133,13 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            void ConfigureConsumer(IConsumerConfiguration configuration)
+            void ConfigureConsumer(ISimpleConsumeConfiguration configuration)
             {
                 if (exclusive is not null) configuration.WithExclusive(exclusive.Value);
                 if (prefetchCount is not null) configuration.WithPrefetchCount(prefetchCount.Value);
             }
 
-            async Task<AckStrategy> OnMessage(byte[] body, MessageProperties properties, MessageReceivedInfo info)
+            async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties, MessageReceivedInfo info)
             {
                 try
                 {
@@ -211,7 +215,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            await _bus.Advanced.QueuePurgeAsync(new Queue(queueName), cancellationToken)
+            await _bus.Advanced.QueuePurgeAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -225,7 +229,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            await _bus.Advanced.QueueDeleteAsync(new Queue(queueName), ifUnused, ifEmpty, cancellationToken)
+            await _bus.Advanced.QueueDeleteAsync(queueName, ifUnused, ifEmpty, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -237,7 +241,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            var starts = await _bus.Advanced.GetQueueStatsAsync(new Queue(queueName), cancellationToken)
+            var starts = await _bus.Advanced.GetQueueStatsAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
             return starts.MessagesCount;
         }

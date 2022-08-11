@@ -7,7 +7,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
-        public static ReceivedRabbitMqMessage CreateReceivedMessage(byte[] body,
+        public static ReceivedRabbitMqMessage CreateReceivedMessage(ReadOnlyMemory<byte> body,
             MessageProperties messageProperties,
             MessageReceivedInfo info)
         {
@@ -56,9 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
                 ContentEncoding = properties.ContentEncoding,
                 ContentType = properties.ContentType,
                 CorrelationId = properties.CorrelationId,
-                Expiration = properties.ExpirationPresent
-                    ? TimeSpan.FromMilliseconds(int.Parse(properties.Expiration))
-                    : null,
+                Expiration = properties.Expiration,
                 MessageId = properties.MessageId,
                 Priority = properties.PriorityPresent ? properties.Priority : null,
                 Type = properties.Type,
