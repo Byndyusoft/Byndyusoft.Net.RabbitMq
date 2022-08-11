@@ -36,7 +36,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
                 properties.Timestamp = new DateTimeOffset(message.Properties.Timestamp.Value).ToUnixTimeMilliseconds();
 
             if (message.Properties.Expiration is not null)
-                properties.Expiration = $"{(int) message.Properties.Expiration.Value.TotalMilliseconds}";
+                properties.Expiration = message.Properties.Expiration;
 
             return properties;
         }

@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Net.Http.Headers;
 
@@ -5,9 +6,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageContent
     {
-        public static HttpContent Create(byte[] body, RabbitMqMessageProperties properties)
+        public static HttpContent Create(ReadOnlyMemory<byte> body, RabbitMqMessageProperties properties)
         {
-            var result = new ByteArrayContent(body);
+            var result = new ByteArrayContent(body.ToArray());
 
             if (properties.ContentType is not null)
                 result.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);

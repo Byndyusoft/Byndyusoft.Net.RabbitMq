@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
@@ -94,7 +93,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();
-            JsonSerializer.Deserialize<Message>(pullingResult.Body).Should().BeEquivalentTo(data);
+            JsonSerializer.Deserialize<Message>(pullingResult.Body.ToArray()).Should().BeEquivalentTo(data);
             pullingResult.Properties.Headers["key"].Should().BeOfType<byte[]>().Subject.Should()
                 .BeEquivalentTo(Encoding.UTF8.GetBytes("value"));
             CheckProperties(pullingResult.Properties, message.Properties);
@@ -156,7 +155,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             pullingResult.ReceivedInfo.Queue.Should().Be(queueName);
             pullingResult.ReceivedInfo.Exchange.Should().Be(exchangeName);
             pullingResult.ReceivedInfo.RoutingKey.Should().Be(routingKey);
-            JsonSerializer.Deserialize<Message>(pullingResult.Body).Should().BeEquivalentTo(data);
+            JsonSerializer.Deserialize<Message>(pullingResult.Body.ToArray()).Should().BeEquivalentTo(data);
             pullingResult.Properties.Headers["key"].Should().BeOfType<byte[]>().Subject.Should()
                 .BeEquivalentTo(Encoding.UTF8.GetBytes("value"));
             pullingResult.Properties.ContentType.Should().Be(message.Properties.ContentType);
@@ -164,8 +163,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             pullingResult.Properties.Type.Should().Be(message.Properties.Type);
             pullingResult.Properties.ContentEncoding.Should().Be(message.Properties.ContentEncoding);
             pullingResult.Properties.CorrelationId.Should().Be(message.Properties.CorrelationId);
-            pullingResult.Properties.Expiration.Should()
-                .Be(message.Properties.Expiration?.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            pullingResult.Properties.Expiration.Should().Be(message.Properties.Expiration);
             pullingResult.Properties.AppId.Should().Be(message.Properties.AppId);
             pullingResult.Properties.MessageId.Should().Be(message.Properties.MessageId);
             pullingResult.Properties.ReplyTo.Should().Be(message.Properties.ReplyTo);
@@ -203,7 +201,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 Type = "type",
                 ContentEncoding = "contentEncoding",
                 CorrelationId = "correlationId",
-                Expiration = "10000",
+                Expiration = TimeSpan.FromMilliseconds(10000),
                 AppId = "appId",
                 MessageId = "messageId",
                 ReplyTo = "replyTo",
@@ -216,7 +214,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             };
 
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(data));
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, body);
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
@@ -236,7 +234,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(CompleteMessage_Ack_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
 
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
@@ -246,7 +244,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
+            var stats = await _rabbit.GetQueueStatsAsync(queueName);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -257,7 +255,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(CompleteMessage_RejectWithoutRequeue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
 
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
@@ -267,7 +265,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
+            var stats = await _rabbit.GetQueueStatsAsync(queueName);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -278,9 +276,9 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(CompleteMessage_RejectWithRequeue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
 
-            var body = Array.Empty<byte>();
+            var body = new byte[] {1, 2, 3};
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, body);
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, new ReadOnlyMemory<byte>(body));
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             var message = await _client.GetMessageAsync(queueName);
@@ -293,7 +291,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();
-            pullingResult.Body.Should().BeEquivalentTo(body);
+            pullingResult.Body.ToArray().Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
         }
 
@@ -305,9 +303,9 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var errorQueueName = _options.NamingConventions.ErrorQueueName(queueName);
             await using var queue = await QueueDeclareAsync(queueName);
 
-            var body = Array.Empty<byte>();
+            var body = new byte[] {1, 2, 3};
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, body);
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             var message = await _client.GetMessageAsync(queueName);
@@ -321,10 +319,10 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();
-            pullingResult.Body.Should().BeEquivalentTo(body);
+            pullingResult.Body.ToArray().Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
 
-            _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(0);
+            _rabbit.GetQueueStats(queueName).MessagesCount.Should().Be(0);
         }
 
         [Fact]
@@ -341,7 +339,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             QueueExists(queueName).Should().BeTrue();
 
             // cleanup
-            await _rabbit.QueueDeleteAsync(new Queue(queueName));
+            await _rabbit.QueueDeleteAsync(queueName);
         }
 
         [Fact]
@@ -391,7 +389,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             // arrange
             var queueName = $"{nameof(PurgeQueue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
@@ -399,7 +397,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _client.PurgeQueueAsync(queueName);
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(new Queue(queueName));
+            var stats = await _rabbit.GetQueueStatsAsync(queueName);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -409,7 +407,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             // arrange
             var queueName = $"{nameof(GetQueueMessageCount_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
@@ -492,11 +490,11 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _client.BindQueueAsync(exchangeName, routingKey, queueName);
 
             // assert
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, new MessageProperties(),
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount.Should().Be(1);
+            _rabbit.GetQueueStats(queueName).MessagesCount.Should().Be(1);
         }
 
         [Fact]
@@ -516,7 +514,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             // act
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.GetDefault(), queueName, true, properties, Array.Empty<byte>());
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, Array.Empty<byte>());
 
             // assert
             await WaitForAsync(() => receivedMessage is not null, TimeSpan.FromSeconds(5));
@@ -557,7 +555,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             actual.Type.Should().Be(expected.Type);
             actual.ContentEncoding.Should().Be(expected.ContentEncoding);
             actual.CorrelationId.Should().Be(expected.CorrelationId);
-            actual.Expiration.Should().Be(int.Parse(expected.Expiration).Milliseconds());
+            actual.Expiration.Should().Be(expected.Expiration);
             actual.AppId.Should().Be(expected.AppId);
             actual.MessageId.Should().Be(expected.MessageId);
             actual.ReplyTo.Should().Be(expected.ReplyTo);
@@ -572,8 +570,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             actual.Type.Should().Be(expected.Type);
             actual.ContentEncoding.Should().Be(expected.ContentEncoding);
             actual.CorrelationId.Should().Be(expected.CorrelationId);
-            actual.Expiration.Should()
-                .Be(expected.Expiration?.TotalMilliseconds.ToString(CultureInfo.InvariantCulture));
+            actual.Expiration.Should().Be(expected.Expiration);
             actual.AppId.Should().Be(expected.AppId);
             actual.MessageId.Should().Be(expected.MessageId);
             actual.ReplyTo.Should().Be(expected.ReplyTo);
@@ -583,7 +580,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
         private Task WaitForMessageAsync(string queueName, TimeSpan timeout)
         {
-            return WaitForAsync(() => _rabbit.GetQueueStats(new Queue(queueName)).MessagesCount != 0, timeout);
+            return WaitForAsync(() => _rabbit.GetQueueStats(queueName).MessagesCount != 0, timeout);
         }
 
         private static async Task WaitForAsync(Func<bool> condition, TimeSpan timeout)
@@ -603,13 +600,13 @@ namespace Byndyusoft.Messaging.Tests.Functional
         private async Task<IAsyncDisposable> QueueDeclareAsync(string queueName)
         {
             await _rabbit.QueueDeclareAsync(queueName, false, false, true);
-            await _rabbit.QueuePurgeAsync(new Queue(queueName));
+            await _rabbit.QueuePurgeAsync(queueName);
 
             return new AsyncDisposable(async () =>
             {
-                await _rabbit.QueueDeleteAsync(new Queue(queueName));
-                await _rabbit.QueueDeleteAsync(new Queue(_options.NamingConventions.ErrorQueueName(queueName)));
-                await _rabbit.QueueDeleteAsync(new Queue(_options.NamingConventions.RetryQueueName(queueName)));
+                await _rabbit.QueueDeleteAsync(queueName);
+                await _rabbit.QueueDeleteAsync(_options.NamingConventions.ErrorQueueName(queueName));
+                await _rabbit.QueueDeleteAsync(_options.NamingConventions.RetryQueueName(queueName));
             });
         }
 
