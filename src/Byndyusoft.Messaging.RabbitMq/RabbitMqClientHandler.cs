@@ -29,12 +29,16 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
         {
+            Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(options.Value.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
             _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
             _busFactory = busFactory;
+            Options = options.Value;
         }
+
+        internal RabbitMqClientOptions Options { get; }
 
         RabbitMqEndpoint IRabbitMqEndpointContainer.Endpoint
         {
