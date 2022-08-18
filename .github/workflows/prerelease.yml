@@ -1,8 +1,8 @@
 name: Publish
 
 on:
-  release:
-    types: [released]
+  release:  
+    types: [prereleased]
 
 jobs:
   publish:
@@ -23,7 +23,7 @@ jobs:
 
       - name: Install packages
         run: dotnet restore
-
+          
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
@@ -31,7 +31,7 @@ jobs:
         run: dotnet test --configuration Release --no-build
         
       - name: Create package(s)
-        run: dotnet pack --configuration Release --no-build
+        run: dotnet pack --version-suffix ${{format('tags-{0}', github.ref_name)}} --configuration Release --no-build
         
       - name: Publish packages
         run: dotnet nuget push **/*.nupkg -k ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
