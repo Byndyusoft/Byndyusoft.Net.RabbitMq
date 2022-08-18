@@ -1,37 +1,33 @@
-name: Publish
+name: release
 
 on:
   release:
-    types: [released]
-
+    types: [published]
+    
 jobs:
-  publish:
-    runs-on: ubuntu-latest
+  deploy:
+    name: deploy
 
-    env:
-      DOTNET_NOLOGO: true
-      DOTNET_CLI_TELEMETRY_OPTOUT: true
-      
+    runs-on: ubuntu-latest
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
-
+        uses: actions/checkout@v2
       - name: Install dotnet
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v1
         with:
           dotnet-version: '6.0.x'
-
-      - name: Install packages
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test --configuration Release --no-build
-        
-      - name: Create package(s)
-        run: dotnet pack --configuration Release --no-build
-        
-      - name: Publish packages
-        run: dotnet nuget push **/*.nupkg -k ${{secrets.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json
+      - name: Run Cake script
+        uses: cake-build/cake-action@v1
+        with:
+          script-path: ./build/build.cake
+          target: Pack
+          verbosity: Verbose
+          arguments: |
+            configuration: Release
+            nuget_useinprocessclient: true
+            settings_skipverification: true
+            settings_skippackageversioncheck: true
+      - name: Publish
+        working-directory: ./build/artifacts
+        run: dotnet nuget push "*.nupkg" -s https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }}
