@@ -31,7 +31,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 {
                     try
                     {
-                        using var message = await _rabbitMqClient.GetMessageAsync(queueName, stoppingToken);
+                        await using var message = await _rabbitMqClient.GetMessageAsync(queueName, stoppingToken);
                         if (message is not null)
                             try
                             {

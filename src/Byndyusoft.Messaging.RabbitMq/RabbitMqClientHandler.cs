@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Internal;
+using Byndyusoft.Messaging.RabbitMq.Messages;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using EasyNetQ;
@@ -13,6 +14,7 @@ using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
+//using RabbitMqMessageFactory = Byndyusoft.Messaging.RabbitMq.Internal.RabbitMqMessageFactory;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
@@ -66,7 +68,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return ReceivedRabbitMqMessageFactory.CreateReceivedMessage(pullingResult);
+            return ReceivedRabbitMqMessageFactory.CreatePulledMessage(pullingResult, this);
         }
 
         public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
@@ -82,6 +84,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
+            {
+                pulledRabbitMqMessage.IsCompleted = true;
+            }
         }
 
         public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
@@ -98,6 +105,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
+            {
+                pulledRabbitMqMessage.IsCompleted = true;
+            }
         }
 
         public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)

@@ -59,7 +59,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var data = new Message {Content = "content"};
 
             // act
-            var message = new RabbitMqMessage
+            await using var message = new RabbitMqMessage
             {
                 Mandatory = true,
                 Persistent = true,
@@ -90,7 +90,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
+            using var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();
             JsonSerializer.Deserialize<Message>(pullingResult.Body.ToArray()).Should().BeEquivalentTo(data);
@@ -117,7 +117,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var data = new Message {Content = "content"};
 
             // act
-            var message = new RabbitMqMessage
+            await using var message = new RabbitMqMessage
             {
                 Mandatory = true,
                 Persistent = true,
@@ -148,7 +148,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
+            using var pullingResult = await consumer.PullAsync();
 
             pullingResult.IsAvailable.Should().BeTrue();
 
@@ -180,7 +180,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             // act
-            using var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             // assert
             message.Should().BeNull();
@@ -218,7 +218,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
-            using var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             message.Should().NotBeNull();
             message!.Content.ReadFromJsonAsync<Message>().GetAwaiter().GetResult().Should().BeEquivalentTo(data);
@@ -238,7 +238,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             // act
             await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
@@ -259,7 +259,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             // act
             await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
@@ -281,7 +281,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, new ReadOnlyMemory<byte>(body));
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             // act
             await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
@@ -308,7 +308,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName);
 
             // act
             await _client.CompleteMessageAsync(message!, ConsumeResult.Error());

@@ -2,7 +2,7 @@ using System;
 
 namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
-    public static class RabbitMqMessageFactory
+    internal static class RabbitMqMessageFactory
     {
         public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
         {
