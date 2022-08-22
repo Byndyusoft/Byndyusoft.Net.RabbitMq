@@ -81,8 +81,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
-                        //case ConsumeResult.Retry:
-                        //    await _handler.PublishMessageToRetryQueueAsync( message, Options.NamingConventions, cancellationToken)
+                        //case RetryConsumeResult:
+                        //    await _handler.PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
                         //        .ConfigureAwait(false);
                         //    await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                         //    break;

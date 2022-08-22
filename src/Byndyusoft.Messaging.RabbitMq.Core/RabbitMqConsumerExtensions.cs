@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Topology;
@@ -80,17 +79,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             async Task EventHandler(IRabbitMqConsumer _, CancellationToken cancellationToken)
             {
-                await consumer.Client.CreateQueueIfNotExistsAsync(consumer.QueueName, options, cancellationToken)
+                await consumer.Client.CreateQueueIfNotExistsAsync(queueName, options, cancellationToken)
                     .ConfigureAwait(false);
             }
 
-            //consumer.OnStarting += EventHandler;
-
-            // queue declaring event handler should be first
-            var field = consumer.GetType().GetTypeInfo().GetDeclaredField(nameof(IRabbitMqConsumer.OnStarting));
-            var current = (Delegate) field.GetValue(consumer);
-            var dlg = Delegate.Combine(new BeforeRabbitQueueConsumerStartEventHandler(EventHandler), current);
-            field.SetValue(consumer, dlg);
+            consumer.OnStarting += EventHandler;
 
             return consumer;
         }
