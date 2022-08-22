@@ -1,39 +1,35 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Byndyusoft.Messaging.RabbitMq.Utils
 {
-    public abstract class Disposable : IDisposable
+    public abstract class AsyncDisposable : Disposable, IAsyncDisposable
     {
-        internal bool IsDisposed { get; set; }
-
-        ~Disposable()
-        {
-            Dispose(false);
-        }
-
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (IsDisposed) return;
 
-            Dispose(true);
-            IsDisposed = true;
-            GC.SuppressFinalize(this);
-        }
+            await DisposeAsyncCore().ConfigureAwait(false);
 
-        protected virtual void Dispose(bool disposing)
-        {
+            Dispose(false);
+            IsDisposed = true;
+            #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816 // Dispose methods should call SuppressFinalize
         }
         
-        public static void MultiDispose(IEnumerable<IDisposable> disposables)
+        protected virtual ValueTask DisposeAsyncCore() => new();
+
+        public static async ValueTask MultiDispose(IEnumerable<IAsyncDisposable> disposables)
         {
             var exceptions = new List<Exception>();
 
             foreach (var disposable in disposables)
                 try
                 {
-                    disposable.Dispose();
+                    await disposable.DisposeAsync().ConfigureAwait(false);
                 }
                 catch (Exception e)
                 {

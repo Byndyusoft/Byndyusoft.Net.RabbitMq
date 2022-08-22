@@ -81,11 +81,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                                 .ConfigureAwait(false);
                             await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
                             break;
-                        //case ConsumeResult.Retry:
-                        //    await _handler.PublishMessageToRetryQueueAsync( message, Options.NamingConventions, cancellationToken)
-                        //        .ConfigureAwait(false);
-                        //    await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
-                        //    break;
+                        case RetryConsumeResult:
+                            await _handler.PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
+                                .ConfigureAwait(false);
+                            await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                            break;
                         default:
                             throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
                     }
@@ -205,15 +205,17 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
+
             if (_disposeHandler)
             {
                 _handler.Dispose();
                 _handler = null!;
             }
-
-            base.DisposeCore();
         }
 
         protected void SetPublishingMessageProperties(RabbitMqMessage message)

@@ -3,7 +3,7 @@ using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqMessage : Disposable
+    public class RabbitMqMessage : AsyncDisposable
     {
         private HttpContent? _content;
         private string? _exchange;
@@ -120,9 +120,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
-            base.DisposeCore();
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
 
             _content?.Dispose();
             _content = null;

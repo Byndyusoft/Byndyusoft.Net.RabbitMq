@@ -7,7 +7,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
-        public static ReceivedRabbitMqMessage CreateReceivedMessage(ReadOnlyMemory<byte> body,
+        public static ReceivedRabbitMqMessage CreateReceivedMessage(
+            ReadOnlyMemory<byte> body,
             MessageProperties messageProperties,
             MessageReceivedInfo info)
         {
