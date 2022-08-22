@@ -4,7 +4,6 @@
 
 	<PropertyGroup>
 		<PackageIcon>icon.png</PackageIcon>
-		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 	<ItemGroup>
 		<None Include="..\..\icon.png" Pack="true" PackagePath="icon.png" />

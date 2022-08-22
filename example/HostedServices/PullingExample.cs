@@ -43,8 +43,8 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                             }
                             catch (Exception e)
                             {
-                                await _rabbitMqClient.CompleteMessageAsync(message, ConsumeResult.Error(e),
-                                    stoppingToken);
+                                Console.WriteLine($"Error {e}");
+                                await _rabbitMqClient.CompleteMessageAsync(message, ConsumeResult.Error(e), stoppingToken);
                             }
                     }
                     catch (Exception e)

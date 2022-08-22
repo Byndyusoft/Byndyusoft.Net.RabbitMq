@@ -228,6 +228,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
+        // TODO После получения сообщения MessageCount и так возвращает 0.
+        // TODO После реализации issue https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues/12 нужно поправить
         public async Task CompleteMessage_Ack_Test()
         {
             // arrange
@@ -249,6 +251,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
+        // TODO После получения сообщения MessageCount и так возвращает 0.
+        // TODO После реализации issue https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues/12 нужно поправить
         public async Task CompleteMessage_RejectWithoutRequeue_Test()
         {
             // arrange
@@ -293,6 +297,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             pullingResult.IsAvailable.Should().BeTrue();
             pullingResult.Body.ToArray().Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
+
+            _rabbit.GetQueueStats(queueName).MessagesCount.Should().Be(0);
         }
 
         [Fact]
