@@ -7,11 +7,11 @@ namespace Byndyusoft.Messaging.RabbitMq
     public class RabbitMqClientHandlerFactory : IRabbitMqClientHandlerFactory
     {
         private readonly IBusFactory _busFactory;
-        private readonly IOptionsSnapshot<RabbitMqClientOptions> _options;
+        private readonly IOptionsMonitor<RabbitMqClientOptions> _options;
 
         public RabbitMqClientHandlerFactory(
             IBusFactory busFactory,
-            IOptionsSnapshot<RabbitMqClientOptions> options)
+            IOptionsMonitor<RabbitMqClientOptions> options)
         {
             _busFactory = Preconditions.CheckNotNull(busFactory, nameof(busFactory));
             _options = Preconditions.CheckNotNull(options, nameof(options));

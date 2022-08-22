@@ -50,6 +50,12 @@ namespace Byndyusoft.Net.RabbitMq
 
                     services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
                     //services.AddInMemoryRabbitMqClient();
+
+                    services.BuildServiceProvider(new ServiceProviderOptions
+                    {
+                        ValidateOnBuild = true,
+                        ValidateScopes = true
+                    });
                 });
         }
     }
