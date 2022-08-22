@@ -9,6 +9,37 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitMqClientExtensions
     {
+        public static async Task<bool> PullMessageAsync(
+            this IRabbitMqClient client,
+            string queueName,
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(client, nameof(client));
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+
+            await using var message = await client.GetMessageAsync(queueName, cancellationToken)
+                .ConfigureAwait(false);
+            if (message is null)
+                return false;
+
+            try
+            {
+                var consumeResult = await onMessage(message, cancellationToken)
+                    .ConfigureAwait(false);
+                await client.CompleteMessageAsync(message, consumeResult, cancellationToken)
+                    .ConfigureAwait(false);
+                return true;
+            }
+            catch (Exception e)
+            {
+                await client.CompleteMessageAsync(message, ConsumeResult.Error(e), cancellationToken)
+                    .ConfigureAwait(false);
+                throw;
+            }
+        }
+
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string queueName,
             Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
