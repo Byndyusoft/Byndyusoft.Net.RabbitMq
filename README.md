@@ -68,13 +68,93 @@ IRabbtiMqСlient вдохновлён HttpClient'ом.
 
 (-) Я как автор клиента имею готовую инфраструктуру для реализации RPC
 
+# Simple usage
 
+## Send message
 
-[![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](LICENSE.txt)
+Create queue in hosted service:
 
+```csharp
+public class QueueHostedService : IHostedService
+{
+    private readonly IRabbitMqClient _rabbitMqClient;
 
-| [Byndyusoft.Messaging.RabbitMq.Abstractions](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) | [![Nuget](https://img.shields.io/nuget/v/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) | [![Downloads](https://img.shields.io/nuget/dt/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) |
+    public QueueHostedService(
+        IRabbitMqClient rabbitMqClient)
+    {
+        _rabbitMqClient = rabbitMqClient;
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await _rabbitMqClient.CreateQueueAsync("app.sample_dto", o => o.AsDurable(true), cancellationToken: cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}
+```
+
+Send message:
+
+```csharp
+public async Task SendMessageAsync(int id)
+{
+    var sampleDto = new SampleDto
+                        {
+                            Id = id,
+                            Name = "name"
+                        };
+    await _rabbitMqClient.PublishAsJsonAsync(exchangeName: null, 
+                                             routingKey: "app.sample_dto", 
+                                             model: sampleDto);
+}
+```
+
+## Handle message
+
+Register handler in hosted service:
+
+```csharp
+public class QueueHostedService : BackgroundService
+{
+    private readonly IRabbitMqClient _rabbitMqClient;
+    private readonly SampleDtoHandler _sampleDtoHandler;
+
+    public QueueHostedService(
+        IRabbitMqClient rabbitMqClient,
+        SampleDtoHandler sampleDtoHandler)
+    {
+        _rabbitMqClient = rabbitMqClient;
+        _sampleDtoHandler = sampleDtoHandler;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await _rabbitMqClient.SubscribeAsJson<SampleDto>("app.sample_dto", OnMessage)
+                             .WithDeclareErrorQueue(o => o.AsDurable(true))
+                             .WithConstantTimeoutRetryStrategy(TimeSpan.FromSeconds(5), 5, o => o.AsDurable(true))
+                             .StartAsync(stoppingToken);
+    }
+
+    private async Task<ConsumeResult> OnMessage(SampleDto? dto, CancellationToken cancellationToken)
+    {
+        if (dto == null)
+            throw new InvalidOperationException("content is null");
+
+        await _sampleDtoHandler.HandleAsync(dto);
+        return ConsumeResult.Ack;
+    }
+}
+```
+
+[![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Net.RabbitMq.svg)](LICENSE)
+
+| Package name | Nuget | Downloads |
 | ------- | ------------ | --------- |
+| [**Byndyusoft.Messaging.RabbitMq.Abstractions**](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) | [![Nuget](https://img.shields.io/nuget/v/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) | [![Downloads](https://img.shields.io/nuget/dt/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Abstractions/) |
 | [**Byndyusoft.Messaging.RabbitMq.Core**](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Core/) | [![Nuget](https://img.shields.io/nuget/v/Byndyusoft.Messaging.RabbitMq.Core.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Core/) | [![Downloads](https://img.shields.io/nuget/dt/Byndyusoft.Messaging.RabbitMq.Core.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.Core/) |
 | [**Byndyusoft.Messaging.RabbitMq**](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq/) | [![Nuget](https://img.shields.io/nuget/v/Byndyusoft.Messaging.RabbitMq.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq/) | [![Downloads](https://img.shields.io/nuget/dt/Byndyusoft.Messaging.RabbitMq.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq/) |
 | [**Byndyusoft.Messaging.RabbitMq.OpenTelemetry**](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.OpenTelemetry/) | [![Nuget](https://img.shields.io/nuget/v/Byndyusoft.Messaging.RabbitMq.OpenTelemetry.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.OpenTelemetry/) | [![Downloads](https://img.shields.io/nuget/dt/Byndyusoft.Messaging.RabbitMq.OpenTelemetry.svg)](https://www.nuget.org/packages/Byndyusoft.Messaging.RabbitMq.OpenTelemetry/) |
