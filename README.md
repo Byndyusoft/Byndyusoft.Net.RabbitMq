@@ -87,7 +87,7 @@ public class QueueHostedService : IHostedService
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
-        await _rabbitMqClient.CreateQueueAsync(QueueNames.Default, o => o.AsAutoDelete(true), cancellationToken: cancellationToken);
+        await _rabbitMqClient.CreateQueueAsync("app.sample_dto", o => o.AsAutoDelete(true), cancellationToken: cancellationToken);
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -108,7 +108,7 @@ public async Task SendMessageAsync(int id)
                             Name = "name"
                         };
     await _rabbitMqClient.PublishAsJsonAsync(exchangeName: null, 
-                                             routingKey: QueueNames.Default, 
+                                             routingKey: "app.sample_dto", 
                                              model: sampleDto);
 }
 ```
@@ -133,7 +133,7 @@ public class QueueHostedService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await _rabbitMqClient.SubscribeAsJson<SampleDto>(QueueNames.Default, OnMessage)
+        await _rabbitMqClient.SubscribeAsJson<SampleDto>("app.sample_dto", OnMessage)
                              .WithDeclareErrorQueue(o => o.AsAutoDelete(true))
                              .WithConstantTimeoutRetryStrategy(TimeSpan.FromSeconds(5), 5, o => o.AsAutoDelete(true))
                              .StartAsync(stoppingToken);
