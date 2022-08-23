@@ -150,7 +150,7 @@ public class QueueHostedService : BackgroundService
 }
 ```
 
-[![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](LICENSE.txt)
+[![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Net.RabbitMq.svg)](LICENSE)
 
 | Package name | Nuget | Downloads |
 | ------- | ------------ | --------- |
