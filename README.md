@@ -68,7 +68,87 @@ IRabbtiMqСlient вдохновлён HttpClient'ом.
 
 (-) Я как автор клиента имею готовую инфраструктуру для реализации RPC
 
+# Simple usage
 
+## Send message
+
+Create queue in hosted service:
+
+```csharp
+public class QueueHostedService : IHostedService
+{
+    private readonly IRabbitMqClient _rabbitMqClient;
+
+    public QueueHostedService(
+        IRabbitMqClient rabbitMqClient)
+    {
+        _rabbitMqClient = rabbitMqClient;
+    }
+
+    public async Task StartAsync(CancellationToken cancellationToken)
+    {
+        await _rabbitMqClient.CreateQueueAsync(QueueNames.Default, o => o.AsAutoDelete(true), cancellationToken: cancellationToken);
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}
+```
+
+Send message:
+
+```csharp
+public async Task SendMessageAsync(int id)
+{
+    var sampleDto = new SampleDto
+                        {
+                            Id = id,
+                            Name = "name"
+                        };
+    await _rabbitMqClient.PublishAsJsonAsync(exchangeName: null, 
+                                             routingKey: QueueNames.Default, 
+                                             model: sampleDto);
+}
+```
+
+## Handle message
+
+Register handler in hosted service:
+
+```csharp
+public class QueueHostedService : BackgroundService
+{
+    private readonly IRabbitMqClient _rabbitMqClient;
+    private readonly SampleDtoHandler _sampleDtoHandler;
+
+    public QueueHostedService(
+        IRabbitMqClient rabbitMqClient,
+        SampleDtoHandler sampleDtoHandler)
+    {
+        _rabbitMqClient = rabbitMqClient;
+        _sampleDtoHandler = sampleDtoHandler;
+    }
+
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        await _rabbitMqClient.SubscribeAsJson<SampleDto>(QueueNames.Default, OnMessage)
+                             .WithDeclareErrorQueue(o => o.AsAutoDelete(true))
+                             .WithConstantTimeoutRetryStrategy(TimeSpan.FromSeconds(5), 5, o => o.AsAutoDelete(true))
+                             .StartAsync(stoppingToken);
+    }
+
+    private async Task<ConsumeResult> OnMessage(SampleDto? dto, CancellationToken cancellationToken)
+    {
+        if (dto == null)
+            throw new InvalidOperationException("content is null");
+
+        await _sampleDtoHandler.HandleAsync(dto);
+        return ConsumeResult.Ack;
+    }
+}
+```
 
 [![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Messaging.RabbitMq.Abstractions.svg)](LICENSE.txt)
 
