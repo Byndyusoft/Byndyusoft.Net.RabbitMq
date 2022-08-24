@@ -142,7 +142,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async Task InvokeBeforeStartActionsAsync(CancellationToken cancellationToken)
         {
-            foreach (var (action, priority) in _beforeStartActions.OrderBy(i => i.Priority))
+            foreach (var (action, _) in _beforeStartActions.OrderBy(i => i.Priority))
                 await action(this, cancellationToken).ConfigureAwait(false);
         }
     }
