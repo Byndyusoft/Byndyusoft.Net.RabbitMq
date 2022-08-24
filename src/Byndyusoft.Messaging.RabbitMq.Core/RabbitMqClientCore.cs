@@ -36,7 +36,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public RabbitMqClientCoreOptions Options { get; }
 
-        public virtual async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
+        public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -54,7 +54,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 });
         }
 
-        public virtual async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
+        public async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
@@ -82,7 +82,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 });
         }
 
-        internal async Task<HandlerConsumeResult> ProcessConsumeResultAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
+        protected internal virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
+            ReceivedRabbitMqMessage message, 
+            ConsumeResult consumeResult,
             CancellationToken cancellationToken)
         {
             switch (consumeResult)
@@ -107,7 +109,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public virtual async Task PublishMessageAsync(RabbitMqMessage message,
+        public async Task PublishMessageAsync(RabbitMqMessage message,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(message, nameof(message));
