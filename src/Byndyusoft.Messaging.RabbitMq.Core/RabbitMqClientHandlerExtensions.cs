@@ -42,5 +42,27 @@ namespace Byndyusoft.Messaging.RabbitMq
             var errorMessage = RabbitMqMessageFactory.CreateErrorMessage(message, errorQueueName, exception);
             await handler.PublishMessageAsync(errorMessage, cancellationToken).ConfigureAwait(false);
         }
+
+        public static async Task CompleteMessageAsync(
+            this IRabbitMqClientHandler handler, 
+            ReceivedRabbitMqMessage message, 
+            HandlerConsumeResult handlerConsumeResult,
+            CancellationToken cancellationToken)
+        {
+            switch (handlerConsumeResult)
+            {
+                case HandlerConsumeResult.Ack:
+                    await handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                    break;
+                case HandlerConsumeResult.RejectWithRequeue:
+                    await handler.RejectMessageAsync(message, true, cancellationToken).ConfigureAwait(false);
+                    break;
+                case HandlerConsumeResult.RejectWithoutRequeue:
+                    await handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(handlerConsumeResult), handlerConsumeResult, null);
+            }
+        }
     }
 }

@@ -65,20 +65,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 async () =>
                 {
                     var handlerConsumeResult = await ProcessConsumeResultAsync(message, consumeResult, cancellationToken);
-                    switch (handlerConsumeResult)
-                    {
-                        case HandlerConsumeResult.Ack:
-                            await _handler.AckMessageAsync(message, cancellationToken).ConfigureAwait(false);
-                            break;
-                        case HandlerConsumeResult.RejectWithRequeue:
-                            await _handler.RejectMessageAsync(message, true, cancellationToken).ConfigureAwait(false);
-                            break;
-                        case HandlerConsumeResult.RejectWithoutRequeue:
-                            await _handler.RejectMessageAsync(message, false, cancellationToken).ConfigureAwait(false);
-                            break;
-                        default:
-                            throw new ArgumentOutOfRangeException(nameof(handlerConsumeResult), handlerConsumeResult, null);
-                    }
+                    await _handler.CompleteMessageAsync(message, handlerConsumeResult, cancellationToken).ConfigureAwait(false);
                 });
         }
 
