@@ -218,9 +218,11 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             foreach (var queue in Queues) queue.Clear();
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
-            base.DisposeCore();
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
 
             MultiDispose(_queues.Values);
             _queues.Clear();

@@ -7,7 +7,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
-        public static ReceivedRabbitMqMessage CreateReceivedMessage(ReadOnlyMemory<byte> body,
+        public static ReceivedRabbitMqMessage CreateReceivedMessage(
+            ReadOnlyMemory<byte> body,
             MessageProperties messageProperties,
             MessageReceivedInfo info)
         {
@@ -69,12 +70,33 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             };
         }
 
-        public static ReceivedRabbitMqMessage? CreateReceivedMessage(PullResult pullResult)
+        public static PulledRabbitMqMessage? CreatePulledMessage(PullResult pullResult, IRabbitMqClientHandler handler)
         {
             if (pullResult.IsAvailable == false)
                 return null;
 
-            return CreateReceivedMessage(pullResult.Body, pullResult.Properties, pullResult.ReceivedInfo);
+            var info = pullResult.ReceivedInfo;
+            var body = pullResult.Body;
+            var messageProperties = pullResult.Properties;
+
+            var properties = CreateMessageProperties(messageProperties);
+            var headers = CreateMessageHeaders(messageProperties);
+            var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
+
+            return new PulledRabbitMqMessage(handler)
+            {
+                Content = RabbitMqMessageContent.Create(body, properties),
+                ConsumerTag = info.ConsumerTag,
+                DeliveryTag = info.DeliveryTag,
+                Queue = info.Queue,
+                Redelivered = info.Redelivered,
+                RoutingKey = info.RoutingKey,
+                Exchange = info.Exchange,
+                Properties = properties,
+                Headers = headers,
+                RetryCount = retryCount,
+                Persistent = messageProperties.DeliveryMode == 2
+            };
         }
     }
 }

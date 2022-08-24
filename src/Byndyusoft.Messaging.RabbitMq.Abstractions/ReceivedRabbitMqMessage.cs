@@ -3,10 +3,10 @@ using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class ReceivedRabbitMqMessage : Disposable
+    public class ReceivedRabbitMqMessage : AsyncDisposable
     {
         private readonly string _consumerTag = default!;
-        private readonly HttpContent? _content;
+        private HttpContent? _content;
         private readonly RabbitMqMessageHeaders _headers = new();
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
@@ -85,11 +85,14 @@ namespace Byndyusoft.Messaging.RabbitMq
             init => _headers = Preconditions.CheckNotNull(value, nameof(Headers));
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
-            base.DisposeCore();
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
 
             _content?.Dispose();
+            _content = null;
         }
     }
 }

@@ -77,9 +77,11 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             };
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
-            base.DisposeCore();
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
 
             Message.Dispose();
         }

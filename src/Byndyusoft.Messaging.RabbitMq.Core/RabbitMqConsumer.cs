@@ -134,12 +134,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             return this;
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
             _consumer?.Dispose();
             _consumer = null;
-
-            base.DisposeCore();
         }
 
         private async Task<HandlerConsumeResult> HandleConsumeResultAsync(ReceivedRabbitMqMessage consumedMessage,

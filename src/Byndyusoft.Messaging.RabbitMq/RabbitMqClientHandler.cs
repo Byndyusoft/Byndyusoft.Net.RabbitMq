@@ -1,10 +1,11 @@
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Internal;
+using Byndyusoft.Messaging.RabbitMq.Messages;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using EasyNetQ;
@@ -13,6 +14,7 @@ using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
+//using RabbitMqMessageFactory = Byndyusoft.Messaging.RabbitMq.Internal.RabbitMqMessageFactory;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
@@ -21,8 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private static readonly ConnectionStringParser ConnectionStringParser = new();
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
-        private readonly object _lock = new();
-        private readonly Dictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
+        private readonly ConcurrentDictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus _bus = default!;
         private RabbitMqEndpoint? _endPoint;
         private bool _isInitialized;
@@ -67,7 +68,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return ReceivedRabbitMqMessageFactory.CreateReceivedMessage(pullingResult);
+            return ReceivedRabbitMqMessageFactory.CreatePulledMessage(pullingResult, this);
         }
 
         public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
@@ -83,6 +84,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
+            {
+                pulledRabbitMqMessage.IsCompleted = true;
+            }
         }
 
         public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
@@ -99,6 +105,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
+
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
+            {
+                pulledRabbitMqMessage.IsCompleted = true;
+            }
         }
 
         public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
@@ -182,7 +193,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .AsExclusive(options.Exclusive)
                     .WithQueueType(options.Type.ToString().ToLower());
 
-                foreach (var argument in options.Arguments) config.WithArgument(argument.Key, argument.Value);
+                foreach (var (key, value) in options.Arguments) 
+                    config.WithArgument(key, value);
             }
 
             await _bus.Advanced.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
@@ -241,9 +253,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Initialize();
 
-            var starts = await _bus.Advanced.GetQueueStatsAsync(queueName, cancellationToken)
+            var stats = await _bus.Advanced.GetQueueStatsAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
-            return starts.MessagesCount;
+            return stats.MessagesCount;
         }
 
         public async Task CreateExchangeAsync(string exchangeName,
@@ -329,29 +341,23 @@ namespace Byndyusoft.Messaging.RabbitMq
             _isInitialized = true;
         }
 
-        protected override void DisposeCore()
+        protected override void Dispose(bool disposing)
         {
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
+
             MultiDispose(_pullingConsumers.Values);
 
             _pullingConsumers.Clear();
             _bus.Dispose();
-
-            base.DisposeCore();
         }
 
         private IPullingConsumer<PullResult> GetPullingConsumer(string queueName)
         {
-            if (_pullingConsumers.TryGetValue(queueName, out var pullingConsumer) == false)
-                lock (_lock)
-                {
-                    if (_pullingConsumers.TryGetValue(queueName, out pullingConsumer) == false)
-                    {
-                        pullingConsumer = _bus.Advanced.CreatePullingConsumer(new Queue(queueName), false);
-                        _pullingConsumers.Add(queueName, pullingConsumer);
-                    }
-                }
-
-            return pullingConsumer;
+            return _pullingConsumers.GetOrAdd(
+                queueName, 
+                _ => _bus.Advanced.CreatePullingConsumer(new Queue(queueName), false));
         }
     }
 }
