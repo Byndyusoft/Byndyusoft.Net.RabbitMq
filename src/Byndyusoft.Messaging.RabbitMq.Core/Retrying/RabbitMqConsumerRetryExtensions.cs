@@ -3,7 +3,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Messages;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -37,7 +36,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
-                    Exception? handleException = null;
+                    Exception? handledException = null;
+
                     try
                     {
                         var result = await onMessage(message, cancellationToken);
@@ -46,17 +46,13 @@ namespace Byndyusoft.Messaging.RabbitMq
                     }
                     catch (Exception exception)
                     {
-                        handleException = exception;
+                        handledException = exception;
                     }
 
                     if (maxRetryCount != null && message.RetryCount >= maxRetryCount)
-                        return ConsumeResult.Error(handleException);
+                        return ConsumeResult.Error(handledException);
 
-                    var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName);
-                    retryMessage.Headers.SetException(handleException);
-
-                    await consumer.Client.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
-                    return ConsumeResult.Ack;
+                    return ConsumeResult.Retry;
                 }
                 catch (Exception exception)
                 {
