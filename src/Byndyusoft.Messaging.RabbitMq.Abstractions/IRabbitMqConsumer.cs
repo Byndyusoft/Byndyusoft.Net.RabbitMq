@@ -4,10 +4,7 @@ using System.Threading.Tasks;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public delegate Task AfterRabbitQueueConsumerStopEventHandler(IRabbitMqConsumer consumer,
-        CancellationToken cancellationToken);
-
-    public delegate Task BeforeRabbitQueueConsumerStartEventHandler(IRabbitMqConsumer consumer,
+    public delegate Task BeforeRabbitQueueConsumerStartDelegate(IRabbitMqConsumer consumer,
         CancellationToken cancellationToken);
 
     public delegate Task<ConsumeResult>
@@ -21,9 +18,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         ushort? PrefetchCount { get; set; }
         ReceivedRabbitMqMessageHandler OnMessage { get; set; }
         bool IsRunning { get; }
-        event BeforeRabbitQueueConsumerStartEventHandler OnStarting;
-        event AfterRabbitQueueConsumerStopEventHandler OnStopped;
         Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default);
         Task<IRabbitMqConsumer> StopAsync(CancellationToken cancellationToken = default);
+        void RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority);
     }
 }

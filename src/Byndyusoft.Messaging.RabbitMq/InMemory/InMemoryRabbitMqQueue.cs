@@ -146,7 +146,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
                         continue;
 
 
-                    var isExpired = messageTtl is not null && message.IsExpired(messageTtl!);
+                    var isExpired = messageTtl is not null && message.IsExpired(messageTtl);
                     if (!isExpired)
                         continue;
 

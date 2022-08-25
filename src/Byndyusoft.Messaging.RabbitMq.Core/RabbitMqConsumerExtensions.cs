@@ -30,11 +30,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
-            consumer.OnStarting += async (_, cancellationToken) =>
+            async Task OnBeforeStart(IRabbitMqConsumer _, CancellationToken cancellationToken)
             {
                 await consumer.Client.BindQueueAsync(exchangeName, routingKey, consumer.QueueName, cancellationToken)
                     .ConfigureAwait(false);
-            };
+            }
+
+            consumer.RegisterBeforeStartAction(OnBeforeStart, BeforeStartActionPriorities.BindQueue);
 
             return consumer;
         }
@@ -77,13 +79,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(options, nameof(options));
 
-            async Task EventHandler(IRabbitMqConsumer _, CancellationToken cancellationToken)
+            async Task OnBeforeStart(IRabbitMqConsumer _, CancellationToken cancellationToken)
             {
                 await consumer.Client.CreateQueueIfNotExistsAsync(queueName, options, cancellationToken)
                     .ConfigureAwait(false);
             }
 
-            consumer.OnStarting += EventHandler;
+            consumer.RegisterBeforeStartAction(OnBeforeStart, BeforeStartActionPriorities.DeclareQueue);
 
             return consumer;
         }
@@ -127,6 +129,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             optionsSetup(options);
 
             return WithDeclareErrorQueue(consumer, options);
+        }
+
+        private static class BeforeStartActionPriorities
+        {
+            public static int DeclareQueue => 0;
+            public static int BindQueue => 10;
         }
     }
 }

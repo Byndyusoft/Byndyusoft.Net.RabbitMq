@@ -23,12 +23,12 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 try
                 {
                     using var consumer = _rabbitMqClient
-                        .Subscribe("test", async (message, token) =>
+                        .Subscribe("test", (message, _) =>
                         {
                             Console.WriteLine($"Retry count {message.RetryCount}");
 
                             if (message.RetryCount >= 0)
-                                return ConsumeResult.Retry;
+                                return Task.FromResult(ConsumeResult.Retry);
 
                             throw new Exception("first retry");
                         })

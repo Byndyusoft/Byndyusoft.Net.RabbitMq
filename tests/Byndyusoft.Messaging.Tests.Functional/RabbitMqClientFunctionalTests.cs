@@ -228,8 +228,6 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
-        // TODO После получения сообщения MessageCount и так возвращает 0.
-        // TODO После реализации issue https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues/12 нужно поправить
         public async Task CompleteMessage_Ack_Test()
         {
             // arrange
@@ -240,10 +238,12 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            await using var message = await _client.GetMessageAsync(queueName);
+            {
+                await using var message = await _client.GetMessageAsync(queueName);
 
-            // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
+                // act
+                await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
+            }
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(queueName);
@@ -251,8 +251,6 @@ namespace Byndyusoft.Messaging.Tests.Functional
         }
 
         [Fact]
-        // TODO После получения сообщения MessageCount и так возвращает 0.
-        // TODO После реализации issue https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues/12 нужно поправить
         public async Task CompleteMessage_RejectWithoutRequeue_Test()
         {
             // arrange
@@ -263,10 +261,12 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 Array.Empty<byte>());
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            await using var message = await _client.GetMessageAsync(queueName);
+            {
+                await using var message = await _client.GetMessageAsync(queueName);
 
-            // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
+                // act
+                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
+            }
 
             // assert
             var stats = await _rabbit.GetQueueStatsAsync(queueName);
@@ -285,10 +285,12 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, new ReadOnlyMemory<byte>(body));
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            await using var message = await _client.GetMessageAsync(queueName);
+            {
+                await using var message = await _client.GetMessageAsync(queueName);
 
-            // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
+                // act
+                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
+            }
 
             // assert
             using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
@@ -314,10 +316,13 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            await using var message = await _client.GetMessageAsync(queueName);
+            {
+                await using var message = await _client.GetMessageAsync(queueName);
 
-            // act
-            await _client.CompleteMessageAsync(message!, ConsumeResult.Error());
+                // act
+                await _client.CompleteMessageAsync(message!, ConsumeResult.Error());
+            }
+
             await WaitForMessageAsync(errorQueueName, TimeSpan.FromSeconds(5));
 
             // assert
