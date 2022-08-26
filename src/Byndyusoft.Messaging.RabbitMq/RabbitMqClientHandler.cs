@@ -29,7 +29,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
         {
             Preconditions.CheckNotNull(options, nameof(options));
-            Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(options.Value.ConnectionString));
+            Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(RabbitMqClientOptions.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
             _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
