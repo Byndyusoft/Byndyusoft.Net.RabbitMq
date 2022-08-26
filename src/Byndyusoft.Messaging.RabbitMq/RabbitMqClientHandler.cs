@@ -22,7 +22,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly ConcurrentDictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
-        private IBus _bus = default!;
+        private IBus? _bus;
         private RabbitMqEndpoint? _endPoint;
         private bool _isInitialized;
 
@@ -60,8 +60,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             var pullingConsumer = GetPullingConsumer(queueName);
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
@@ -76,8 +74,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 nameof(message),
                 $"Message must have not null {nameof(ReceivedRabbitMqMessage.Queue)}");
             Preconditions.CheckNotDisposed(this);
-
-            Initialize();
 
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
@@ -98,8 +94,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 $"Message must have not null {nameof(ReceivedRabbitMqMessage.Queue)}");
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             var pullingConsumer = GetPullingConsumer(message.Queue);
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
@@ -115,14 +109,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             var exchange = message.Exchange is null ? Exchange.Default : new Exchange(message.Exchange);
 
             var (body, properties) =
                 await RabbitMqMessageFactory.CreateEasyNetQMessageAsync(message).ConfigureAwait(false);
 
-            await _bus.Advanced.PublishAsync(exchange,
+            await AdvancedBus.PublishAsync(exchange,
                     message.RoutingKey,
                     message.Mandatory,
                     properties,
@@ -139,8 +131,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
             Preconditions.CheckNotDisposed(this);
-
-            Initialize();
 
             void ConfigureConsumer(ISimpleConsumeConfiguration configuration)
             {
@@ -171,7 +161,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 }
             }
 
-            return _bus.Advanced.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+            return AdvancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
         }
 
         public async Task CreateQueueAsync(string queueName,
@@ -181,8 +171,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotDisposed(this);
-
-            Initialize();
 
             void ConfigureQueue(IQueueDeclareConfiguration config)
             {
@@ -195,7 +183,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     config.WithArgument(key, value);
             }
 
-            await _bus.Advanced.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
+            await AdvancedBus.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -204,11 +192,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             try
             {
-                await _bus.Advanced.QueueDeclarePassiveAsync(queueName, cancellationToken)
+                await AdvancedBus.QueueDeclarePassiveAsync(queueName, cancellationToken)
                     .ConfigureAwait(false);
                 return true;
             }
@@ -223,9 +209,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
-            await _bus.Advanced.QueuePurgeAsync(queueName, cancellationToken)
+            await AdvancedBus.QueuePurgeAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -237,9 +221,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
-            await _bus.Advanced.QueueDeleteAsync(queueName, ifUnused, ifEmpty, cancellationToken)
+            await AdvancedBus.QueueDeleteAsync(queueName, ifUnused, ifEmpty, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -249,9 +231,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
-            var stats = await _bus.Advanced.GetQueueStatsAsync(queueName, cancellationToken)
+            var stats = await AdvancedBus.GetQueueStatsAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
             return stats.MessagesCount;
         }
@@ -264,8 +244,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             void ConfigureExchange(IExchangeDeclareConfiguration config)
             {
                 config.AsAutoDelete(options.AutoDelete)
@@ -276,7 +254,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 foreach (var argument in options.Arguments) config.WithArgument(argument.Key, argument.Value);
             }
 
-            await _bus.Advanced.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
+            await AdvancedBus.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -285,11 +263,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             try
             {
-                await _bus.Advanced.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken)
+                await AdvancedBus.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken)
                     .ConfigureAwait(false);
                 return true;
             }
@@ -306,9 +282,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
-            await _bus.Advanced.ExchangeDeleteAsync(new Exchange(exchangeName), ifUnused, cancellationToken)
+            await AdvancedBus.ExchangeDeleteAsync(new Exchange(exchangeName), ifUnused, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -321,12 +295,23 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotDisposed(this);
 
-            Initialize();
-
             var exchange = new Exchange(exchangeName);
             var queue = new Queue(queueName);
-            await _bus.Advanced.BindAsync(exchange, queue, routingKey, cancellationToken)
+            await AdvancedBus.BindAsync(exchange, queue, routingKey, cancellationToken)
                 .ConfigureAwait(false);
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            base.Dispose(disposing);
+
+            if (disposing == false) return;
+
+            MultiDispose(_pullingConsumers.Values);
+            _pullingConsumers.Clear();
+
+            _bus?.Dispose();
+            _bus = null;
         }
 
         private void Initialize()
@@ -339,23 +324,20 @@ namespace Byndyusoft.Messaging.RabbitMq
             _isInitialized = true;
         }
 
-        protected override void Dispose(bool disposing)
-        {
-            base.Dispose(disposing);
-
-            if (disposing == false) return;
-
-            MultiDispose(_pullingConsumers.Values);
-
-            _pullingConsumers.Clear();
-            _bus.Dispose();
-        }
-
         private IPullingConsumer<PullResult> GetPullingConsumer(string queueName)
         {
             return _pullingConsumers.GetOrAdd(
                 queueName, 
-                _ => _bus.Advanced.CreatePullingConsumer(new Queue(queueName), false));
+                _ => AdvancedBus.CreatePullingConsumer(new Queue(queueName), false));
+        }
+
+        private IAdvancedBus AdvancedBus
+        {
+            get
+            {
+                Initialize();
+                return _bus!.Advanced;
+            }
         }
     }
 }
