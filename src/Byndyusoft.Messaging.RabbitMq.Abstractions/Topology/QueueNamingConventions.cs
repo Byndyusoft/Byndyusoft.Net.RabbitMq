@@ -1,4 +1,3 @@
-using System;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Topology
@@ -8,17 +7,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         private CreateQueueNameDelegate _createQueueName = (exchangeName, routingKey, application) =>
             $"{exchangeName}::{application}::{routingKey}".ToLowerInvariant();
 
-        private Func<string, string> _errorQueueName = queue => $"{queue}.error";
+        private CreateErrorQueueNameDelegate _errorQueueName = queue => $"{queue}.error";
 
-        private Func<string, string> _retryQueueName = queue => $"{queue}.retry";
+        private CreateRetryQueueNameDelegate _retryQueueName = queue => $"{queue}.retry";
 
-        public Func<string, string> ErrorQueueName
+        public CreateErrorQueueNameDelegate ErrorQueueName
         {
             get => _errorQueueName;
             set => _errorQueueName = Preconditions.CheckNotNull(value, nameof(ErrorQueueName));
         }
 
-        public Func<string, string> RetryQueueName
+        public CreateRetryQueueNameDelegate RetryQueueName
         {
             get => _retryQueueName;
             set => _retryQueueName = Preconditions.CheckNotNull(value, nameof(RetryQueueName));
