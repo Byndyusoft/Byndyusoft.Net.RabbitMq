@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using OpenTelemetry;
 using OpenTelemetry.Context.Propagation;
@@ -34,8 +35,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             static string[] Getter(RabbitMqMessageHeaders h, string key)
             {
-                var value = h[key] as string;
-                return new[] {value!};
+                if (h.TryGetValue(key, out var value))
+                    return new[] { (string)value! };
+                return Array.Empty<string>();
             }
 
             var propagationContext = new PropagationContext();
