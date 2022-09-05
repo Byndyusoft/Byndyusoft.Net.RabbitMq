@@ -114,7 +114,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 }
             }
 
-            _consumer = _handler.StartConsume(QueueName, _exclusive, _prefetchCount, OnMessage);
+            _consumer = await _handler
+                .StartConsumeAsync(QueueName, _exclusive, _prefetchCount, OnMessage, cancellationToken)
+                .ConfigureAwait(false);
 
             return this;
         }

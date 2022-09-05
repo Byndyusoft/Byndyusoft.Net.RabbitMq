@@ -24,7 +24,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly ConcurrentDictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus? _bus;
         private RabbitMqEndpoint? _endPoint;
-        private bool _isInitialized;
+        private readonly SemaphoreSlim _mutex = new(1, 1);
 
         public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
         {
@@ -60,7 +60,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            var pullingConsumer = GetPullingConsumer(queueName);
+            var pullingConsumer = await GetPullingConsumer(queueName, cancellationToken)
+                .ConfigureAwait(false);
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -75,7 +76,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 $"Message must have not null {nameof(ReceivedRabbitMqMessage.Queue)}");
             Preconditions.CheckNotDisposed(this);
 
-            var pullingConsumer = GetPullingConsumer(message.Queue);
+            var pullingConsumer = await GetPullingConsumer(message.Queue, cancellationToken)
+                .ConfigureAwait(false);
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -94,7 +96,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 $"Message must have not null {nameof(ReceivedRabbitMqMessage.Queue)}");
             Preconditions.CheckNotDisposed(this);
 
-            var pullingConsumer = GetPullingConsumer(message.Queue);
+            var pullingConsumer = await GetPullingConsumer(message.Queue, cancellationToken)
+                .ConfigureAwait(false);
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
 
@@ -114,7 +117,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             var (body, properties) =
                 await RabbitMqMessageFactory.CreateEasyNetQMessageAsync(message).ConfigureAwait(false);
 
-            await AdvancedBus.PublishAsync(exchange,
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.PublishAsync(exchange,
                     message.RoutingKey,
                     message.Mandatory,
                     properties,
@@ -123,10 +128,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public IDisposable StartConsume(string queueName,
+        public async Task<IDisposable> StartConsumeAsync(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
+            CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
@@ -138,7 +144,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 if (prefetchCount is not null) configuration.WithPrefetchCount(prefetchCount.Value);
             }
 
-            async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties, MessageReceivedInfo info)
+            async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties,
+                MessageReceivedInfo info)
             {
                 try
                 {
@@ -161,7 +168,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 }
             }
 
-            return AdvancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            return advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
         }
 
         public async Task CreateQueueAsync(string queueName,
@@ -179,11 +188,13 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .AsExclusive(options.Exclusive)
                     .WithQueueType(options.Type.ToString().ToLower());
 
-                foreach (var (key, value) in options.Arguments) 
+                foreach (var (key, value) in options.Arguments)
                     config.WithArgument(key, value);
             }
 
-            await AdvancedBus.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -194,7 +205,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             try
             {
-                await AdvancedBus.QueueDeclarePassiveAsync(queueName, cancellationToken)
+                var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await advancedBus.QueueDeclarePassiveAsync(queueName, cancellationToken)
                     .ConfigureAwait(false);
                 return true;
             }
@@ -209,7 +222,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            await AdvancedBus.QueuePurgeAsync(queueName, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.QueuePurgeAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -221,7 +236,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            await AdvancedBus.QueueDeleteAsync(queueName, ifUnused, ifEmpty, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.QueueDeleteAsync(queueName, ifUnused, ifEmpty, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -231,7 +248,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            var stats = await AdvancedBus.GetQueueStatsAsync(queueName, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            var stats = await advancedBus.GetQueueStatsAsync(queueName, cancellationToken)
                 .ConfigureAwait(false);
             return stats.MessagesCount;
         }
@@ -254,7 +273,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 foreach (var argument in options.Arguments) config.WithArgument(argument.Key, argument.Value);
             }
 
-            await AdvancedBus.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -265,7 +286,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             try
             {
-                await AdvancedBus.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken)
+                var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                await advancedBus.ExchangeDeclarePassiveAsync(exchangeName, cancellationToken)
                     .ConfigureAwait(false);
                 return true;
             }
@@ -282,7 +305,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotDisposed(this);
 
-            await AdvancedBus.ExchangeDeleteAsync(new Exchange(exchangeName), ifUnused, cancellationToken)
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.ExchangeDeleteAsync(new Exchange(exchangeName), ifUnused, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -297,7 +322,10 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var exchange = new Exchange(exchangeName);
             var queue = new Queue(queueName);
-            await AdvancedBus.BindAsync(exchange, queue, routingKey, cancellationToken)
+
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.BindAsync(exchange, queue, routingKey, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -314,29 +342,54 @@ namespace Byndyusoft.Messaging.RabbitMq
             _bus = null;
         }
 
-        private void Initialize()
+        private async ValueTask<IPullingConsumer<PullResult>> GetPullingConsumer(string queueName,
+            CancellationToken cancellationToken)
         {
-            if (_isInitialized)
-                return;
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
 
-            _bus = _busFactory.CreateBus(_connectionConfiguration);
-
-            _isInitialized = true;
-        }
-
-        private IPullingConsumer<PullResult> GetPullingConsumer(string queueName)
-        {
             return _pullingConsumers.GetOrAdd(
-                queueName, 
-                _ => AdvancedBus.CreatePullingConsumer(new Queue(queueName), false));
+                queueName,
+                _ => advancedBus.CreatePullingConsumer(new Queue(queueName), false));
         }
 
-        private IAdvancedBus AdvancedBus
+        private async ValueTask<IAdvancedBus> ConnectIfNeededAsync(CancellationToken cancellationToken = default)
         {
-            get
+            await _mutex.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                Initialize();
-                return _bus!.Advanced;
+                await ConnectAsync(cancellationToken).ConfigureAwait(false);
+            }
+            finally
+            {
+                _mutex.Release();
+            }
+            
+            return _bus!.Advanced;
+        }
+
+        private async ValueTask ConnectAsync(CancellationToken cancellationToken)
+        {
+            _bus ??= _busFactory.CreateBus(_connectionConfiguration);
+
+            var advancedBus = _bus.Advanced;
+            while (advancedBus.IsConnected == false && cancellationToken.IsCancellationRequested == false)
+            {
+                try
+                {
+                    await advancedBus.ConnectAsync(cancellationToken)
+                        .ConfigureAwait(false);
+
+                    break;
+                }
+                catch (BrokerUnreachableException)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        throw;
+
+                    await Task.Delay(_connectionConfiguration.ConnectIntervalAttempt, cancellationToken)
+                        .ConfigureAwait(false);
+                }
             }
         }
     }

@@ -19,10 +19,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken);
 
-        IDisposable StartConsume(string queueName,
+        Task<IDisposable> StartConsumeAsync(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage);
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
+            CancellationToken cancellationToken);
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
 

@@ -96,16 +96,17 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
-        public IDisposable StartConsume(string queueName,
+        public Task<IDisposable> StartConsumeAsync(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage)
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
+            CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
             var queue = GetRequiredQueue(queueName);
-
-            return queue.Consume(prefetchCount ?? 1, onMessage);
+            var result = queue.Consume(prefetchCount ?? 1, onMessage);
+            return Task.FromResult(result);
         }
 
         public Task CreateQueueAsync(string queueName,
