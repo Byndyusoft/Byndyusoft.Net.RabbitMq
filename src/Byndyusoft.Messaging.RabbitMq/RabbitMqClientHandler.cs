@@ -11,6 +11,8 @@ using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
 
@@ -24,9 +26,13 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly ConcurrentDictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus? _bus;
         private RabbitMqEndpoint? _endPoint;
-        private readonly SemaphoreSlim _mutex = new(1, 1);
+        private SemaphoreSlim? _mutex = new(1, 1);
+        private readonly ILogger<RabbitMqClientHandler> _logger;
 
-        public RabbitMqClientHandler(IOptions<RabbitMqClientOptions> options, IBusFactory busFactory)
+        public RabbitMqClientHandler(
+            IOptions<RabbitMqClientOptions> options, 
+            IBusFactory busFactory,
+            ILogger<RabbitMqClientHandler>? logger = null)
         {
             Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(RabbitMqClientOptions.ConnectionString));
@@ -34,6 +40,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
             _busFactory = busFactory;
+            _logger = logger ?? NullLogger<RabbitMqClientHandler>.Instance;
             Options = options.Value;
         }
 
@@ -340,6 +347,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _bus?.Dispose();
             _bus = null;
+
+            _mutex?.Dispose();
+            _mutex = null;
         }
 
         private async ValueTask<IPullingConsumer<PullResult>> GetPullingConsumer(string queueName,
@@ -355,7 +365,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async ValueTask<IAdvancedBus> ConnectIfNeededAsync(CancellationToken cancellationToken = default)
         {
-            await _mutex.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _mutex!.WaitAsync(cancellationToken).ConfigureAwait(false);
             try
             {
                 await ConnectAsync(cancellationToken).ConfigureAwait(false);
@@ -382,12 +392,13 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                     break;
                 }
-                catch (BrokerUnreachableException)
+                catch (BrokerUnreachableException exception)
                 {
-                    if (cancellationToken.IsCancellationRequested)
-                        throw;
+                    var interval = _connectionConfiguration.ConnectIntervalAttempt;
+                    var message = $"{exception.Message}. Wait {interval} and try connect again";
+                    _logger.LogError(message);
 
-                    await Task.Delay(_connectionConfiguration.ConnectIntervalAttempt, cancellationToken)
+                    await Task.Delay(interval, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }
