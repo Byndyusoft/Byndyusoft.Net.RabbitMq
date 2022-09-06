@@ -18,9 +18,4 @@
     <PackageReference Include="Jaeger" Version="1.0.3" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\RabbitMq\RabbitMq.csproj" />
-    <ProjectReference Include="..\..\src\RabbitMq.Extensions\RabbitMq.Extensions.csproj" />
-  </ItemGroup>
-
 </Project>
