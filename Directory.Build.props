@@ -9,6 +9,6 @@
 		<RepositoryType>git</RepositoryType>
 		<Nullable>enable</Nullable>
 		<LangVersion>9</LangVersion>
-    <IsPackable>false</IsPackable>
+		<IsPackable>false</IsPackable>
 	</PropertyGroup>
 </Project>

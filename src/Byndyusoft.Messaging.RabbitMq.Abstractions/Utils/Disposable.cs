@@ -8,11 +8,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Utils
     {
         internal bool IsDisposed { get; set; }
 
-        ~Disposable()
-        {
-            Dispose(false);
-        }
-
         public void Dispose()
         {
             if (IsDisposed) return;
@@ -22,10 +17,15 @@ namespace Byndyusoft.Messaging.RabbitMq.Utils
             GC.SuppressFinalize(this);
         }
 
+        ~Disposable()
+        {
+            Dispose(false);
+        }
+
         protected virtual void Dispose(bool disposing)
         {
         }
-        
+
         public static void MultiDispose(IEnumerable<IDisposable> disposables)
         {
             var exceptions = new List<Exception>();

@@ -34,6 +34,5 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddSingleton<IRabbitMqClient, InMemoryRabbitMqClient>();
             return services;
         }
-
     }
 }

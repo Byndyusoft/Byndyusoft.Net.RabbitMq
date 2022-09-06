@@ -36,7 +36,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             static string[] Getter(RabbitMqMessageHeaders h, string key)
             {
                 if (h.TryGetValue(key, out var value))
-                    return new[] { (string)value! };
+                    return new[] {(string) value!};
                 return Array.Empty<string>();
             }
 

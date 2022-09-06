@@ -23,14 +23,14 @@ namespace Byndyusoft.Messaging.RabbitMq
         private static readonly ConnectionStringParser ConnectionStringParser = new();
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
+        private readonly ILogger<RabbitMqClientHandler> _logger;
         private readonly ConcurrentDictionary<string, IPullingConsumer<PullResult>> _pullingConsumers = new();
         private IBus? _bus;
         private RabbitMqEndpoint? _endPoint;
         private SemaphoreSlim? _mutex = new(1, 1);
-        private readonly ILogger<RabbitMqClientHandler> _logger;
 
         public RabbitMqClientHandler(
-            IOptions<RabbitMqClientOptions> options, 
+            IOptions<RabbitMqClientOptions> options,
             IBusFactory busFactory,
             ILogger<RabbitMqClientHandler>? logger = null)
         {
@@ -88,10 +88,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
-            {
-                pulledRabbitMqMessage.IsCompleted = true;
-            }
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
         public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
@@ -108,10 +105,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
 
-            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
-            {
-                pulledRabbitMqMessage.IsCompleted = true;
-            }
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
         public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
@@ -365,16 +359,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async ValueTask<IAdvancedBus> ConnectIfNeededAsync(CancellationToken cancellationToken = default)
         {
-            await _mutex!.WaitAsync(cancellationToken).ConfigureAwait(false);
+            await _mutex!.WaitAsync(cancellationToken)
+                .ConfigureAwait(false);
             try
             {
-                await ConnectAsync(cancellationToken).ConfigureAwait(false);
+                await ConnectAsync(cancellationToken)
+                    .ConfigureAwait(false);
             }
             finally
             {
                 _mutex.Release();
             }
-            
+
             return _bus!.Advanced;
         }
 
@@ -385,22 +381,27 @@ namespace Byndyusoft.Messaging.RabbitMq
             var advancedBus = _bus.Advanced;
             while (advancedBus.IsConnected == false && cancellationToken.IsCancellationRequested == false)
             {
+                LogLevel logLevel;
                 try
                 {
                     await advancedBus.ConnectAsync(cancellationToken)
                         .ConfigureAwait(false);
-
-                    break;
+                    if (advancedBus.IsConnected)
+                        break;
+                    logLevel = LogLevel.Information;
                 }
-                catch (BrokerUnreachableException exception)
+                catch (BrokerUnreachableException)
                 {
-                    var interval = _connectionConfiguration.ConnectIntervalAttempt;
-                    var message = $"{exception.Message}. Wait {interval} and try connect again";
-                    _logger.LogError(message);
-
-                    await Task.Delay(interval, cancellationToken)
-                        .ConfigureAwait(false);
+                    logLevel = LogLevel.Error;
                 }
+
+                var interval = _connectionConfiguration.ConnectIntervalAttempt;
+                var message = $"None of the specified endpoints were reachable. Wait {interval} and try connect again";
+
+                _logger.Log(logLevel, message);
+
+                await Task.Delay(interval, cancellationToken)
+                    .ConfigureAwait(false);
             }
         }
     }

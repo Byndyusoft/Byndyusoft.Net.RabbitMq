@@ -11,7 +11,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
     public class ClientFactoryExample : BackgroundService
     {
         private readonly IRabbitMqClientFactory _rabbitMqClientFactory;
-        
+
         public ClientFactoryExample(IRabbitMqClientFactory rabbitMqClientFactory)
         {
             _rabbitMqClientFactory = rabbitMqClientFactory;
@@ -64,7 +64,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 var rand = new Random();
                 while (stoppingToken.IsCancellationRequested == false)
                 {
-                    var model = new Message { Property = queueName };
+                    var model = new Message {Property = queueName};
                     await rabbitClient.PublishAsJsonAsync(null, queueName, model, stoppingToken);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()), stoppingToken);
                 }

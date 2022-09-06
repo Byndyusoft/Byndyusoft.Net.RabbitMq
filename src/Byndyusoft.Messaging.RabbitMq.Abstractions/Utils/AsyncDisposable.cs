@@ -17,8 +17,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Utils
             IsDisposed = true;
             GC.SuppressFinalize(this);
         }
-        
-        protected virtual ValueTask DisposeAsyncCore() => new();
+
+        protected virtual ValueTask DisposeAsyncCore()
+        {
+            return new();
+        }
 
         public static async ValueTask MultiDispose(IEnumerable<IAsyncDisposable> disposables)
         {

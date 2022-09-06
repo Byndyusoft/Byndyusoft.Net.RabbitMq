@@ -9,15 +9,17 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqConsumer : Disposable, IRabbitMqConsumer
     {
+        private readonly List<(BeforeRabbitQueueConsumerStartDelegate Action, int Priority)>
+            _beforeStartActions = new();
+
         private readonly IRabbitMqClientHandler _handler;
         private readonly string _queueName;
+        private readonly RabbitMqClientCore _rabbitMqClientCore;
 
         private IDisposable? _consumer;
         private bool? _exclusive;
         private ReceivedRabbitMqMessageHandler _onMessage;
         private ushort? _prefetchCount;
-        private readonly RabbitMqClientCore _rabbitMqClientCore;
-        private readonly List<(BeforeRabbitQueueConsumerStartDelegate Action, int Priority)> _beforeStartActions = new();
 
         public RabbitMqConsumer(RabbitMqClientCore client,
             IRabbitMqClientHandler handler,
@@ -71,7 +73,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _prefetchCount = value;
             }
         }
-        
+
         public IRabbitMqClient Client { get; }
 
         public ReceivedRabbitMqMessageHandler OnMessage
@@ -101,11 +103,13 @@ namespace Byndyusoft.Messaging.RabbitMq
                     try
                     {
                         var consumeResult = await _onMessage(message, token).ConfigureAwait(false);
-                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message, consumeResult, cancellationToken);
+                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message, consumeResult,
+                            cancellationToken);
                     }
                     catch (Exception exception)
                     {
-                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message, ConsumeResult.Error(exception), cancellationToken);
+                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message,
+                            ConsumeResult.Error(exception), cancellationToken);
                     }
                 }
                 catch

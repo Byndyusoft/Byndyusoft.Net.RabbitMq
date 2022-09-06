@@ -44,8 +44,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         public static async Task CompleteMessageAsync(
-            this IRabbitMqClientHandler handler, 
-            ReceivedRabbitMqMessage message, 
+            this IRabbitMqClientHandler handler,
+            ReceivedRabbitMqMessage message,
             HandlerConsumeResult handlerConsumeResult,
             CancellationToken cancellationToken)
         {

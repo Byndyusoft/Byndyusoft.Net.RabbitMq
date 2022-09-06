@@ -35,14 +35,18 @@ namespace Byndyusoft.Net.RabbitMq
         private static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
+                .ConfigureHostOptions(options =>
+                {
+                    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
+                })
                 .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
                 .ConfigureServices((_, services) =>
                 {
-                    services.AddHostedService<PullingExample>();
-                    services.AddHostedService<RetryAndErrorExample>();
-                    services.AddHostedService<SubscribeAsJsonExample>();
+                    //services.AddHostedService<PullingExample>();
+                    //services.AddHostedService<RetryAndErrorExample>();
+                    //services.AddHostedService<SubscribeAsJsonExample>();
                     services.AddHostedService<SubscribeExchangeExample>();
-                    services.AddHostedService<ClientFactoryExample>();
+                    //services.AddHostedService<ClientFactoryExample>();
 
                     //services.AddHostedService<QueueInstallerHostedService>();
 

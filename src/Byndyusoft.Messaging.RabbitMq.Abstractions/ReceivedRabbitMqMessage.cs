@@ -6,12 +6,12 @@ namespace Byndyusoft.Messaging.RabbitMq
     public class ReceivedRabbitMqMessage : AsyncDisposable
     {
         private readonly string _consumerTag = default!;
-        private HttpContent? _content;
         private readonly RabbitMqMessageHeaders _headers = new();
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
         private readonly long _retryCount;
         private readonly string _routingKey = default!;
+        private HttpContent? _content;
 
         public bool Persistent { get; init; }
 

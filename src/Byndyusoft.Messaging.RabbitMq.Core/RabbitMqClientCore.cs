@@ -64,36 +64,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    var handlerConsumeResult = await ProcessConsumeResultAsync(message, consumeResult, cancellationToken);
-                    await _handler.CompleteMessageAsync(message, handlerConsumeResult, cancellationToken).ConfigureAwait(false);
+                    var handlerConsumeResult =
+                        await ProcessConsumeResultAsync(message, consumeResult, cancellationToken);
+                    await _handler.CompleteMessageAsync(message, handlerConsumeResult, cancellationToken)
+                        .ConfigureAwait(false);
                 });
-        }
-
-        protected internal virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
-            ReceivedRabbitMqMessage message, 
-            ConsumeResult consumeResult,
-            CancellationToken cancellationToken)
-        {
-            switch (consumeResult)
-            {
-                case AckConsumeResult:
-                    return HandlerConsumeResult.Ack;
-                case RejectWithRequeueConsumeResult:
-                    return HandlerConsumeResult.RejectWithRequeue;
-                case RejectWithoutRequeueConsumeResult:
-                    return HandlerConsumeResult.RejectWithoutRequeue;
-                case ErrorConsumeResult error:
-                    await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions,
-                            error.Exception, cancellationToken)
-                        .ConfigureAwait(false);
-                    return HandlerConsumeResult.Ack;
-                case RetryConsumeResult:
-                    await _handler.PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
-                        .ConfigureAwait(false);
-                    return HandlerConsumeResult.Ack;
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
-            }
         }
 
         public async Task PublishMessageAsync(RabbitMqMessage message,
@@ -208,6 +183,33 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(this, _handler, queueName, OnMessage);
         }
 
+        protected internal virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
+            ReceivedRabbitMqMessage message,
+            ConsumeResult consumeResult,
+            CancellationToken cancellationToken)
+        {
+            switch (consumeResult)
+            {
+                case AckConsumeResult:
+                    return HandlerConsumeResult.Ack;
+                case RejectWithRequeueConsumeResult:
+                    return HandlerConsumeResult.RejectWithRequeue;
+                case RejectWithoutRequeueConsumeResult:
+                    return HandlerConsumeResult.RejectWithoutRequeue;
+                case ErrorConsumeResult error:
+                    await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions,
+                            error.Exception, cancellationToken)
+                        .ConfigureAwait(false);
+                    return HandlerConsumeResult.Ack;
+                case RetryConsumeResult:
+                    await _handler
+                        .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
+                        .ConfigureAwait(false);
+                    return HandlerConsumeResult.Ack;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
+            }
+        }
 
         protected override void Dispose(bool disposing)
         {

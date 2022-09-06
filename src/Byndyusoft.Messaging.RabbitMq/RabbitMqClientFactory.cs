@@ -15,7 +15,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             _handlerFactory = Preconditions.CheckNotNull(handlerFactory, nameof(handlerFactory));
         }
 
-        public IRabbitMqClient CreateClient() => CreateClient(Options.DefaultName);
+        public IRabbitMqClient CreateClient()
+        {
+            return CreateClient(Options.DefaultName);
+        }
 
         public IRabbitMqClient CreateClient(string name)
         {
