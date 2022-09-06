@@ -4,7 +4,7 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
 		<AssemblyName>Byndyusoft.Messaging.RabbitMq</AssemblyName>
-    <IsPackable>true</IsPackable>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>

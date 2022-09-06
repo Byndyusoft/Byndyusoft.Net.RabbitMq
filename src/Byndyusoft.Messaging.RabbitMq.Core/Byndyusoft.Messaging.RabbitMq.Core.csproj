@@ -4,14 +4,13 @@
 		<TargetFramework>netstandard2.1</TargetFramework>
 		<RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
 		<AssemblyName>Byndyusoft.Messaging.RabbitMq.Core</AssemblyName>
-    <IsPackable>true</IsPackable>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="System.Diagnostics.DiagnosticSource" Version="6.0.0" />
 		<PackageReference Include="OpenTelemetry.API" Version="1.1.0" />
 		<PackageReference Include="Byndyusoft.Net.Http.Json" Version="0.2.1" />
-		<PackageReference Include="System.Net.Http.Json" Version="6.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
