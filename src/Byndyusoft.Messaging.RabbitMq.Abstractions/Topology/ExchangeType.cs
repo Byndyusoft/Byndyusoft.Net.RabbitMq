@@ -3,7 +3,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
     public enum ExchangeType
     {
         Direct,
-        Funout,
+        Fanout,
         Headers,
         Topic
     }

@@ -3,6 +3,7 @@ using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.RabbitMq.Utils;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -29,13 +30,13 @@ namespace Microsoft.Extensions.DependencyInjection
             services.AddOptions();
             services.Configure(name, setupOptions);
 
-            services.AddSingleton<IBusFactory, BusFactory>();
-            services.AddSingleton<RabbitMqClient>();
-            services.AddSingleton<IRabbitMqClient, RabbitMqClient>();
-            services.AddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
-            services.AddSingleton<RabbitMqClientHandler>();
-            services.AddSingleton<IRabbitMqClientHandler, RabbitMqClientHandler>();
-            services.AddSingleton<IRabbitMqClientHandlerFactory, RabbitMqClientHandlerFactory>();
+            services.TryAddSingleton<IBusFactory, BusFactory>();
+            services.TryAddSingleton<RabbitMqClient>();
+            services.TryAddSingleton<IRabbitMqClient, RabbitMqClient>();
+            services.TryAddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
+            services.TryAddSingleton<RabbitMqClientHandler>();
+            services.TryAddSingleton<IRabbitMqClientHandler, RabbitMqClientHandler>();
+            services.TryAddSingleton<IRabbitMqClientHandlerFactory, RabbitMqClientHandlerFactory>();
 
             return services;
         }

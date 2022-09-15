@@ -8,7 +8,7 @@ using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public static class RabbitMqConsumerRetryExtensions
+    public static class RabbitMqConsumerConstantTimeoutRetryStrategyExtensions
     {
         public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
             TimeSpan delay, int? maxRetryCount, Action<QueueOptions> optionsSetup)
@@ -26,8 +26,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             TimeSpan delay, int? maxRetryCount, QueueOptions? options = null)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
-
-            var retryQueueName = consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
 
             //Без локальной переменной будет рекурсия
             var onMessage = consumer.OnMessage;
@@ -62,15 +60,14 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             consumer.OnMessage = OnMessage;
 
-            if (options is not null)
-            {
-                options = options
-                    .WithMessageTtl(delay)
-                    .WithDeadLetterExchange(null)
-                    .WithDeadLetterRoutingKey(consumer.QueueName);
-
-                consumer.WithDeclareQueue(retryQueueName, options);
-            }
+            var retryQueueOptions =
+                (options ?? QueueOptions.Default)
+                .WithMessageTtl(delay)
+                .WithDeadLetterExchange(null)
+                .WithDeadLetterRoutingKey(consumer.QueueName);
+            var retryQueueName = 
+                consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
+            consumer.WithDeclareQueue(retryQueueName, retryQueueOptions);
 
             return consumer;
         }
