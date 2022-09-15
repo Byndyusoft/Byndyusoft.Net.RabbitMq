@@ -65,7 +65,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .WithMessageTtl(delay)
                 .WithDeadLetterExchange(null)
                 .WithDeadLetterRoutingKey(consumer.QueueName);
-            var retryQueueName = 
+            var retryQueueName =
                 consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
             consumer.WithDeclareQueue(retryQueueName, retryQueueOptions);
 
