@@ -5,18 +5,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageHeadersExtensions
     {
-        public static void SetRetryCount(this IDictionary<string, object?> headers, long retryCount)
-        {
-            var list = headers.GetValue("x-death") as List<object>;
-            if (list is null) headers["x-death"] = list = new List<object>();
-
-            if (list.Count == 0) list.Add(new Dictionary<string, object>());
-
-            var dic = (Dictionary<string, object>) list[0];
-            dic["count"] = retryCount;
-        }
-
-        public static long? GetRetryCount(this IDictionary<string, object?> headers)
+        public static long? GetRetryCount(this RabbitMqMessageHeaders headers)
         {
             var list = headers.GetValue("x-death") as List<object>;
             if (list is null || list.Count == 0) return null;
@@ -25,7 +14,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             return dic.GetValue("count") as long?;
         }
 
-        public static void SetException(this IDictionary<string, object?> headers, Exception? exception)
+        public static void SetException(this RabbitMqMessageHeaders headers, Exception? exception)
         {
             if (exception is not null)
             {
@@ -39,7 +28,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             }
         }
 
-        public static void RemoveRetryData(this IDictionary<string, object?> headers)
+        public static void RemoveRetryData(this RabbitMqMessageHeaders headers)
         {
             headers.Remove("x-death");
             headers.Remove("x-first-death-exchange");

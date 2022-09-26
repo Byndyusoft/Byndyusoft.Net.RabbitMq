@@ -14,7 +14,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         {
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
-            var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
+            var retryCount = headers.GetRetryCount() ?? 0;
 
             return new ReceivedRabbitMqMessage
             {
@@ -81,7 +81,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 
             var properties = CreateMessageProperties(messageProperties);
             var headers = CreateMessageHeaders(messageProperties);
-            var retryCount = messageProperties.Headers.GetRetryCount() ?? 0;
+            var retryCount = headers.GetRetryCount() ?? 0;
 
             return new PulledRabbitMqMessage(handler)
             {
