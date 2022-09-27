@@ -7,7 +7,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
         public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
         {
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
-            headers.SetRetryCount(consumedMessage.RetryCount);
 
             return new RabbitMqMessage
             {
