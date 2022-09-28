@@ -31,8 +31,26 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return;
 
-                var tags = new ActivityTagsCollection {{"result", result.ToString()}};
+                var tags = new ActivityTagsCollection {{"result", result.GetType().Name}};
                 var activityEvent = new ActivityEvent("message.consumed", tags: tags);
+                activity.AddEvent(activityEvent);
+            }
+
+            public void MessageRepublishedToRetry(Activity? activity)
+            {
+                if (activity is null)
+                    return;
+
+                var activityEvent = new ActivityEvent("message.publishedToRetry");
+                activity.AddEvent(activityEvent);
+            }
+
+            public void MessageRepublishedToError(Activity? activity)
+            {
+                if (activity is null)
+                    return;
+
+                var activityEvent = new ActivityEvent("message.publishedToError");
                 activity.AddEvent(activityEvent);
             }
 

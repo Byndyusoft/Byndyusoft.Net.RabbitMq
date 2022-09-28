@@ -43,9 +43,9 @@ namespace Byndyusoft.Net.RabbitMq
                 .ConfigureServices((_, services) =>
                 {
                     //services.AddHostedService<PullingExample>();
-                    //services.AddHostedService<RetryAndErrorExample>();
+                    services.AddHostedService<RetryAndErrorExample>();
                     //services.AddHostedService<SubscribeAsJsonExample>();
-                    services.AddHostedService<SubscribeExchangeExample>();
+                    //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();
 
                     //services.AddHostedService<QueueInstallerHostedService>();

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -15,6 +16,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly IRabbitMqClientHandler _handler;
         private readonly string _queueName;
         private readonly RabbitMqClientCore _rabbitMqClientCore;
+        private readonly RabbitMqClientActivitySource _activitySource;
 
         private IDisposable? _consumer;
         private bool? _exclusive;
@@ -27,6 +29,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             ReceivedRabbitMqMessageHandler onMessage)
         {
             _rabbitMqClientCore = client;
+            _activitySource = _rabbitMqClientCore.ActivitySource;
             Client = client;
             _handler = handler;
             _onMessage = onMessage;
@@ -100,9 +103,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
+                    using var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
                     try
                     {
                         var consumeResult = await _onMessage(message, token).ConfigureAwait(false);
+                        _activitySource.Events.MessageConsumed(activity, message, consumeResult);
                         return await _rabbitMqClientCore.ProcessConsumeResultAsync(message, consumeResult,
                             cancellationToken);
                     }
