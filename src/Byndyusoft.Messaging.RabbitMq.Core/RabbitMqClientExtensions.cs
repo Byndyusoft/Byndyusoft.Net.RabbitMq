@@ -60,7 +60,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+            ReceivedRabbitMqMessageHandler onMessage)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));

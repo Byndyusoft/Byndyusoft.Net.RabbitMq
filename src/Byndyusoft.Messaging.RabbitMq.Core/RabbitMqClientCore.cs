@@ -14,8 +14,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public abstract class RabbitMqClientCore : Disposable, IRabbitMqClient
     {
+        private readonly RabbitMqClientActivitySource _activitySource;
         private readonly bool _disposeHandler;
-        internal readonly RabbitMqClientActivitySource ActivitySource;
         private IRabbitMqClientHandler _handler;
 
         static RabbitMqClientCore()
@@ -31,7 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Options = options;
             _handler = handler;
-            ActivitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
         }
 
@@ -43,14 +43,14 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
-            var activity = ActivitySource.Activities.StartGetMessage(_handler.Endpoint, queueName);
-            return await ActivitySource.ExecuteAsync(activity,
+            var activity = _activitySource.Activities.StartGetMessage(_handler.Endpoint, queueName);
+            return await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
                     SetConsumedMessageProperties(message);
-                    ActivitySource.Events.MessageGot(activity, message);
+                    _activitySource.Events.MessageGot(activity, message);
                     return message;
                 });
         }
@@ -61,8 +61,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
-            var activity = ActivitySource.Activities.StartCompleteMessage(_handler.Endpoint, message, consumeResult);
-            await ActivitySource.ExecuteAsync(activity,
+            var activity = _activitySource.Activities.StartCompleteMessage(_handler.Endpoint, message, consumeResult);
+            await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
                     var handlerConsumeResult =
@@ -80,8 +80,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             SetPublishingMessageProperties(message);
 
-            var activity = ActivitySource.Activities.StartPublishMessage(_handler.Endpoint, message);
-            await ActivitySource.ExecuteAsync(activity,
+            var activity = _activitySource.Activities.StartPublishMessage(_handler.Endpoint, message);
+            await _activitySource.ExecuteAsync(activity,
                 async () => { await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false); });
         }
 
@@ -166,19 +166,49 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public IRabbitMqConsumer Subscribe(string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+        public IRabbitMqConsumer Subscribe(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken ct)
-            {
-                var consumeResult = await onMessage(message, ct).ConfigureAwait(false);
-                return consumeResult;
-            }
-
-            return new RabbitMqConsumer(this, _handler, queueName, OnMessage);
+            return new RabbitMqConsumer(this, queueName, onMessage);
         }
 
-        protected internal virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
+        internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
+            CancellationToken cancellationToken)
+        {
+            async Task<HandlerConsumeResult> HandlersOnMessageHandler(ReceivedRabbitMqMessage message,
+                CancellationToken ct)
+            {
+                try
+                {
+                    var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
+                    return await _activitySource.ExecuteAsync(activity, async () =>
+                        {
+                            try
+                            {
+                                var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
+                                _activitySource.Events.MessageConsumed(activity, message, consumeResult);
+                                return await ProcessConsumeResultAsync(message, consumeResult, ct);
+                            }
+                            catch (Exception exception)
+                            {
+                                return await ProcessConsumeResultAsync(message, ConsumeResult.Error(exception),
+                                    ct);
+                            }
+                        }
+                    );
+                }
+                catch
+                {
+                    return HandlerConsumeResult.RejectWithRequeue;
+                }
+            }
+
+            return await _handler
+                .StartConsumeAsync(consumer.QueueName, consumer.Exclusive, consumer.PrefetchCount,
+                    HandlersOnMessageHandler, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        protected virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
             ReceivedRabbitMqMessage message,
             ConsumeResult consumeResult,
             CancellationToken cancellationToken)
@@ -197,7 +227,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                             error.Exception, cancellationToken)
                         .ConfigureAwait(false);
                     var activity = Activity.Current;
-                    ActivitySource.Events.MessageRepublishedToError(activity);
+                    _activitySource.Events.MessageRepublishedToError(activity);
                     return HandlerConsumeResult.Ack;
                 }
                 case RetryConsumeResult:
@@ -206,7 +236,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                         .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
                         .ConfigureAwait(false);
                     var activity = Activity.Current;
-                    ActivitySource.Events.MessageRepublishedToRetry(activity);
+                    _activitySource.Events.MessageRepublishedToRetry(activity);
                     return HandlerConsumeResult.Ack;
                 }
                 default:

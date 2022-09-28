@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -13,25 +12,22 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly List<(BeforeRabbitQueueConsumerStartDelegate Action, int Priority)>
             _beforeStartActions = new();
 
-        private readonly IRabbitMqClientHandler _handler;
+        private readonly RabbitMqClientCore _client;
+
         private readonly string _queueName;
-        private readonly RabbitMqClientCore _rabbitMqClientCore;
-        private readonly RabbitMqClientActivitySource _activitySource;
 
         private IDisposable? _consumer;
         private bool? _exclusive;
         private ReceivedRabbitMqMessageHandler _onMessage;
+
         private ushort? _prefetchCount;
 
         public RabbitMqConsumer(RabbitMqClientCore client,
-            IRabbitMqClientHandler handler,
             string queueName,
-            ReceivedRabbitMqMessageHandler onMessage)
+            ReceivedRabbitMqMessageHandler onMessage
+        )
         {
-            _rabbitMqClientCore = client;
-            _activitySource = _rabbitMqClientCore.ActivitySource;
-            Client = client;
-            _handler = handler;
+            _client = client;
             _onMessage = onMessage;
             _queueName = queueName;
         }
@@ -77,12 +73,16 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public IRabbitMqClient Client { get; }
+        public IRabbitMqClient Client => _client;
 
         public ReceivedRabbitMqMessageHandler OnMessage
         {
             get => _onMessage;
-            set => _onMessage = Preconditions.CheckNotNull(value, nameof(OnMessage));
+            set
+            {
+                Preconditions.Check(IsRunning == false, "Can't change OnMessage handler for started consumer");
+                _onMessage = Preconditions.CheckNotNull(value, nameof(OnMessage));
+            }
         }
 
         public void RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority)
@@ -99,33 +99,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             await InvokeBeforeStartActionsAsync(cancellationToken).ConfigureAwait(false);
 
-            async Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
-            {
-                try
-                {
-                    using var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
-                    try
-                    {
-                        var consumeResult = await _onMessage(message, token).ConfigureAwait(false);
-                        _activitySource.Events.MessageConsumed(activity, message, consumeResult);
-                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message, consumeResult,
-                            cancellationToken);
-                    }
-                    catch (Exception exception)
-                    {
-                        return await _rabbitMqClientCore.ProcessConsumeResultAsync(message,
-                            ConsumeResult.Error(exception), cancellationToken);
-                    }
-                }
-                catch
-                {
-                    return HandlerConsumeResult.RejectWithRequeue;
-                }
-            }
-
-            _consumer = await _handler
-                .StartConsumeAsync(QueueName, _exclusive, _prefetchCount, OnMessage, cancellationToken)
-                .ConfigureAwait(false);
+            _consumer = await _client.StartConsumerAsync(this, cancellationToken);
 
             return this;
         }
