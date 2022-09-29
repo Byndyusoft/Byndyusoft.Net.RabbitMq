@@ -226,8 +226,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions,
                             error.Exception, cancellationToken)
                         .ConfigureAwait(false);
-                    var activity = Activity.Current;
-                    _activitySource.Events.MessageRepublishedToError(activity);
                     return HandlerConsumeResult.Ack;
                 }
                 case RetryConsumeResult:
@@ -235,8 +233,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     await _handler
                         .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
                         .ConfigureAwait(false);
-                    var activity = Activity.Current;
-                    _activitySource.Events.MessageRepublishedToRetry(activity);
                     return HandlerConsumeResult.Ack;
                 }
                 default:

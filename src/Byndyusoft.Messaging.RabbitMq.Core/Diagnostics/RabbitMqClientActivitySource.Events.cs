@@ -36,24 +36,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 activity.AddEvent(activityEvent);
             }
 
-            public void MessageRepublishedToRetry(Activity? activity)
-            {
-                if (activity is null)
-                    return;
-
-                var activityEvent = new ActivityEvent("message.publishedToRetry");
-                activity.AddEvent(activityEvent);
-            }
-
-            public void MessageRepublishedToError(Activity? activity)
-            {
-                if (activity is null)
-                    return;
-
-                var activityEvent = new ActivityEvent("message.publishedToError");
-                activity.AddEvent(activityEvent);
-            }
-
             private ActivityTagsCollection GetConsumedMessageEventTags(ReceivedRabbitMqMessage? message)
             {
                 var tags = new ActivityTagsCollection();
