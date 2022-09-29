@@ -31,7 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return;
 
-                var tags = new ActivityTagsCollection {{"result", result.GetType().Name}};
+                var tags = new ActivityTagsCollection {{"result", result.GetDescription()}};
                 var activityEvent = new ActivityEvent("message.consumed", tags: tags);
                 activity.AddEvent(activityEvent);
             }
