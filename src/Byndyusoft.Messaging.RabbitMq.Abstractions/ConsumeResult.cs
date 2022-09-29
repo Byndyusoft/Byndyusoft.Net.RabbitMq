@@ -65,7 +65,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             var exceptionPart =
                 Exception is null
-                    ? "null"
+                    ? "no exception"
                     : $"{Exception.GetType().Name} : {Exception.Message}";
             return $"Error ({exceptionPart})";
         }
