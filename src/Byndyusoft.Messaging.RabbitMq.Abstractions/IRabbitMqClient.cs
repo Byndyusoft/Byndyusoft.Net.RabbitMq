@@ -21,7 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
         IRabbitMqConsumer Subscribe(string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage);
+            ReceivedRabbitMqMessageHandler onMessage);
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default);
 
