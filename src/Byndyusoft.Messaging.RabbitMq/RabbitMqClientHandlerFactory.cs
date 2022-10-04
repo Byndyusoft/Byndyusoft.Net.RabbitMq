@@ -1,7 +1,6 @@
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq

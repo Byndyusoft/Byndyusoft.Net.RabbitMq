@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Net.Http.Formatting;
 using System.Net.Http.Headers;
