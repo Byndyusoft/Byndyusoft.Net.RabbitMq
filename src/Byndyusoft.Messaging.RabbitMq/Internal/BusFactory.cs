@@ -9,7 +9,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         public virtual IBus CreateBus(ConnectionConfiguration connectionConfiguration)
         {
             return RabbitHutch.CreateBus(connectionConfiguration,
-                register => register.TryRegister<ISerializer>(_ => new MockSerializer()));
+                register => register.TryRegister<ISerializer>(_ => new FakeSerializer()));
         }
     }
 }
