@@ -376,7 +376,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async ValueTask ConnectAsync(CancellationToken cancellationToken)
         {
-            _bus ??= _busFactory.CreateBus(_connectionConfiguration);
+            _bus ??= _busFactory.CreateBus(Options, _connectionConfiguration);
 
             var advancedBus = _bus.Advanced;
             while (advancedBus.IsConnected == false && cancellationToken.IsCancellationRequested == false)

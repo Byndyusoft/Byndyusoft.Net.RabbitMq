@@ -4,6 +4,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Abstractions
 {
     public interface IBusFactory
     {
-        IBus CreateBus(ConnectionConfiguration connectionConfiguration);
+        IBus CreateBus(RabbitMqClientOptions options, ConnectionConfiguration connectionConfiguration);
     }
 }
