@@ -1,4 +1,6 @@
 using System;
+using System.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 
 namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
@@ -7,8 +9,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
         public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
         {
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
-            headers.SetRetryCount(consumedMessage.RetryCount);
-
+            
+            var activity = Activity.Current;
+            ActivityContextPropagation.InjectContext(activity, headers);
+            
             return new RabbitMqMessage
             {
                 Content = RabbitMqMessageContent.Create(consumedMessage.Content),
@@ -27,6 +31,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
             headers.SetException(exception);
             headers.RemoveRetryData();
+
+            var activity = Activity.Current;
+            ActivityContextPropagation.InjectContext(activity, headers);
 
             return new RabbitMqMessage
             {

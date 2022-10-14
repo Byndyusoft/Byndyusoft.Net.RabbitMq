@@ -56,7 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 // we need to restore context to link complete activity with push one.
                 ActivityContextPropagation.ExtractContext(activity, message.Headers);
 
-                activity.SetTag("amqp.message.consume_result", consumeResult.ToString());
+                activity.SetTag("amqp.message.consume_result", consumeResult.GetDescription());
                 activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
 
                 return activity;

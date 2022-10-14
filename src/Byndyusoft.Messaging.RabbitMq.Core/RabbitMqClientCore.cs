@@ -165,25 +165,49 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public IRabbitMqConsumer Subscribe(string queueName,
-            Func<ReceivedRabbitMqMessage, CancellationToken, Task<ConsumeResult>> onMessage)
+        public IRabbitMqConsumer Subscribe(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken ct)
-            {
-                var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
-                return await _activitySource.ExecuteAsync(activity,
-                    async () =>
-                    {
-                        var consumeResult = await onMessage(message, ct).ConfigureAwait(false);
-                        _activitySource.Events.MessageConsumed(activity, message, consumeResult);
-                        return consumeResult;
-                    });
-            }
-
-            return new RabbitMqConsumer(this, _handler, queueName, OnMessage);
+            return new RabbitMqConsumer(this, queueName, onMessage);
         }
 
-        protected internal virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
+        internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
+            CancellationToken cancellationToken)
+        {
+            async Task<HandlerConsumeResult> HandlersOnMessageHandler(ReceivedRabbitMqMessage message,
+                CancellationToken ct)
+            {
+                try
+                {
+                    var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
+                    return await _activitySource.ExecuteAsync(activity, async () =>
+                        {
+                            try
+                            {
+                                var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
+                                _activitySource.Events.MessageConsumed(activity, message, consumeResult);
+                                return await ProcessConsumeResultAsync(message, consumeResult, ct);
+                            }
+                            catch (Exception exception)
+                            {
+                                return await ProcessConsumeResultAsync(message, ConsumeResult.Error(exception),
+                                    ct);
+                            }
+                        }
+                    );
+                }
+                catch
+                {
+                    return HandlerConsumeResult.RejectWithRequeue;
+                }
+            }
+
+            return await _handler
+                .StartConsumeAsync(consumer.QueueName, consumer.Exclusive, consumer.PrefetchCount,
+                    HandlersOnMessageHandler, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        protected virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
             ReceivedRabbitMqMessage message,
             ConsumeResult consumeResult,
             CancellationToken cancellationToken)
@@ -197,15 +221,19 @@ namespace Byndyusoft.Messaging.RabbitMq
                 case RejectWithoutRequeueConsumeResult:
                     return HandlerConsumeResult.RejectWithoutRequeue;
                 case ErrorConsumeResult error:
+                {
                     await _handler.PublishMessageToErrorQueueAsync(message, Options.NamingConventions,
                             error.Exception, cancellationToken)
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
+                }
                 case RetryConsumeResult:
+                {
                     await _handler
                         .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
+                }
                 default:
                     throw new ArgumentOutOfRangeException(nameof(consumeResult), consumeResult, null);
             }
