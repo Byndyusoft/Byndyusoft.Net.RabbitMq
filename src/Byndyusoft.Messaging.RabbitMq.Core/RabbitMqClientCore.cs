@@ -170,6 +170,20 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(this, queueName, onMessage);
         }
 
+        public event ReturnedRabbitMqMessageHandler? MessageReturned
+        {
+            add
+            {
+                Preconditions.CheckNotDisposed(this);
+                _handler.MessageReturned += value;
+            }
+            remove
+            {
+                Preconditions.CheckNotDisposed(this);
+                _handler.MessageReturned -= value;
+            }
+        }
+
         internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
             CancellationToken cancellationToken)
         {
