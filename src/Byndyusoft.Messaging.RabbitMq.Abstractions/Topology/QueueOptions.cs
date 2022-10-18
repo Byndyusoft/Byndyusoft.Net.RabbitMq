@@ -59,5 +59,16 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
             Arguments[name] = value;
             return this;
         }
+
+        /// <summary>
+        ///     Sets queueType.
+        /// </summary>
+        /// <param name="type">The queueType to set</param>
+        /// <returns>QueueOptions</returns>
+        public QueueOptions WithType(QueueType type)
+        {
+            Type = type;
+            return this;
+        }
     }
 }

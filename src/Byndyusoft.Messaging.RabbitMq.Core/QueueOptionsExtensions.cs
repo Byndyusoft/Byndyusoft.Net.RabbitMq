@@ -146,19 +146,6 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         /// <summary>
-        ///     Sets queueType. Valid types are classic and quorum.
-        /// </summary>
-        /// <param name="options">The options instance</param>
-        /// <param name="queueType">The queueType to set</param>
-        /// <returns>QueueOptions</returns>
-        public static QueueOptions WithQueueType(this QueueOptions options, QueueType queueType)
-        {
-            Preconditions.CheckNotNull(options, nameof(options));
-
-            return options.WithArgument("x-queue-type", queueType);
-        }
-
-        /// <summary>
         ///     Enables single active consumer
         /// </summary>
         /// <param name="options">The options instance</param>
