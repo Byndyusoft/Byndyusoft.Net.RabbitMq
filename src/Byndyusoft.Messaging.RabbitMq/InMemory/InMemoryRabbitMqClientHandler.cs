@@ -162,6 +162,8 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
+        public event ReturnedRabbitMqMessageHandler? MessageReturned;
+
         public Task<ulong> GetQueueMessageCountAsync(string queueName, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));

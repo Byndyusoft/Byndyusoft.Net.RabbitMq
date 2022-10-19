@@ -27,6 +27,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
 
+        event ReturnedRabbitMqMessageHandler MessageReturned;
+
         #endregion
 
         #region Управлением очередями и обменниками
