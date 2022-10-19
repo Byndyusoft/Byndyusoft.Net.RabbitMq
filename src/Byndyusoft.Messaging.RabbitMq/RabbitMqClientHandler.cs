@@ -330,6 +330,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        public event ReturnedRabbitMqMessageHandler? MessageReturned;
+
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
@@ -339,8 +341,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             MultiDispose(_pullingConsumers.Values);
             _pullingConsumers.Clear();
 
-            _bus?.Dispose();
-            _bus = null;
+            if (_bus != null)
+            {
+                _bus.Advanced.MessageReturned -= OnMessageReturned;
+                _bus.Dispose();
+                _bus.Advanced.Dispose();
+                _bus = null;
+            }
 
             _mutex?.Dispose();
             _mutex = null;
@@ -376,7 +383,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async ValueTask ConnectAsync(CancellationToken cancellationToken)
         {
-            _bus ??= _busFactory.CreateBus(_connectionConfiguration);
+            if (_bus is null)
+            {
+                _bus = _busFactory.CreateBus(Options, _connectionConfiguration);
+                _bus.Advanced.MessageReturned += OnMessageReturned;
+            }
 
             var advancedBus = _bus.Advanced;
             while (advancedBus.IsConnected == false && cancellationToken.IsCancellationRequested == false)
@@ -402,6 +413,26 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                 await Task.Delay(interval, cancellationToken)
                     .ConfigureAwait(false);
+            }
+        }
+
+        private async void OnMessageReturned(object sender, MessageReturnedEventArgs args)
+        {
+            await using var returnedMessage =
+                ReceivedRabbitMqMessageFactory.CreateReturnedMessage(
+                    args.MessageBody,
+                    args.MessageProperties,
+                    args.MessageReturnedInfo);
+
+            try
+            {
+                var task = MessageReturned?.Invoke(returnedMessage, CancellationToken.None);
+                if (task is not null)
+                    await task.Value;
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e, e.Message);
             }
         }
     }

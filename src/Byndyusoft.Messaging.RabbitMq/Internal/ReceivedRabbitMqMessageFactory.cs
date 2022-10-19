@@ -7,6 +7,25 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 {
     internal static class ReceivedRabbitMqMessageFactory
     {
+        public static ReturnedRabbitMqMessage CreateReturnedMessage(
+            ReadOnlyMemory<byte> body,
+            MessageProperties messageProperties,
+            MessageReturnedInfo info)
+        {
+            var properties = CreateMessageProperties(messageProperties);
+            var headers = CreateMessageHeaders(messageProperties);
+
+            return new ReturnedRabbitMqMessage
+            {
+                Content = RabbitMqMessageContent.Create(body, properties),
+                RoutingKey = info.RoutingKey,
+                Exchange = info.Exchange,
+                Properties = properties,
+                Headers = headers,
+                ReturnReason = info.ReturnReason
+            };
+        }
+
         public static ReceivedRabbitMqMessage CreateReceivedMessage(
             ReadOnlyMemory<byte> body,
             MessageProperties messageProperties,
