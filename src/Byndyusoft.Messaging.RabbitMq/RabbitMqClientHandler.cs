@@ -430,7 +430,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 if (task is not null)
                     await task.Value;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logger.LogError(e, e.Message);
             }

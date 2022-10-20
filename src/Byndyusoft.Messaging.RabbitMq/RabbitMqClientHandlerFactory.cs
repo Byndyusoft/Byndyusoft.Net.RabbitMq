@@ -8,12 +8,12 @@ namespace Byndyusoft.Messaging.RabbitMq
     public class RabbitMqClientHandlerFactory : IRabbitMqClientHandlerFactory
     {
         private readonly IBusFactory _busFactory;
-        private readonly IOptionsMonitor<RabbitMqClientOptions> _options;
         private readonly ILoggerFactory _loggerFactory;
+        private readonly IOptionsMonitor<RabbitMqClientOptions> _options;
 
         public RabbitMqClientHandlerFactory(
             IBusFactory busFactory,
-            IOptionsMonitor<RabbitMqClientOptions> options, 
+            IOptionsMonitor<RabbitMqClientOptions> options,
             ILoggerFactory loggerFactory)
         {
             _loggerFactory = loggerFactory;

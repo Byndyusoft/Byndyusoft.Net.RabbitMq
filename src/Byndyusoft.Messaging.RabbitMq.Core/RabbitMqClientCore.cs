@@ -30,6 +30,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             Options = options;
             _handler = handler;
+            _handler.MessageReturned += OnMessageReturned;
             _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
         }
@@ -81,7 +82,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var activity = _activitySource.Activities.StartPublishMessage(_handler.Endpoint, message);
             await _activitySource.ExecuteAsync(activity,
-                async () => { await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false); });
+                async () =>
+                {
+                    _activitySource.Events.MessagePublishing(activity, message);
+                    await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                });
         }
 
         public async Task CreateQueueAsync(string queueName,
@@ -170,19 +175,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(this, queueName, onMessage);
         }
 
-        public event ReturnedRabbitMqMessageHandler? MessageReturned
-        {
-            add
-            {
-                Preconditions.CheckNotDisposed(this);
-                _handler.MessageReturned += value;
-            }
-            remove
-            {
-                Preconditions.CheckNotDisposed(this);
-                _handler.MessageReturned -= value;
-            }
-        }
+        public event ReturnedRabbitMqMessageHandler? MessageReturned;
 
         internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
             CancellationToken cancellationToken)
@@ -259,11 +252,27 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             if (disposing == false) return;
 
+            _handler.MessageReturned -= OnMessageReturned;
+
             if (_disposeHandler)
             {
                 _handler.Dispose();
                 _handler = null!;
             }
+        }
+
+        private async ValueTask OnMessageReturned(ReturnedRabbitMqMessage message, CancellationToken cancellationToken)
+        {
+            var activity = _activitySource.Activities.StartReturnMessage(_handler.Endpoint, message);
+            await _activitySource.ExecuteAsync(activity,
+                async () =>
+                {
+                    _activitySource.Events.MessageReturned(activity, message);
+
+                    var task = MessageReturned?.Invoke(message, cancellationToken);
+                    if (task is not null)
+                        await task.Value;
+                });
         }
 
         protected void SetPublishingMessageProperties(RabbitMqMessage message)

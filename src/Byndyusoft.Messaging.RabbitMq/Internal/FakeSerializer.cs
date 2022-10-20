@@ -9,7 +9,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
     // and throws exception if it finds none
     internal class FakeSerializer : ISerializer
     {
-        const string MethodCallExceptionMessage = "ISerializer methods must not be called. Internal bug in Byndyusoft.Messaging.RabbitMq. Please, report it at https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues";
+        private const string MethodCallExceptionMessage =
+            "ISerializer methods must not be called. Internal bug in Byndyusoft.Messaging.RabbitMq. Please, report it at https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq/issues";
 
         public IMemoryOwner<byte> MessageToBytes(Type messageType, object message)
         {

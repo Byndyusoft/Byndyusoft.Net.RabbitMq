@@ -97,34 +97,8 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
                 }
 
             if (sent == false)
-            {
                 await ReturnMessageAsync(message, cancellationToken)
                     .ConfigureAwait(false);
-            }
-        }
-
-        private async Task ReturnMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
-        {
-            await using var returnedMessage = new ReturnedRabbitMqMessage
-            {
-                Properties = message.Properties,
-                Headers = message.Headers,
-                Content = message.Content,
-                RoutingKey = message.RoutingKey,
-                Exchange = message.Exchange,
-                ReturnReason = RabbitMqMessageReturnReasons.NoRoute
-            };
-
-            try
-            {
-                var task = MessageReturned?.Invoke(returnedMessage, cancellationToken);
-                if (task is not null)
-                    await task.Value;
-            }
-            catch
-            {
-                // do noting
-            }
         }
 
         public Task<IDisposable> StartConsumeAsync(string queueName,
@@ -245,6 +219,30 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             var exchange = GetRequiredExchange(exchangeName);
             exchange.Bind(routingKey, queueName);
             return Task.CompletedTask;
+        }
+
+        private async Task ReturnMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        {
+            await using var returnedMessage = new ReturnedRabbitMqMessage
+            {
+                Properties = message.Properties,
+                Headers = message.Headers,
+                Content = message.Content,
+                RoutingKey = message.RoutingKey,
+                Exchange = message.Exchange,
+                ReturnReason = RabbitMqMessageReturnReasons.NoRoute
+            };
+
+            try
+            {
+                var task = MessageReturned?.Invoke(returnedMessage, cancellationToken);
+                if (task is not null)
+                    await task.Value;
+            }
+            catch
+            {
+                // do noting
+            }
         }
 
         public void Clear()

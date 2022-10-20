@@ -22,7 +22,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             return consumer.StopAsync().GetAwaiter().GetResult();
         }
 
-        public static IRabbitMqConsumer RegisterBeforeStartAction(this IRabbitMqConsumer consumer, Action<IRabbitMqConsumer> action, int priority = int.MaxValue)
+        public static IRabbitMqConsumer RegisterBeforeStartAction(this IRabbitMqConsumer consumer,
+            Action<IRabbitMqConsumer> action, int priority = int.MaxValue)
         {
             return consumer.RegisterBeforeStartAction((c, _) =>
             {

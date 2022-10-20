@@ -23,7 +23,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return activity;
 
-                _activitySource.SetMessageTags(activity, message);
                 ActivityContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
@@ -70,6 +69,20 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                     return activity;
 
                 _activitySource.Events.MessageGot(activity, message);
+
+                return activity;
+            }
+
+            public Activity? StartReturnMessage(RabbitMqEndpoint endpoint, ReturnedRabbitMqMessage message)
+            {
+                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
+                Preconditions.CheckNotNull(message, nameof(message));
+
+                var activity = _activitySource.StartActivity("Return", endpoint, ActivityKind.Producer);
+                if (activity is null)
+                    return activity;
+
+                ActivityContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
             }

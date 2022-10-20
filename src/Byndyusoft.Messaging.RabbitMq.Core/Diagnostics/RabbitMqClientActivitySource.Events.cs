@@ -14,6 +14,26 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 _activitySource = activitySource;
             }
 
+            public void MessagePublishing(Activity? activity, RabbitMqMessage message)
+            {
+                if (activity is null)
+                    return;
+
+                var tags = GetPublishedMessageEventTags(message);
+                var activityEvent = new ActivityEvent("message.publishing", tags: tags);
+                activity.AddEvent(activityEvent);
+            }
+
+            public void MessageReturned(Activity? activity, ReturnedRabbitMqMessage message)
+            {
+                if (activity is null)
+                    return;
+
+                var tags = GetReturnedMessageEventTags(message);
+                var activityEvent = new ActivityEvent("message.returned", tags: tags);
+                activity.AddEvent(activityEvent);
+            }
+
             public void MessageGot(Activity? activity, ReceivedRabbitMqMessage? message)
             {
                 if (activity is null)
@@ -34,6 +54,36 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 var tags = new ActivityTagsCollection {{"result", result.GetDescription()}};
                 var activityEvent = new ActivityEvent("message.consumed", tags: tags);
                 activity.AddEvent(activityEvent);
+            }
+
+            private ActivityTagsCollection GetReturnedMessageEventTags(ReturnedRabbitMqMessage message)
+            {
+                var tags = new ActivityTagsCollection();
+
+                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
+                tags.Add("amqp.message.routing_key", message.RoutingKey);
+                tags.Add("amqp.message.return_reason", message.ReturnReason);
+                tags.Add("amqp.message.content",
+                    message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                tags.Add("amqp.message.properties",
+                    JsonSerializer.Serialize(message.Properties, _activitySource._options));
+
+                return tags;
+            }
+
+            private ActivityTagsCollection GetPublishedMessageEventTags(RabbitMqMessage message)
+            {
+                var tags = new ActivityTagsCollection();
+
+                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
+                tags.Add("amqp.message.routing_key", message.RoutingKey);
+                tags.Add("amqp.message.mandatory", message.Mandatory);
+                tags.Add("amqp.message.content",
+                    message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                tags.Add("amqp.message.properties",
+                    JsonSerializer.Serialize(message.Properties, _activitySource._options));
+
+                return tags;
             }
 
             private ActivityTagsCollection GetConsumedMessageEventTags(ReceivedRabbitMqMessage? message)

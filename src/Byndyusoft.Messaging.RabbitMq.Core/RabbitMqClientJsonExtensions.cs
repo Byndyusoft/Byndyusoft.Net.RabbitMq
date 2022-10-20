@@ -38,7 +38,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             return PublishAsJsonAsync(client, exchangeName, routingKey, model, null, cancellationToken);
         }
-        
+
         public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
             string queueName,
             Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
