@@ -22,6 +22,15 @@ namespace Byndyusoft.Messaging.RabbitMq
             return consumer.StopAsync().GetAwaiter().GetResult();
         }
 
+        public static IRabbitMqConsumer RegisterBeforeStartAction(this IRabbitMqConsumer consumer, Action<IRabbitMqConsumer> action, int priority = int.MaxValue)
+        {
+            return consumer.RegisterBeforeStartAction((c, _) =>
+            {
+                action(c);
+                return Task.CompletedTask;
+            }, priority);
+        }
+
         public static IRabbitMqConsumer WithQueueBinding(this IRabbitMqConsumer consumer,
             string exchangeName,
             string routingKey)
@@ -131,9 +140,39 @@ namespace Byndyusoft.Messaging.RabbitMq
             return WithDeclareErrorQueue(consumer, options);
         }
 
+        public static IRabbitMqConsumer WithDeclareExchange(this IRabbitMqConsumer consumer, string exchangeName,
+            Action<ExchangeOptions> optionsSetup)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
+
+            var options = ExchangeOptions.Default;
+            optionsSetup(options);
+
+            return consumer.WithDeclareExchange(exchangeName, options);
+        }
+
+        public static IRabbitMqConsumer WithDeclareExchange(this IRabbitMqConsumer consumer, string exchangeName,
+            ExchangeOptions options)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            async Task OnBeforeStart(IRabbitMqConsumer _, CancellationToken cancellationToken)
+            {
+                await consumer.Client.CreateExchangeIfNotExistsAsync(exchangeName, options, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            consumer.RegisterBeforeStartAction(OnBeforeStart, BeforeStartActionPriorities.DeclareExchange);
+
+            return consumer;
+        }
+
         private static class BeforeStartActionPriorities
         {
             public static int DeclareQueue => 0;
+            public static int DeclareExchange => 0;
             public static int BindQueue => 10;
         }
     }

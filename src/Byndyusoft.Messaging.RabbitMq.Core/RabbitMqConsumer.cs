@@ -32,6 +32,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _queueName = queueName;
         }
 
+
         public bool IsRunning => _consumer is not null;
 
         public string QueueName
@@ -85,9 +86,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public void RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority)
+        public IRabbitMqConsumer RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority)
         {
             _beforeStartActions.Add((action, priority));
+            return this;
         }
 
         public async Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default)

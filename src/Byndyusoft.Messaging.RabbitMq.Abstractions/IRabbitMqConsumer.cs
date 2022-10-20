@@ -20,6 +20,6 @@ namespace Byndyusoft.Messaging.RabbitMq
         bool IsRunning { get; }
         Task<IRabbitMqConsumer> StartAsync(CancellationToken cancellationToken = default);
         Task<IRabbitMqConsumer> StopAsync(CancellationToken cancellationToken = default);
-        void RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority);
+        IRabbitMqConsumer RegisterBeforeStartAction(BeforeRabbitQueueConsumerStartDelegate action, int priority = int.MaxValue);
     }
 }
