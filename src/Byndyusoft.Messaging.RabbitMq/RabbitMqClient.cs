@@ -23,5 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             })
         {
         }
+
+        public new RabbitMqClientOptions Options => (RabbitMqClientOptions) base.Options;
     }
 }

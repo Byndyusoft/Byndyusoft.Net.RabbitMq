@@ -9,7 +9,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         private static Func<ExchangeOptions> _default = () => new ExchangeOptions().AsDurable(true);
 
         public static ExchangeOptions Default => _default();
-        
+
         /// <summary>
         ///     Type of the exchange.
         /// </summary>
