@@ -34,21 +34,34 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public static IRabbitMqConsumer WithQueueBinding(this IRabbitMqConsumer consumer,
             string exchangeName,
-            string routingKey)
+            string routingKey,
+            string queueName)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
 
             async Task OnBeforeStart(IRabbitMqConsumer _, CancellationToken cancellationToken)
             {
-                await consumer.Client.BindQueueAsync(exchangeName, routingKey, consumer.QueueName, cancellationToken)
+                await consumer.Client.BindQueueAsync(exchangeName, routingKey, queueName, cancellationToken)
                     .ConfigureAwait(false);
             }
 
             consumer.RegisterBeforeStartAction(OnBeforeStart, BeforeStartActionPriorities.BindQueue);
 
             return consumer;
+        }
+
+        public static IRabbitMqConsumer WithSubscribingQueueBinding(this IRabbitMqConsumer consumer,
+            string exchangeName,
+            string routingKey)
+        {
+            Preconditions.CheckNotNull(consumer, nameof(consumer));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+
+            return consumer.WithQueueBinding(exchangeName, routingKey, consumer.QueueName);
         }
 
         public static IRabbitMqConsumer WithPrefetchCount(this IRabbitMqConsumer consumer,

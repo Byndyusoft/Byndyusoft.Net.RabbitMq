@@ -88,7 +88,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
 
             return client.Subscribe(queueName, onMessage)
-                .WithQueueBinding(exchangeName, routingKey);
+                .WithSubscribingQueueBinding(exchangeName, routingKey);
         }
 
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
@@ -105,7 +105,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
 
             return client.SubscribeAs(queueName, onMessage)
-                .WithQueueBinding(exchangeName, routingKey);
+                .WithSubscribingQueueBinding(exchangeName, routingKey);
         }
 
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
@@ -122,7 +122,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
 
             return client.SubscribeAs(queueName, onMessage)
-                .WithQueueBinding(exchangeName, routingKey);
+                .WithSubscribingQueueBinding(exchangeName, routingKey);
         }
 
         public static async Task CreateQueueAsync(this IRabbitMqClient client,
