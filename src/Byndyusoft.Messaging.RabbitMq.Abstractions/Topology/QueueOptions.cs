@@ -1,10 +1,14 @@
+using System;
 using System.Collections.Generic;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class QueueOptions
     {
-        public static QueueOptions Default => new QueueOptions().AsDurable(true);
+        private static Func<QueueOptions> _default = () => new QueueOptions().AsDurable(true);
+
+        public static QueueOptions Default => _default();
 
         public QueueType Type { get; set; } = QueueType.Classic;
 
@@ -69,6 +73,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         {
             Type = type;
             return this;
+        }
+
+        public static void SetDefault(Func<QueueOptions> options)
+        {
+            _default = Preconditions.CheckNotNull(options, nameof(options));
         }
     }
 }
