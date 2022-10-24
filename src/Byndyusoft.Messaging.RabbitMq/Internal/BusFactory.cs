@@ -8,6 +8,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
     {
         public virtual IBus CreateBus(RabbitMqClientOptions options, ConnectionConfiguration connectionConfiguration)
         {
+            connectionConfiguration.Name = options.ApplicationName;
             return RabbitHutch.CreateBus(connectionConfiguration,
                 register => register.TryRegister<ISerializer>(_ => new FakeSerializer()));
         }

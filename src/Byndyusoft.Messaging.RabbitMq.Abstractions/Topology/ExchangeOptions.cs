@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -5,7 +6,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
 {
     public class ExchangeOptions
     {
-        public static ExchangeOptions Default => new ExchangeOptions().AsDurable(true);
+        private static Func<ExchangeOptions> _default = () => new ExchangeOptions().AsDurable(true);
+
+        public static ExchangeOptions Default => _default();
 
         /// <summary>
         ///     Type of the exchange.
@@ -68,6 +71,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
 
             Arguments[name] = value;
             return this;
+        }
+
+        public static void SetDefault(Func<ExchangeOptions> options)
+        {
+            _default = Preconditions.CheckNotNull(options, nameof(options));
         }
     }
 }

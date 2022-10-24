@@ -9,10 +9,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
         public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
         {
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
-            
+
             var activity = Activity.Current;
             ActivityContextPropagation.InjectContext(activity, headers);
-            
+
             return new RabbitMqMessage
             {
                 Content = RabbitMqMessageContent.Create(consumedMessage.Content),

@@ -77,23 +77,28 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
-        public Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);
 
-            if (message.Exchange is not null)
-            {
-                var exchange = GetRequiredExchange(message.Exchange);
-                foreach (var (routingKey, queueName) in exchange.Bindings)
-                    if (string.Equals(routingKey, message.RoutingKey))
-                        PublishToQueue(queueName, message);
-            }
-            else
+            if (message.Exchange is null)
             {
                 PublishToQueue(message.RoutingKey, message);
+                return;
             }
 
-            return Task.CompletedTask;
+            var exchange = GetRequiredExchange(message.Exchange);
+            var sent = false;
+            foreach (var (routingKey, queueName) in exchange.Bindings)
+                if (string.Equals(routingKey, message.RoutingKey))
+                {
+                    sent = true;
+                    PublishToQueue(queueName, message);
+                }
+
+            if (sent == false)
+                await ReturnMessageAsync(message, cancellationToken)
+                    .ConfigureAwait(false);
         }
 
         public Task<IDisposable> StartConsumeAsync(string queueName,
@@ -216,6 +221,30 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
+        private async Task ReturnMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        {
+            await using var returnedMessage = new ReturnedRabbitMqMessage
+            {
+                Properties = message.Properties,
+                Headers = message.Headers,
+                Content = message.Content,
+                RoutingKey = message.RoutingKey,
+                Exchange = message.Exchange,
+                ReturnReason = RabbitMqMessageReturnReasons.NoRoute
+            };
+
+            try
+            {
+                var task = MessageReturned?.Invoke(returnedMessage, cancellationToken);
+                if (task is not null)
+                    await task.Value;
+            }
+            catch
+            {
+                // do noting
+            }
+        }
+
         public void Clear()
         {
             foreach (var queue in Queues) queue.Clear();
@@ -249,8 +278,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
 
         private void PublishToQueue(string queueName, RabbitMqMessage message)
         {
-            if (_queues.TryGetValue(queueName, out var queue) == false)
-                return;
+            var queue = GetRequiredQueue(queueName);
             queue.Add(new InMemoryRabbitMqMessage(message));
         }
 

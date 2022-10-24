@@ -5,11 +5,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class ReturnedRabbitMqMessage : AsyncDisposable
     {
+        private readonly RabbitMqMessageHeaders _headers = new();
+        private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _returnReason = default!;
         private readonly string _routingKey = default!;
         private HttpContent? _content;
-        private readonly RabbitMqMessageHeaders _headers = new();
-        private readonly RabbitMqMessageProperties _properties = new();
 
         public string ReturnReason
         {
