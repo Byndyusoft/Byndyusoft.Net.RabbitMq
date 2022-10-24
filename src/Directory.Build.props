@@ -3,9 +3,12 @@
 	<Import Project="../Directory.Build.props" />
 
 	<PropertyGroup>
+		<IsPackable>true</IsPackable>
 		<PackageIcon>icon.png</PackageIcon>
 	</PropertyGroup>
+
 	<ItemGroup>
 		<None Include="..\..\icon.png" Pack="true" PackagePath="icon.png" />
 	</ItemGroup>
+
 </Project>
