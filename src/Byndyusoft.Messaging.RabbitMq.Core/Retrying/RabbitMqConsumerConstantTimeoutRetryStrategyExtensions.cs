@@ -62,7 +62,6 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var retryQueueOptions =
                 (options ?? QueueOptions.Default)
-                .WithType(QueueType.Quorum)
                 .WithMessageTtl(delay)
                 .WithDeadLetterExchange(null)
                 .WithDeadLetterRoutingKey(consumer.QueueName);
