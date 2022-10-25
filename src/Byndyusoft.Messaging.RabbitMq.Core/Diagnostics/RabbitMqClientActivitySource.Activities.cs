@@ -81,7 +81,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 var activity = _activitySource.StartActivity("Return", endpoint, ActivityKind.Producer);
                 if (activity is null)
                     return activity;
-
+                
+                ActivityContextPropagation.ExtractContext(activity, message.Headers);
                 ActivityContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
