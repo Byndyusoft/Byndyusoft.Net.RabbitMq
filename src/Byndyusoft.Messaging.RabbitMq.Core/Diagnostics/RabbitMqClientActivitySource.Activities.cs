@@ -83,7 +83,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                     return activity;
                 
                 ActivityContextPropagation.ExtractContext(activity, message.Headers);
-                ActivityContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
             }
