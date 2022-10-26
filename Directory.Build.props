@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<VersionPrefix>0.3.2</VersionPrefix>
+		<VersionPrefix>0.3.3</VersionPrefix>
 		<AssemblyName>Byndyusoft.Net.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>Byndyusoft.Net.$(MSBuildProjectName)</RootNamespace>
 		<Authors>Byndyusoft</Authors>
