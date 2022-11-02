@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Topology
@@ -65,14 +66,88 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         }
 
         /// <summary>
-        ///     Sets queueType.
+        ///     Sets queue type.
         /// </summary>
-        /// <param name="type">The queueType to set</param>
+        /// <param name="type">The queue type to set</param>
         /// <returns>QueueOptions</returns>
         public QueueOptions WithType(QueueType type)
         {
             Type = type;
             return this;
+        }
+
+        /// <summary>
+        ///     Sets queue mode.
+        /// </summary>
+        /// <param name="mode">The queue mode to set</param>
+        /// <returns>QueueOptions</returns>
+        public QueueOptions WithMode(QueueMode mode)
+        {
+            return WithArgument("x-queue-mode", mode.ToString().ToLowerInvariant());
+        }
+
+        /// <summary>
+        ///     Sets Message TTL.
+        /// </summary>
+        /// <see href="https://www.rabbitmq.com/ttl.html#message-ttl-using-x-args" />
+        public QueueOptions WithMessageTtl(TimeSpan messageTtl)
+        {
+            return WithArgument("x-message-ttl", (int)messageTtl.TotalMilliseconds);
+        }
+
+        /// <summary>
+        ///     Sets queue TTL.
+        /// </summary>
+        /// <remarks>Queues will expire after a period of time only when they are not used (e.g. do not have consumers)</remarks>
+        /// <see href="https://www.rabbitmq.com/ttl.html#queue-ttl" />
+        public QueueOptions WithTtl(TimeSpan ttl)
+        {
+            return WithArgument("x-expires", (int)ttl.TotalMilliseconds);
+        }
+
+        /// <summary>
+        ///     Sets max queue length.
+        /// </summary>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#definition-using-x-args" />
+        public QueueOptions WithMaxLength(int maxLength)
+        {
+            return WithArgument("x-max-length", maxLength);
+        }
+
+        /// <summary>
+        ///     Sets max queue length in bytes.
+        /// </summary>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#definition-using-x-args" />
+        public QueueOptions WithMaxLengthBytes(int maxLengthBytes)
+        {
+            return WithArgument("x-max-length-bytes", maxLengthBytes);
+        }
+
+        /// <summary>
+        ///     Sets queue overflow behaviour
+        /// </summary>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#overflow-behaviour" />
+        public QueueOptions WithOverflowBehaviour(QueueOverflowBehaviour behaviour)
+        {
+            string value = behaviour switch
+            {
+                QueueOverflowBehaviour.DropHead => "drop-head",
+                QueueOverflowBehaviour.RejectPublish => "reject-publish",
+                QueueOverflowBehaviour.RejectPublishDlx => "reject-publish-dlx",
+                _ => throw new ArgumentOutOfRangeException(nameof(behaviour))
+            };
+
+            return WithArgument("x-overflow", value);
+        }
+
+        /// <summary>
+        ///     Sets queue max priority
+        /// </summary>
+        /// <remarks>Max number of priorities: 255. Values between 1 and 10 are recommended.</remarks>
+        /// <see href="https://www.rabbitmq.com/priority.html" />
+        public QueueOptions WithMaxPriority(byte maxPriority)
+        {
+            return WithArgument("x-max-priority", (int)maxPriority);
         }
 
         public static void SetDefault(Func<QueueOptions> options)
