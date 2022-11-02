@@ -15,7 +15,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="maxPriority">The maxPriority to set</param>
         /// <returns>QueueOptions</returns>
-        public static QueueOptions WithMaxPriority(this QueueOptions options, int maxPriority)
+        /// <see href="https://www.rabbitmq.com/priority.html" />
+        public static QueueOptions WithMaxPriority(this QueueOptions options, byte maxPriority)
         {
             Preconditions.CheckNotNull(options, nameof(options));
 
@@ -29,6 +30,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="maxLength">The maxLength to set</param>
         /// <returns>QueueOptions</returns>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#definition-using-x-args" />
         public static QueueOptions WithMaxLength(this QueueOptions options, int maxLength)
         {
             Preconditions.CheckNotNull(options, nameof(options));
@@ -43,6 +45,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="maxLengthBytes">The maxLengthBytes flag to set</param>
         /// <returns>QueueOptions</returns>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#definition-using-x-args" />
         public static QueueOptions WithMaxLengthBytes(this QueueOptions options, int maxLengthBytes)
         {
             Preconditions.CheckNotNull(options, nameof(options));
@@ -57,6 +60,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="expires">The expires to set</param>
         /// <returns>QueueOptions</returns>
+        /// <see href="https://www.rabbitmq.com/ttl.html#queue-ttl" />
         public static QueueOptions WithExpires(this QueueOptions options, TimeSpan expires)
         {
             Preconditions.CheckNotNull(options, nameof(options));
@@ -70,6 +74,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="messageTtl">The messageTtl to set</param>
         /// <returns>QueueOptions</returns>
+        /// <see href="https://www.rabbitmq.com/ttl.html#message-ttl-using-x-args" />
         public static QueueOptions WithMessageTtl(this QueueOptions options, TimeSpan messageTtl)
         {
             Preconditions.CheckNotNull(options, nameof(options));
@@ -138,11 +143,11 @@ namespace Byndyusoft.Messaging.RabbitMq
         /// <param name="options">The options instance</param>
         /// <param name="queueMode">The queueMode to set</param>
         /// <returns>QueueOptions</returns>
-        public static QueueOptions WithQueueMode(this QueueOptions options, string queueMode)
+        public static QueueOptions WithQueueMode(this QueueOptions options, QueueMode queueMode)
         {
             Preconditions.CheckNotNull(options, nameof(options));
 
-            return options.WithArgument("x-queue-mode", queueMode);
+            return options.WithArgument("x-queue-mode", queueMode.ToString().ToLowerInvariant());
         }
 
         /// <summary>
@@ -155,6 +160,23 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(options, nameof(options));
 
             return options.WithArgument("x-single-active-consumer", true);
+        }
+
+        /// <summary>
+        ///     Sets queue overflow behaviour
+        /// </summary>
+        /// <see href="https://www.rabbitmq.com/maxlength.html#overflow-behaviour" />
+        public static QueueOptions WithOverflowBehaviour(this QueueOptions options, QueueOverflowBehaviour behaviour)
+        {
+            string value = behaviour switch
+            {
+                QueueOverflowBehaviour.DropHead => "drop-head",
+                QueueOverflowBehaviour.RejectPublish => "reject-publish",
+                QueueOverflowBehaviour.RejectPublishDlx => "reject-publish-dlx",
+                _ => throw new ArgumentOutOfRangeException(nameof(behaviour))
+            };
+
+            return options.WithArgument("x-overflow", value);
         }
     }
 }
