@@ -2,7 +2,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
-using Byndyusoft.Messaging.RabbitMq.Topology;
 using Microsoft.Extensions.Hosting;
 
 namespace Byndyusoft.Net.RabbitMq.HostedServices
@@ -23,6 +22,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
             using var consumer = _rabbitMqClient.SubscribeRpcAsJson<RpcRequest, RpcResponse>(queueName,
                     async (request, _) =>
                     {
+                        await Task.Yield();
                         checked
                         {
                             return new RpcResponse
