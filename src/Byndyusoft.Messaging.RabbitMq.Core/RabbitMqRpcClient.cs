@@ -13,8 +13,7 @@ namespace Byndyusoft.Messaging.RabbitMq
     {
         private SemaphoreSlim? _mutex = new(1, 1);
         private readonly IRabbitMqClientHandler _handler;
-        private readonly RabbitMqClientCoreOptions _options;
-        private bool _isRpcStarted = false;
+        private bool _isRpcStarted;
         private readonly string _rpcQueueName;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
         private IDisposable? _rpcQueueConsumer;
@@ -22,8 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
         {
             _handler = handler;
-            _options = options;
-            _rpcQueueName = options.NamingConventions.RpcReplyQueueName(options.ApplicationName);
+            _rpcQueueName = options.GetRpcReplyQueueName();
         }
 
         public async Task<ReceivedRabbitMqMessage> Rpc(

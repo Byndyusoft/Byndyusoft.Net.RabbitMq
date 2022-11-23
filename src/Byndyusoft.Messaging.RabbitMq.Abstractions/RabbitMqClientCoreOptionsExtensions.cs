@@ -10,5 +10,12 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return options.NamingConventions.QueueName(exchange, routingKey, options.ApplicationName);
         }
+
+        public static string GetRpcReplyQueueName(this RabbitMqClientCoreOptions options)
+        {
+            Preconditions.CheckNotNull(options, nameof(options));
+
+            return options.NamingConventions.RpcReplyQueueName(options.ApplicationName);
+        }
     }
 }
