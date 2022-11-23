@@ -9,8 +9,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Serialization
 
             using var stream = new StringLimitStream(options.ValueMaxStringLength);
 
-            System.Text.Json.JsonSerializer.SerializeAsync(stream, value, options.JsonSerializerOptions)
-                .GetAwaiter().GetResult();
+            System.Text.Json.JsonSerializer.Serialize(stream, value, options.JsonSerializerOptions);
 
             return stream.GetString();
         }
