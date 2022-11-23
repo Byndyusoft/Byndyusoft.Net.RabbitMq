@@ -34,7 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var correlationId = message.Properties.CorrelationId ??= Guid.NewGuid().ToString();
             message.Properties.ReplyTo = _rpcQueueName;
 
-            var tcs = new TaskCompletionSource<ReceivedRabbitMqMessage>(cancellationToken);
+            var tcs = new TaskCompletionSource<ReceivedRabbitMqMessage>();
 
             cancellationToken.Register(OnCancelled, correlationId);
 

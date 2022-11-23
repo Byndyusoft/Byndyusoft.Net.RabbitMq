@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Net.Http;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 
 namespace Byndyusoft.Messaging.RabbitMq.Messages
@@ -43,6 +44,55 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
                 Persistent = consumedMessage.Persistent,
                 Headers = headers,
                 RoutingKey = errorQueueName
+            };
+        }
+
+        public static RabbitMqMessage CreateRpcSuccessResponseMessage(ReceivedRabbitMqMessage requestMessage,
+            RpcSuccessResult response)
+        {
+            var replyTo = requestMessage.Properties.ReplyTo!;
+            var correlationId = requestMessage.Properties.CorrelationId!;
+
+            var headers = new RabbitMqMessageHeaders();
+            ActivityContextPropagation.InjectContext(Activity.Current, headers);
+
+            return new RabbitMqMessage
+            {
+                Content = response.Response,
+                Properties = new RabbitMqMessageProperties
+                {
+                    CorrelationId = correlationId
+                },
+                Mandatory = true,
+                Persistent = requestMessage.Persistent,
+                Headers = headers,
+                RoutingKey = replyTo,
+                Exchange = null,
+            };
+        }
+
+        public static RabbitMqMessage CreateRpcErrorResponseMessage(ReceivedRabbitMqMessage requestMessage,
+            RpcErrorResult response)
+        {
+            var replyTo = requestMessage.Properties.ReplyTo!;
+            var correlationId = requestMessage.Properties.CorrelationId!;
+
+            var headers = new RabbitMqMessageHeaders();
+            headers.SetException(response.Exception);
+            ActivityContextPropagation.InjectContext(Activity.Current, headers);
+
+            return new RabbitMqMessage
+            {
+                Content = new StringContent(string.Empty),
+                Properties = new RabbitMqMessageProperties
+                {
+                    CorrelationId = correlationId
+                },
+                Mandatory = true,
+                Persistent = requestMessage.Persistent,
+                Headers = headers,
+                RoutingKey = replyTo,
+                Exchange = null,
             };
         }
     }
