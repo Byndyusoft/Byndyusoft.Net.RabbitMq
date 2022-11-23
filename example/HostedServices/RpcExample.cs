@@ -2,7 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
-using Jaeger.Thrift.Agent.Zipkin;
+using Byndyusoft.Messaging.RabbitMq.Topology;
 using Microsoft.Extensions.Hosting;
 
 namespace Byndyusoft.Net.RabbitMq.HostedServices
@@ -31,7 +31,6 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                             };
                         }
                     })
-                .WithPrefetchCount(20)
                 .WithDeclareSubscribingQueue(options => options.AsAutoDelete(true))
                 .Start();
 
@@ -53,9 +52,11 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                         Console.WriteLine($"{request.Number1}+{request.Number2}: {e.Message}");
                     }
                    
-                    await Task.Delay(TimeSpan.FromMilliseconds(rand.NextDouble()*100), stoppingToken);
+                    await Task.Delay(TimeSpan.FromMilliseconds(rand.NextDouble()*10), stoppingToken);
                 }
             }, stoppingToken);
+
+            await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
         private class RpcRequest

@@ -68,8 +68,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is not {IsAllDataRequested: true})
                     return activity;
 
-                _activitySource.Events.MessageGot(activity, message);
-
                 return activity;
             }
 

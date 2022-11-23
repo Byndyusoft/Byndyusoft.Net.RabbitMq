@@ -46,6 +46,16 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 activity.AddEvent(activityEvent);
             }
 
+            public void MessageReplied(Activity? activity, ReceivedRabbitMqMessage message)
+            {
+                if (activity is null)
+                    return;
+
+                var tags = GetConsumedMessageEventTags(message);
+                var activityEvent = new ActivityEvent("message.replied", tags: tags);
+                activity.AddEvent(activityEvent);
+            }
+
             public void MessageConsumed(Activity? activity, ReceivedRabbitMqMessage _, ConsumeResult result)
             {
                 if (activity is null)

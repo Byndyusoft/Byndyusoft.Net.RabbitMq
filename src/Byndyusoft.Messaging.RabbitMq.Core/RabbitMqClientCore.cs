@@ -205,6 +205,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public async Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
+            Preconditions.CheckNotNull(message, nameof(message));
 
             var activity = _activitySource.Activities.StartRpc(_handler.Endpoint, message);
             return await _activitySource.ExecuteAsync(activity,
@@ -213,13 +214,17 @@ namespace Byndyusoft.Messaging.RabbitMq
                     _activitySource.Events.MessagePublishing(activity, message);
                     var response =  await _rpcClient.Rpc(message, cancellationToken)
                         .ConfigureAwait(false);
-                    _activitySource.Events.MessageGot(activity, response);
+                    _activitySource.Events.MessageReplied(activity, response);
                     return response;
                 });
         }
 
         public IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
+            Preconditions.CheckNotDisposed(this);
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+
             async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage, CancellationToken cancellationToken)
             {
                 var replyTo = requestMessage.Properties.ReplyTo;
@@ -256,7 +261,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 return result;
             }
 
-            return Subscribe(queueName, OnRpcCall);
+            return new RabbitMqConsumer(this, queueName, OnRpcCall);
         }
 
         public event ReturnedRabbitMqMessageHandler? MessageReturned;
@@ -272,6 +277,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
                     return await _activitySource.ExecuteAsync(activity, async () =>
                         {
+                            _activitySource.Events.MessageGot(activity, message);
+
                             try
                             {
                                 var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
