@@ -16,6 +16,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly RabbitMqClientActivitySource _activitySource;
         private readonly bool _disposeHandler;
         private IRabbitMqClientHandler _handler;
+        private RabbitMqRpcClient _rpcClient;
+        private readonly RabbitMqClientCoreOptions _options;
 
         static RabbitMqClientCore()
         {
@@ -28,18 +30,27 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(handler, nameof(handler));
             Preconditions.CheckNotNull(options, nameof(options));
 
-            Options = options;
+            _options = options;
             _handler = handler;
             _handler.MessageReturned += OnMessageReturned;
             _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
+            _rpcClient = new RabbitMqRpcClient(_handler);
         }
 
-        public RabbitMqClientCoreOptions Options { get; }
+        public RabbitMqClientCoreOptions Options
+        {
+            get
+            {
+                Preconditions.CheckNotDisposed(this);
+                return _options;
+            }
+        }
 
         public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
 
@@ -58,6 +69,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public async Task CompleteMessageAsync(ReceivedRabbitMqMessage message, ConsumeResult consumeResult,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
@@ -75,6 +87,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public async Task PublishMessageAsync(RabbitMqMessage message,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
 
@@ -93,6 +106,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             QueueOptions options,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(options, nameof(options));
 
@@ -101,6 +115,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
 
             await _handler.PurgeQueueAsync(queueName, cancellationToken).ConfigureAwait(false);
@@ -108,6 +123,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
 
             return await _handler.QueueExistsAsync(queueName, cancellationToken).ConfigureAwait(false);
@@ -118,6 +134,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             bool ifEmpty = false,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
 
             await _handler.DeleteQueueAsync(queueName, ifUnused, ifEmpty, cancellationToken).ConfigureAwait(false);
@@ -126,6 +143,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         public async Task<ulong> GetQueueMessageCountAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
 
             return await _handler.GetQueueMessageCountAsync(queueName, cancellationToken).ConfigureAwait(false);
@@ -135,6 +153,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             ExchangeOptions options,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(options, nameof(options));
 
@@ -143,6 +162,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public async Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
 
             return await _handler.ExchangeExistsAsync(exchangeName, cancellationToken).ConfigureAwait(false);
@@ -152,6 +172,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             bool ifUnused = false,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
 
             await _handler.DeleteExchangeAsync(exchangeName, ifUnused, cancellationToken).ConfigureAwait(false);
@@ -162,6 +183,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             string queueName,
             CancellationToken cancellationToken = default)
         {
+            Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
@@ -172,7 +194,25 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public IRabbitMqConsumer Subscribe(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
+            Preconditions.CheckNotDisposed(this);
+
             return new RabbitMqConsumer(this, queueName, onMessage);
+        }
+
+        public async Task<ReceivedRabbitMqMessage> Rpc(RabbitMqMessage message, CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotDisposed(this);
+
+            var activity = _activitySource.Activities.StartRpc(_handler.Endpoint, message);
+            return await _activitySource.ExecuteAsync(activity,
+                async () =>
+                {
+                    _activitySource.Events.MessagePublishing(activity, message);
+                    var response =  await _rpcClient.Rpc(message, cancellationToken)
+                        .ConfigureAwait(false);
+                    _activitySource.Events.MessageGot(activity, response);
+                    return response;
+                });
         }
 
         public event ReturnedRabbitMqMessageHandler? MessageReturned;
@@ -259,6 +299,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _handler.Dispose();
                 _handler = null!;
             }
+
+            _rpcClient.Dispose();
+            _rpcClient = null!;
         }
 
         private async ValueTask OnMessageReturned(ReturnedRabbitMqMessage message, CancellationToken cancellationToken)

@@ -86,6 +86,20 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
                 return activity;
             }
+
+            public Activity? StartRpc(RabbitMqEndpoint endpoint, RabbitMqMessage message)
+            {
+                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
+                Preconditions.CheckNotNull(message, nameof(message));
+
+                var activity = _activitySource.StartActivity("Rpc", endpoint, ActivityKind.Producer);
+                if (activity is null)
+                    return activity;
+
+                ActivityContextPropagation.InjectContext(activity, message.Headers);
+
+                return activity;
+            }
         }
     }
 }

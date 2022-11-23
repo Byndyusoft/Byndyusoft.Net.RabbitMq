@@ -28,6 +28,18 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             }
         }
 
+        public static Exception? GetException(this RabbitMqMessageHeaders headers)
+        {
+            if (headers.TryGetValue("exception-message", out var message))
+            {
+                return message is not null
+                    ? new Exception((string) message)
+                    : new Exception();
+            }
+
+            return null;
+        }
+
         public static void RemoveRetryData(this RabbitMqMessageHeaders headers)
         {
             headers.Remove("x-death");
