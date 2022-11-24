@@ -29,6 +29,14 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         #endregion
 
+        #region RPC
+
+        Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message, CancellationToken cancellationToken = default);
+
+        IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage);
+
+        #endregion
+
         #region Управление очередями и обменниками
 
         Task CreateQueueAsync(string queueName, QueueOptions options, CancellationToken cancellationToken = default);

@@ -1,3 +1,4 @@
+using System;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Topology
@@ -10,6 +11,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         private CreateErrorQueueNameDelegate _errorQueueName = queue => $"{queue}.error";
 
         private CreateRetryQueueNameDelegate _retryQueueName = queue => $"{queue}.retry";
+
+        private CreateRpcReplyQueueNameDelegate _rpcReplyQueueName = application => $"{application}.{Guid.NewGuid()}.rpc.reply";
 
         public CreateErrorQueueNameDelegate ErrorQueueName
         {
@@ -27,6 +30,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         {
             get => _createQueueName;
             set => _createQueueName = Preconditions.CheckNotNull(value, nameof(QueueName));
+        }
+
+        public CreateRpcReplyQueueNameDelegate RpcReplyQueueName
+        {
+            get => _rpcReplyQueueName;
+            set => _rpcReplyQueueName = Preconditions.CheckNotNull(value, nameof(RpcReplyQueueName));
         }
     }
 }

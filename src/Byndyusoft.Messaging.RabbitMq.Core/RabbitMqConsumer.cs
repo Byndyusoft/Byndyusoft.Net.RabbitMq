@@ -31,8 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _onMessage = onMessage;
             _queueName = queueName;
         }
-
-
+        
         public bool IsRunning => _consumer is not null;
 
         public string QueueName

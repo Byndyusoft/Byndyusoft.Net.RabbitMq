@@ -68,8 +68,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is not {IsAllDataRequested: true})
                     return activity;
 
-                _activitySource.Events.MessageGot(activity, message);
-
                 return activity;
             }
 
@@ -83,6 +81,20 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                     return activity;
                 
                 ActivityContextPropagation.ExtractContext(activity, message.Headers);
+
+                return activity;
+            }
+
+            public Activity? StartRpc(RabbitMqEndpoint endpoint, RabbitMqMessage message)
+            {
+                Preconditions.CheckNotNull(endpoint, nameof(endpoint));
+                Preconditions.CheckNotNull(message, nameof(message));
+
+                var activity = _activitySource.StartActivity("Rpc", endpoint, ActivityKind.Producer);
+                if (activity is null)
+                    return activity;
+
+                ActivityContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
             }

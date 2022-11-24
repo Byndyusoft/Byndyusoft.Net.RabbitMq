@@ -116,5 +116,53 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return client.SubscribeAsJson<T>(exchangeName, routingKey, OnMessage, options);
         }
+
+        public static IRabbitMqConsumer SubscribeRpcAsJson<TRequest, TResponse>(
+            this IRabbitMqClient client,
+            string queueName,
+            Func<TRequest?, CancellationToken, Task<TResponse>> onMessage,
+            JsonSerializerOptions? options = null)
+        {
+            Preconditions.CheckNotNull(client, nameof(client));
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            {
+                var request = await message.Content.ReadFromJsonAsync<TRequest>(options, token)
+                    .ConfigureAwait(false);
+                try
+                {
+                    var response = await onMessage(request, token)
+                        .ConfigureAwait(false);
+                    return ConsumeResult.RpcSuccess(JsonContent.Create(response, options: options));
+                }
+                catch (Exception exception)
+                {
+                    return ConsumeResult.RpcError(exception);
+                }
+            }
+
+            return client.SubscribeRpc(queueName, OnMessage);
+        }
+
+        public static async Task<TResponse?> MakeRpcAsJson<TRequest, TResponse>(
+            this IRabbitMqClient client,
+            string queueName,
+            TRequest request,
+            JsonSerializerOptions? options = null,
+            CancellationToken cancellationToken = default)
+        {
+            var requestMessage = new RabbitMqMessage
+            {
+                Mandatory = true,
+                Content = JsonContent.Create(request, options: options),
+                RoutingKey = queueName
+            };
+            var responseMessage = await client.MakeRpc(requestMessage, cancellationToken)
+                .ConfigureAwait(false);
+            return await responseMessage.Content.ReadFromJsonAsync<TResponse>(options, cancellationToken)
+                .ConfigureAwait(false);
+        }
     }
 }

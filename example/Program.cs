@@ -43,7 +43,8 @@ namespace Byndyusoft.Net.RabbitMq
                 .ConfigureServices((_, services) =>
                 {
                     //services.AddHostedService<PullingExample>();
-                    services.AddHostedService<RetryAndErrorExample>();
+                    //services.AddHostedService<RetryAndErrorExample>();
+                    services.AddHostedService<RpcExample>();
                     //services.AddHostedService<SubscribeAsJsonExample>();
                     //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();
@@ -52,7 +53,7 @@ namespace Byndyusoft.Net.RabbitMq
 
                     services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
 
-                    services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
+                    //services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
                     //services.AddInMemoryRabbitMqClient();
 
                     services.BuildServiceProvider(new ServiceProviderOptions

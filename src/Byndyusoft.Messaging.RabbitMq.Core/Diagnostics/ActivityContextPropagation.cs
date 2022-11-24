@@ -45,9 +45,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 propagationContext = propagator.Extract(propagationContext, headers, Getter);
 
             var activityContext = propagationContext.ActivityContext;
-            activity.SetParentId(activityContext.TraceId, activityContext.SpanId, activityContext.TraceFlags);
-            activity.TraceStateString = activityContext.TraceState;
-
+            if (activityContext.IsValid())
+            {
+                activity.SetParentId(activityContext.TraceId, activityContext.SpanId, activityContext.TraceFlags);
+                activity.TraceStateString = activityContext.TraceState;
+            }
+            
             foreach (var item in propagationContext.Baggage) activity.SetBaggage(item.Key, item.Value);
         }
     }

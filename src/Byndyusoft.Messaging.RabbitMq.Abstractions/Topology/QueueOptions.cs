@@ -65,9 +65,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         }
 
         /// <summary>
-        ///     Sets queueType.
+        ///     Sets queue type.
         /// </summary>
-        /// <param name="type">The queueType to set</param>
+        /// <param name="type">The queue type to set</param>
         /// <returns>QueueOptions</returns>
         public QueueOptions WithType(QueueType type)
         {

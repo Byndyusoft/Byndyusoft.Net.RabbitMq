@@ -19,7 +19,7 @@ jobs:
       - name: Start RabbitMQ
         uses: getong/rabbitmq-action@v1.2
         with:
-          rabbitmq version: '3.9.14'
+          rabbitmq version: '3.10.8'
           host port: 5672
           rabbitmq user: 'guest'
           rabbitmq password: 'guest'

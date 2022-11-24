@@ -23,7 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
-            TimeSpan delay, int? maxRetryCount, QueueOptions? options = null)
+            TimeSpan delay, int? maxRetryCount, QueueOptions? retryQueueOptions = null)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
@@ -60,8 +60,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             consumer.OnMessage = OnMessage;
 
-            var retryQueueOptions =
-                (options ?? QueueOptions.Default)
+            retryQueueOptions =
+                (retryQueueOptions ?? QueueOptions.Default)
                 .WithMessageTtl(delay)
                 .WithDeadLetterExchange(null)
                 .WithDeadLetterRoutingKey(consumer.QueueName);
