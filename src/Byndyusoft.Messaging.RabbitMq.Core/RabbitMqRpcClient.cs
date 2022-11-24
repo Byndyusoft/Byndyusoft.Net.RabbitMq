@@ -58,8 +58,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             tcs.SetCanceled();
         }
 
-        private Task<HandlerConsumeResult> OnReply(ReceivedRabbitMqMessage message,
-            CancellationToken cancellationToken)
+        private Task<HandlerConsumeResult> OnReply(ReceivedRabbitMqMessage message, CancellationToken _)
         {
             var correlationId = message.Properties.CorrelationId;
             if (correlationId is not null &&
