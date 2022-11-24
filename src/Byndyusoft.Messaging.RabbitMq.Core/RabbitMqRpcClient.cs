@@ -30,7 +30,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotDisposed(this);
 
-            await StartRpc(cancellationToken).ConfigureAwait(false);
+            await StartRpc(cancellationToken)
+                .ConfigureAwait(false);
 
             var correlationId = message.Properties.CorrelationId ??= Guid.NewGuid().ToString();
             message.Properties.ReplyTo = _rpcQueueName;
@@ -44,7 +45,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _handler.PublishMessageAsync(message, cancellationToken)
                 .ConfigureAwait(false);
 
-            return await tcs.Task;
+            return await tcs.Task
+                .ConfigureAwait(false);
         }
 
         private void OnCancelled(object state)
@@ -56,7 +58,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             tcs.SetCanceled();
         }
 
-        private Task<HandlerConsumeResult> OnMessage(ReceivedRabbitMqMessage message,
+        private Task<HandlerConsumeResult> OnReply(ReceivedRabbitMqMessage message,
             CancellationToken cancellationToken)
         {
             var correlationId = message.Properties.CorrelationId;
@@ -109,7 +111,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                             await _handler.StartConsumeAsync(_rpcQueueName,
                                     true,
                                     null,
-                                    OnMessage,
+                                    OnReply,
                                     cancellationToken)
                                 .ConfigureAwait(false);
                         _isRpcStarted = true;
