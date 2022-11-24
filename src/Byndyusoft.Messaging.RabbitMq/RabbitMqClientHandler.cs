@@ -15,6 +15,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
+using ExchangeType = Byndyusoft.Messaging.RabbitMq.Topology.ExchangeType;
+using QueueType = Byndyusoft.Messaging.RabbitMq.Topology.QueueType;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
@@ -184,10 +186,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             void ConfigureQueue(IQueueDeclareConfiguration config)
             {
+                var queueType = options.Type switch
+                {
+                    QueueType.Classic => "classic",
+                    QueueType.Quorum => "quorum",
+                    QueueType.Stream => "stream",
+                    _ => throw new ArgumentOutOfRangeException(nameof(QueueOptions.Type))
+                };
+
                 config.AsAutoDelete(options.AutoDelete)
                     .AsDurable(options.Durable)
                     .AsExclusive(options.Exclusive)
-                    .WithQueueType(options.Type.ToString().ToLower());
+                    .WithQueueType(queueType);
 
                 foreach (var (key, value) in options.Arguments)
                     config.WithArgument(key, value);
@@ -266,10 +276,19 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             void ConfigureExchange(IExchangeDeclareConfiguration config)
             {
+                var exchangeType = options.Type switch
+                {
+                    ExchangeType.Direct => "direct",
+                    ExchangeType.Headers => "headers",
+                    ExchangeType.Fanout => "fanout",
+                    ExchangeType.Topic => "topic",
+                    _ => throw new ArgumentOutOfRangeException(nameof(ExchangeOptions.Type))
+                };
+                
                 config.AsAutoDelete(options.AutoDelete)
                     .AsDurable(options.Durable)
                     .AsAutoDelete(options.AutoDelete)
-                    .WithType(options.Type.ToString().ToLower());
+                    .WithType(exchangeType);
 
                 foreach (var argument in options.Arguments) config.WithArgument(argument.Key, argument.Value);
             }

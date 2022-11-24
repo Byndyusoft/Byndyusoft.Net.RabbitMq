@@ -147,7 +147,14 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(options, nameof(options));
 
-            return options.WithArgument("x-queue-mode", queueMode.ToString().ToLowerInvariant());
+            var value = queueMode switch
+            {
+                QueueMode.Default => "default",
+                QueueMode.Lazy => "lazy",
+                _ => throw new ArgumentOutOfRangeException(nameof(queueMode))
+            };
+
+            return options.WithArgument("x-queue-mode", value);
         }
 
         /// <summary>
