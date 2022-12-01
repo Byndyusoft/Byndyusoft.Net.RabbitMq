@@ -207,6 +207,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(message, nameof(message));
 
+            SetPublishingMessageProperties(message);
+
             var activity = _activitySource.Activities.StartRpc(_handler.Endpoint, message);
             return await _activitySource.ExecuteAsync(activity,
                 async () =>
@@ -373,7 +375,6 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             message.Properties.ContentEncoding ??= message.Content.Headers.ContentEncoding?.FirstOrDefault();
             message.Properties.ContentType ??= message.Content.Headers.ContentType?.MediaType;
-            message.Properties.AppId ??= Options.ApplicationName;
         }
 
         protected void SetConsumedMessageProperties(ReceivedRabbitMqMessage? message)
