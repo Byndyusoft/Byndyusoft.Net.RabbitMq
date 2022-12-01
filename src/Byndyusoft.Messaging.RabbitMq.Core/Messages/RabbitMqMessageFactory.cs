@@ -63,7 +63,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
                 {
                     CorrelationId = correlationId
                 },
-                Mandatory = true,
+                Mandatory = false,
                 Persistent = requestMessage.Persistent,
                 Headers = headers,
                 RoutingKey = replyTo,
@@ -88,7 +88,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
                 {
                     CorrelationId = correlationId
                 },
-                Mandatory = true,
+                Mandatory = false,
                 Persistent = requestMessage.Persistent,
                 Headers = headers,
                 RoutingKey = replyTo,
