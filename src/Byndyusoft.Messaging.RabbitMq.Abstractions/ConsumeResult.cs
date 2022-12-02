@@ -17,10 +17,6 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public static ConsumeResult Error(string message) => new ErrorConsumeResult(new Exception(message));
 
-        public static ConsumeResult RpcSuccess(HttpContent response) => new RpcSuccessResult(response);
-
-        public static ConsumeResult RpcError(Exception exception) => new RpcErrorResult(exception);
-
         public abstract string GetDescription();
     }
 
@@ -60,33 +56,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     ? ""
                     : $" ({Exception.GetType().Name} : {Exception.Message})";
             return $"Error{exceptionPart}";
-        }
-    }
-
-    public sealed class RpcSuccessResult : ConsumeResult
-    {
-        public HttpContent Response { get; }
-
-        public RpcSuccessResult(HttpContent response)
-        {
-            Response = response;
-        }
-
-        public override string GetDescription() => "RpcSuccess";
-    }
-
-    public sealed class RpcErrorResult : ConsumeResult
-    {
-        public Exception Exception { get; }
-
-        public RpcErrorResult(Exception exception)
-        {
-            Exception = exception;
-        }
-
-        public override string GetDescription()
-        {
-            return $"RpcError ({Exception.GetType().Name} : {Exception.Message})";
         }
     }
 }

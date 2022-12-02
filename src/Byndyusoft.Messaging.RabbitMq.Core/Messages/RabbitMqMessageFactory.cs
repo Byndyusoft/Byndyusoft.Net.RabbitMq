@@ -47,6 +47,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             };
         }
 
+        public static RabbitMqMessage CreateRpcResponseMessage(ReceivedRabbitMqMessage requestMessage,
+            RpcResult rpcResult)
+        {
+            return rpcResult switch
+            {
+                RpcSuccessResult successResult => CreateRpcSuccessResponseMessage(requestMessage, successResult),
+                RpcErrorResult errorResult => CreateRpcErrorResponseMessage(requestMessage, errorResult),
+                _ => throw new ArgumentOutOfRangeException(nameof(rpcResult))
+            };
+        }
+
         public static RabbitMqMessage CreateRpcSuccessResponseMessage(ReceivedRabbitMqMessage requestMessage,
             RpcSuccessResult response)
         {
@@ -92,7 +103,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
                 Persistent = requestMessage.Persistent,
                 Headers = headers,
                 RoutingKey = replyTo,
-                Exchange = null,
+                Exchange = null
             };
         }
     }

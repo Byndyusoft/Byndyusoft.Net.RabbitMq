@@ -221,7 +221,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 });
         }
 
-        public IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage)
+        public IRabbitMqConsumer SubscribeRpc(string queueName, RabbitMqRpcHandler onMessage)
         {
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -237,30 +237,22 @@ namespace Byndyusoft.Messaging.RabbitMq
                 if (correlationId is null)
                     return ConsumeResult.Error("RPC message must have CorrelationId property");
 
-                var result = await onMessage(requestMessage, cancellationToken)
-                    .ConfigureAwait(false);
-
-                switch (result)
+                RpcResult rpcResult;
+                try
                 {
-                    case RpcSuccessResult rpcConsumeResult:
-                    {
-                        var responseMessage =
-                            RabbitMqMessageFactory.CreateRpcSuccessResponseMessage(requestMessage, rpcConsumeResult);
-                        await _handler.PublishMessageAsync(responseMessage, cancellationToken)
-                            .ConfigureAwait(false);
-                        return ConsumeResult.Ack;
-                    }
-                    case RpcErrorResult rpcErrorResult:
-                    {
-                        var responseMessage =
-                            RabbitMqMessageFactory.CreateRpcErrorResponseMessage(requestMessage, rpcErrorResult);
-                        await _handler.PublishMessageAsync(responseMessage, cancellationToken)
-                            .ConfigureAwait(false);
-                        return ConsumeResult.Ack;
-                    }
+                    rpcResult = await onMessage(requestMessage, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    rpcResult = RpcResult.Error(e);
                 }
 
-                return result;
+                var responseMessage =
+                    RabbitMqMessageFactory.CreateRpcResponseMessage(requestMessage, rpcResult);
+                await _handler.PublishMessageAsync(responseMessage, cancellationToken)
+                    .ConfigureAwait(false);
+                return ConsumeResult.Ack;
             }
 
             return new RabbitMqConsumer(this, queueName, OnRpcCall);

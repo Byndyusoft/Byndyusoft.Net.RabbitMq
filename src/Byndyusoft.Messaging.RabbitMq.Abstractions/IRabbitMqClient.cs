@@ -33,7 +33,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage);
+        IRabbitMqConsumer SubscribeRpc(string queueName, RabbitMqRpcHandler onMessage);
 
         #endregion
 

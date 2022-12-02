@@ -4,6 +4,7 @@ using Byndyusoft.Net.RabbitMq.HostedServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -39,12 +40,18 @@ namespace Byndyusoft.Net.RabbitMq
                 {
                     options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
                 })
+                .ConfigureLogging(log => log.AddConsole())
                 .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
                 .ConfigureServices((_, services) =>
                 {
+                    services.AddRabbitMqRpc();
+                    services.AddSingleton<MathRpcServiceClient>();
+                    services.AddRpcService<MathRpcService>();
+                    
                     //services.AddHostedService<PullingExample>();
                     //services.AddHostedService<RetryAndErrorExample>();
-                    services.AddHostedService<RpcExample>();
+                    //services.AddHostedService<RpcExample>();
+                    services.AddHostedService<RpcServerExample>();
                     //services.AddHostedService<SubscribeAsJsonExample>();
                     //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();
