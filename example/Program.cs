@@ -47,11 +47,15 @@ namespace Byndyusoft.Net.RabbitMq
                     services.AddRabbitMqRpc();
                     services.AddSingleton<MathRpcServiceClient>();
                     services.AddRpcService<MathRpcService>();
-                    
+
                     //services.AddHostedService<PullingExample>();
                     //services.AddHostedService<RetryAndErrorExample>();
                     //services.AddHostedService<RpcExample>();
-                    services.AddHostedService<RpcServerExample>();
+
+                    services.AddHostedService<SubscribeAsMessagePackExample>();
+
+                    //services.AddHostedService<RpcServerExample>();
+                    //services.AddHostedService<SubscribeAsExample>();
                     //services.AddHostedService<SubscribeAsJsonExample>();
                     //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();

@@ -13,9 +13,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _beforeStartActions = new();
 
         private readonly RabbitMqClientCore _client;
-
         private readonly string _queueName;
-
         private IDisposable? _consumer;
         private bool? _exclusive;
         private ReceivedRabbitMqMessageHandler _onMessage;

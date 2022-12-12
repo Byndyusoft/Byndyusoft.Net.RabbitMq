@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Net.Http;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -60,6 +61,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 Preconditions.CheckNotDisposed(this);
                 Preconditions.CheckNotNull(value, nameof(Properties));
                 _properties = value;
+                UpdateContentProperties();
             }
         }
 
@@ -75,6 +77,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 Preconditions.CheckNotDisposed(this);
                 Preconditions.CheckNotNull(value, nameof(Content));
                 _content = value;
+                UpdateContentProperties();
             }
         }
 
@@ -128,6 +131,12 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _content?.Dispose();
             _content = null;
+        }
+
+        private void UpdateContentProperties()
+        {
+            Properties.ContentEncoding = Content.Headers.ContentEncoding?.FirstOrDefault();
+            Properties.ContentType = Content.Headers.ContentType?.MediaType;
         }
     }
 }

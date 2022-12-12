@@ -27,7 +27,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _rpcQueueName = options.GetRpcReplyQueueName();
         }
 
-        public async Task<ReceivedRabbitMqMessage> Rpc(
+        public async Task<ReceivedRabbitMqMessage> MakeRpc(
             RabbitMqMessage message,
             CancellationToken cancellationToken = default)
         {
@@ -52,6 +52,39 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return await tcs.Task
                 .ConfigureAwait(false);
+        }
+
+        public IRabbitMqConsumer SubscribeRpc(RabbitMqClientCore coreClient, string queueName, RabbitMqRpcHandler onMessage)
+        {
+            async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage, CancellationToken cancellationToken)
+            {
+                var replyTo = requestMessage.Properties.ReplyTo;
+                if (replyTo is null)
+                    return ConsumeResult.Error("RPC message must have ReplyTo property");
+
+                var correlationId = requestMessage.Properties.CorrelationId;
+                if (correlationId is null)
+                    return ConsumeResult.Error("RPC message must have CorrelationId property");
+
+                RpcResult rpcResult;
+                try
+                {
+                    rpcResult = await onMessage(requestMessage, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    rpcResult = RpcResult.Error(e);
+                }
+
+                var responseMessage =
+                    RabbitMqMessageFactory.CreateRpcResponseMessage(requestMessage, rpcResult);
+                await _handler.PublishMessageAsync(responseMessage, cancellationToken)
+                    .ConfigureAwait(false);
+                return ConsumeResult.Ack;
+            }
+
+            return new RabbitMqConsumer(coreClient, queueName, OnRpcCall);
         }
 
         private void OnCancelled(object state)
