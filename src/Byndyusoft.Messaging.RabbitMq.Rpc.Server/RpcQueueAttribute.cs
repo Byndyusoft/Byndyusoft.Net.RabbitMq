@@ -1,16 +1,17 @@
 using System;
+using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Rpc
 {
     [AttributeUsage(AttributeTargets.Method, Inherited = false)]
-    public class RpcQueueAttribute : Attribute
+    public class RpcMethodAttribute : Attribute
     {
-        public RpcQueueAttribute(string queueName)
+        public RpcMethodAttribute(string queueNameOrKey)
         {
-            QueueName = queueName;
+            QueueNameOrKey = Preconditions.CheckNotNull(queueNameOrKey, nameof(queueNameOrKey));
         }
 
-        public string QueueName { get; }
+        public string QueueNameOrKey { get; }
 
         public ushort PrefetchCount { get; set; }
     }

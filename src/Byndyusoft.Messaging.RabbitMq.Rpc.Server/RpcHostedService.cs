@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Rpc.Internal;
-using Byndyusoft.Messaging.RabbitMq.Topology;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -45,14 +44,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Rpc
                 var rpcMethods = rpcService.GetType().GetRuntimeMethods().ToArray();
                 foreach (var rpcMethod in rpcMethods)
                 {
-                    var rpcQueue = rpcMethod.GetCustomAttribute<RpcQueueAttribute>();
+                    var rpcQueue = rpcMethod.GetCustomAttribute<RpcMethodAttribute>();
                     if (rpcQueue is null)
                         continue;
 
-                    var queueName =
-                        _options.QueueNames.GetValueOrDefault(rpcQueue.QueueName) ?? rpcQueue.QueueName;
-                    var queueOptions =
-                        _options.QueueOption(queueName) ?? QueueOptions.Default;
+                    var queueName = _options.GetQueueName(rpcQueue.QueueNameOrKey);
+                    var queueOptions = _options.GetQueueOptions(queueName);
 
                     var consumer = _rabbitMqClient
                         .SubscribeRpc(queueName,

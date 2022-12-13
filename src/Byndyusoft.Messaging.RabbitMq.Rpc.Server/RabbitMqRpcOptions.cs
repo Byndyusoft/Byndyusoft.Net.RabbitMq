@@ -21,5 +21,17 @@ namespace Byndyusoft.Messaging.RabbitMq.Rpc
             get => _queueOption;
             set => _queueOption = Preconditions.CheckNotNull(value, nameof(QueueOption));
         }
+
+        internal QueueOptions GetQueueOptions(string queueName)
+        {
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            return QueueOption(queueName) ?? QueueOptions.Default;
+        }
+
+        internal string GetQueueName(string queueNameOrKey)
+        {
+            Preconditions.CheckNotNull(queueNameOrKey, nameof(queueNameOrKey));
+            return QueueNames.GetValueOrDefault(queueNameOrKey) ?? queueNameOrKey;
+        }
     }
 }

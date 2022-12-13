@@ -10,7 +10,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
 {
     public class MathRpcService : IRpcService
     {
-        [RpcQueue(MathRpcServiceClient.SumQueueName, PrefetchCount = 10)]
+        [RpcMethod(MathRpcServiceClient.SumQueueName, PrefetchCount = 10)]
         public Task<RpcResponse> Sum(
             [RpcRequest] RpcRequest request,
             [RpcFromServices] ILogger<MathRpcService> logger,
