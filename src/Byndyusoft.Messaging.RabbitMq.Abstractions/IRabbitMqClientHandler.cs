@@ -48,6 +48,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             string queueName,
             CancellationToken cancellationToken);
 
+        Task UnbindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken);
+
         Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
 
         #endregion

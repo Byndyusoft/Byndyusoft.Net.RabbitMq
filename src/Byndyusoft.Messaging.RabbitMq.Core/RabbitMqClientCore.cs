@@ -187,6 +187,20 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        public async Task UnbindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotDisposed(this);
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
+
+            await _handler.UnbindQueueAsync(exchangeName, routingKey, queueName, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public IRabbitMqConsumer Subscribe(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
             Preconditions.CheckNotDisposed(this);
