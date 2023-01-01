@@ -2,13 +2,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Internal
+namespace Byndyusoft.Messaging.RabbitMq
 {
     internal class PulledRabbitMqMessage : ReceivedRabbitMqMessage
     {
         private readonly IRabbitMqClientHandler _handler;
 
-        public PulledRabbitMqMessage(IRabbitMqClientHandler handler)
+        public PulledRabbitMqMessage(ReceivedRabbitMqMessage message, IRabbitMqClientHandler handler)
+            : base(message)
         {
             _handler = Preconditions.CheckNotNull(handler, nameof(handler));
         }

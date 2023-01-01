@@ -59,7 +59,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
                     _activitySource.Events.MessageGot(activity, message);
-                    return message;
+                    return message is not null ? new PulledRabbitMqMessage(message, _handler) : null;
                 });
         }
 

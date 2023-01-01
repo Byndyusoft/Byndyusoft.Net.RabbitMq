@@ -5,12 +5,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageHeadersExtensions
     {
-        public static long? GetRetryCount(this RabbitMqMessageHeaders headers)
+        public static long? GetRetryCount(this IDictionary<string, object?> headers)
         {
             var list = headers.GetValue("x-death") as List<object>;
             if (list is null || list.Count == 0) return null;
 
-            var dic = (Dictionary<string, object?>) list[0];
+            var dic = (Dictionary<string, object?>)list[0];
             return dic.GetValue("count") as long?;
         }
 

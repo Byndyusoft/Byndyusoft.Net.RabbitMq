@@ -89,7 +89,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             };
         }
 
-        public static PulledRabbitMqMessage? CreatePulledMessage(PullResult pullResult, IRabbitMqClientHandler handler)
+        public static ReceivedRabbitMqMessage? CreatePulledMessage(PullResult pullResult)
         {
             if (pullResult.IsAvailable == false)
                 return null;
@@ -102,7 +102,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             var headers = CreateMessageHeaders(messageProperties);
             var retryCount = headers.GetRetryCount() ?? 0;
 
-            return new PulledRabbitMqMessage(handler)
+            return new ReceivedRabbitMqMessage
             {
                 Content = RabbitMqMessageContent.Create(body, properties),
                 ConsumerTag = info.ConsumerTag,

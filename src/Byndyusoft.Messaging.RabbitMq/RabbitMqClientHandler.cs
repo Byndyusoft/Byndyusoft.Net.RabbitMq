@@ -57,8 +57,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 return _endPoint ??=
                     new RabbitMqEndpoint
                     {
-                        Host = _connectionConfiguration.Hosts.FirstOrDefault()?.Host!,
-                        Port = _connectionConfiguration.Hosts.FirstOrDefault()?.Port.ToString()
+                        Name = _connectionConfiguration.Hosts.FirstOrDefault()?.Host!,
+                        Port = _connectionConfiguration.Hosts.FirstOrDefault()?.Port ?? RabbitMqEndpoint.DefaultPort
                     };
             }
         }
@@ -74,7 +74,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             var pullingResult = await pullingConsumer.PullAsync(cancellationToken)
                 .ConfigureAwait(false);
 
-            return ReceivedRabbitMqMessageFactory.CreatePulledMessage(pullingResult, this);
+            return ReceivedRabbitMqMessageFactory.CreatePulledMessage(pullingResult);
         }
 
         public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
@@ -89,8 +89,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
             await pullingConsumer.AckAsync(message.DeliveryTag, false, cancellationToken)
                 .ConfigureAwait(false);
-
-            if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
         public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
@@ -106,8 +104,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
             await pullingConsumer.RejectAsync(message.DeliveryTag, false, requeue, cancellationToken)
                 .ConfigureAwait(false);
-
-            if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
         public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)

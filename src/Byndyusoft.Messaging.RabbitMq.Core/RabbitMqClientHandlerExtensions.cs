@@ -63,6 +63,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 default:
                     throw new ArgumentOutOfRangeException(nameof(handlerConsumeResult), handlerConsumeResult, null);
             }
+
+            if (message is PulledRabbitMqMessage pulledRabbitMqMessage)
+            {
+                pulledRabbitMqMessage.IsCompleted = true;
+            }
         }
     }
 }

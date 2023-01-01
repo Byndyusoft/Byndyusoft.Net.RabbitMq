@@ -83,10 +83,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         private static void SetConnectionTags(Activity activity, RabbitMqEndpoint endpoint)
         {
             activity.SetTag("net.transport", "amqp");
-            activity.SetTag("net.peer.name", endpoint.Host);
-
-            if (endpoint.Port is not null)
-                activity.SetTag("net.peer.port", endpoint.Port);
+            activity.SetTag("net.peer.name", endpoint.Name);
+            activity.SetTag("net.peer.port", endpoint.Port);
         }
 
         private static void SetQueueNameTags(Activity activity, string queueName)

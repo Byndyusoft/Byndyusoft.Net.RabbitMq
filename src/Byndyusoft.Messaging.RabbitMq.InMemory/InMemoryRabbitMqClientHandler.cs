@@ -19,7 +19,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         public InMemoryRabbitMqClientHandler()
         {
             _timer = new Timer(DoService, null, 0, 1000);
-            _endpoint = new RabbitMqEndpoint {Host = "in-memory"};
+            _endpoint = new RabbitMqEndpoint {Name = "in-memory"};
         }
 
         public IEnumerable<InMemoryRabbitMqQueue> Queues

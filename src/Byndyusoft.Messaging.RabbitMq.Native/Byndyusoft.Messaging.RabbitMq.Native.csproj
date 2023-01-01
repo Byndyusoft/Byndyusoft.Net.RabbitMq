@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>netstandard2.1</TargetFramework>
+		<RootNamespace>Byndyusoft.Messaging.RabbitMq.Native</RootNamespace>
+		<AssemblyName>Byndyusoft.Messaging.RabbitMq.Native</AssemblyName>
+		<IsPackable>true</IsPackable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.1.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="2.1.0" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj" />
+	</ItemGroup>
+
+</Project>

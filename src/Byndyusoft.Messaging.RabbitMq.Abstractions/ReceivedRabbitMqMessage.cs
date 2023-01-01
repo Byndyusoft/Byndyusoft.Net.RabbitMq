@@ -14,6 +14,23 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly string _routingKey = default!;
         private HttpContent? _content;
 
+        public ReceivedRabbitMqMessage()
+        {
+        }
+
+        protected ReceivedRabbitMqMessage(ReceivedRabbitMqMessage message)
+        {
+            Preconditions.CheckNotNull(message, nameof(message));
+
+            _consumerTag = message.ConsumerTag;
+            _headers = message.Headers;
+            _properties = message.Properties;
+            _queue = message.Queue;
+            _retryCount = message.RetryCount;
+            _routingKey = message.RoutingKey;
+            _content = message.Content;
+        }
+
         public bool Persistent { get; init; }
 
         public long RetryCount
