@@ -135,8 +135,11 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private void UpdateContentProperties()
         {
-            Properties.ContentEncoding = Content.Headers.ContentEncoding?.FirstOrDefault();
-            Properties.ContentType = Content.Headers.ContentType?.MediaType;
+            if (_content is null) 
+                return;
+
+            _properties.ContentEncoding = _content.Headers.ContentEncoding?.FirstOrDefault();
+            _properties.ContentType = _content.Headers.ContentType?.MediaType;
         }
     }
 }

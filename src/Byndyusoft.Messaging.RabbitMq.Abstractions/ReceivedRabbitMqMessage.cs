@@ -109,11 +109,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (_content is null)
                 return;
 
-            if (Properties.ContentType is not null)
-                _content.Headers.ContentType = new MediaTypeHeaderValue(Properties.ContentType);
+            if (_properties.ContentType is not null)
+                _content.Headers.ContentType = new MediaTypeHeaderValue(_properties.ContentType);
 
-            if (Properties.ContentEncoding is not null)
-                _content.Headers.ContentEncoding.Add(Properties.ContentEncoding);
+            if (_properties.ContentEncoding is not null)
+                _content.Headers.ContentEncoding.Add(_properties.ContentEncoding);
         }
     }
 }
