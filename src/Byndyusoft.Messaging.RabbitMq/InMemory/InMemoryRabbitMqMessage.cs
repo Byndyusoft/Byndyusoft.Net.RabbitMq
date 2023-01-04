@@ -31,7 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
 
         public bool Redelivered { get; private set; }
 
-        public long RetryCount { get; private set; }
+        public ulong RetryCount { get; private set; }
 
         internal bool IsExpired(TimeSpan? expiration = null)
         {

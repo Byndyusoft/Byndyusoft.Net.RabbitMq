@@ -13,22 +13,27 @@ namespace Byndyusoft.Messaging.RabbitMq
     {
         private SemaphoreSlim? _mutex = new(1, 1);
         private readonly IRabbitMqClientHandler _handler;
+        private readonly RabbitMqClientCoreOptions _options;
         private readonly string _rpcQueueName;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
         private IDisposable? _rpcQueueConsumer;
         private Timer? _timer;
+        private long _lastCallTimeBinary; 
 
         public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
         {
             _handler = handler;
+            _options = options;
             _rpcQueueName = options.GetRpcReplyQueueName();
         }
 
-        public async Task<ReceivedRabbitMqMessage> Rpc(
+        public async Task<ReceivedRabbitMqMessage> MakeRpc(
             RabbitMqMessage message,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
+
+            Interlocked.Exchange(ref _lastCallTimeBinary, DateTime.UtcNow.ToBinary());
 
             await StartRpc(cancellationToken)
                 .ConfigureAwait(false);
@@ -49,6 +54,39 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        public IRabbitMqConsumer SubscribeRpc(RabbitMqClientCore coreClient, string queueName, RabbitMqRpcHandler onMessage)
+        {
+            async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage, CancellationToken cancellationToken)
+            {
+                var replyTo = requestMessage.Properties.ReplyTo;
+                if (replyTo is null)
+                    return ConsumeResult.Error("RPC message must have ReplyTo property");
+
+                var correlationId = requestMessage.Properties.CorrelationId;
+                if (correlationId is null)
+                    return ConsumeResult.Error("RPC message must have CorrelationId property");
+
+                RpcResult rpcResult;
+                try
+                {
+                    rpcResult = await onMessage(requestMessage, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception e)
+                {
+                    rpcResult = RpcResult.Error(e);
+                }
+
+                var responseMessage =
+                    RabbitMqMessageFactory.CreateRpcResponseMessage(requestMessage, rpcResult);
+                await _handler.PublishMessageAsync(responseMessage, cancellationToken)
+                    .ConfigureAwait(false);
+                return ConsumeResult.Ack;
+            }
+
+            return new RabbitMqConsumer(coreClient, queueName, OnRpcCall);
+        }
+
         private void OnCancelled(object state)
         {
             var correlationId = (string) state;
@@ -60,6 +98,8 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private Task<HandlerConsumeResult> OnReply(ReceivedRabbitMqMessage message, CancellationToken _)
         {
+            Interlocked.Exchange(ref _lastCallTimeBinary, DateTime.UtcNow.ToBinary());
+
             var correlationId = message.Properties.CorrelationId;
             if (correlationId is not null &&
                 _rpcCalls.TryRemove(correlationId, out var tcs))
@@ -129,13 +169,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private bool IsRpcStarted => _rpcQueueConsumer is not null;
 
-        private async Task StopRpc(CancellationToken cancellationToken)
+        private DateTime LastCallTime => DateTime.FromBinary(_lastCallTimeBinary);
+
+        private async Task StopRpc(bool force, CancellationToken cancellationToken)
         {
             await _mutex!.WaitAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             try
             {
+                if (force == false && _rpcCalls.Any())
+                    return;
+
                 _rpcQueueConsumer?.Dispose();
                 _rpcQueueConsumer = null;
 
@@ -161,7 +206,14 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .ConfigureAwait(false);
                 if (rcpQueueExists == false)
                 {
-                    await StopRpc(cancellationToken)
+                    await StopRpc(true, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+
+                var isIdle = DateTime.UtcNow.Subtract(LastCallTime) > _options.RpcIdleLifetime;
+                if (isIdle)
+                {
+                    await StopRpc(false, cancellationToken)
                         .ConfigureAwait(false);
                 }
             }

@@ -13,16 +13,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Byndyusoft.Net.Http.MessagePack" Version="0.5.2" />
 		<PackageReference Include="Jaeger" Version="1.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
-		<PackageReference Include="OpenTelemetry" Version="1.3.1" />
-		<PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.3.1" />
-		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.3.1" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.0" />
+		<PackageReference Include="OpenTelemetry" Version="1.3.2" />
+		<PackageReference Include="OpenTelemetry.Exporter.Jaeger" Version="1.3.2" />
+		<PackageReference Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.3.2" />
 		<PackageReference Include="System.Data.SqlClient" Version="4.8.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\src\Byndyusoft.Messaging.RabbitMq.OpenTelemetry\Byndyusoft.Messaging.RabbitMq.OpenTelemetry.csproj" />
+	  <ProjectReference Include="..\src\Byndyusoft.Messaging.RabbitMq.Rpc.Server\Byndyusoft.Messaging.RabbitMq.Rpc.Server.csproj" />
 	  <ProjectReference Include="..\src\Byndyusoft.Messaging.RabbitMq\Byndyusoft.Messaging.RabbitMq.csproj" />
 	</ItemGroup>
 </Project>

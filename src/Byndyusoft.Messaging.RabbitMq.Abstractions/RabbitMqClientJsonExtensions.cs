@@ -127,20 +127,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<RpcResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var request = await message.Content.ReadFromJsonAsync<TRequest>(options, token)
                     .ConfigureAwait(false);
-                try
-                {
-                    var response = await onMessage(request, token)
-                        .ConfigureAwait(false);
-                    return ConsumeResult.RpcSuccess(JsonContent.Create(response, options: options));
-                }
-                catch (Exception exception)
-                {
-                    return ConsumeResult.RpcError(exception);
-                }
+                var response = await onMessage(request, token)
+                    .ConfigureAwait(false);
+                return RpcResult.Success(JsonContent.Create(response, options: options));
             }
 
             return client.SubscribeRpc(queueName, OnMessage);

@@ -25,8 +25,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
             CancellationToken cancellationToken);
 
-        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
-
         event ReturnedRabbitMqMessageHandler MessageReturned;
 
         #endregion
@@ -49,6 +47,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             string routingKey,
             string queueName,
             CancellationToken cancellationToken);
+
+        Task UnbindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken);
+
+        Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken);
 
         #endregion
     }

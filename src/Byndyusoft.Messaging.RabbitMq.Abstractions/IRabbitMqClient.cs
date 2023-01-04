@@ -33,7 +33,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message, CancellationToken cancellationToken = default);
 
-        IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage);
+        IRabbitMqConsumer SubscribeRpc(string queueName, RabbitMqRpcHandler onMessage);
 
         #endregion
 
@@ -59,6 +59,11 @@ namespace Byndyusoft.Messaging.RabbitMq
             CancellationToken cancellationToken = default);
 
         Task BindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken = default);
+
+        Task UnbindQueueAsync(string exchangeName,
             string routingKey,
             string queueName,
             CancellationToken cancellationToken = default);

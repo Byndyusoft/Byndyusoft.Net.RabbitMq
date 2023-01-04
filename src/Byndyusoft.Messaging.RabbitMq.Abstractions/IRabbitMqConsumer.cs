@@ -10,6 +10,9 @@ namespace Byndyusoft.Messaging.RabbitMq
     public delegate Task<ConsumeResult>
         ReceivedRabbitMqMessageHandler(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
 
+    public delegate Task<RpcResult>
+        RabbitMqRpcHandler(ReceivedRabbitMqMessage message, CancellationToken cancellationToken);
+
     public interface IRabbitMqConsumer : IDisposable
     {
         string QueueName { get; }

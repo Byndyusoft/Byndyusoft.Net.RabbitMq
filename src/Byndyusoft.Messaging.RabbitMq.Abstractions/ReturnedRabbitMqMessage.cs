@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -34,13 +35,21 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitMqMessageProperties Properties
         {
             get => _properties;
-            init => _properties = Preconditions.CheckNotNull(value, nameof(Properties));
+            init
+            {
+                _properties = Preconditions.CheckNotNull(value, nameof(Properties));
+                UpdateContentProperties();
+            }
         }
 
         public HttpContent Content
         {
             get => _content!;
-            init => _content = Preconditions.CheckNotNull(value, nameof(Content));
+            init
+            {
+                _content = Preconditions.CheckNotNull(value, nameof(Content));
+                UpdateContentProperties();
+            }
         }
 
         public RabbitMqMessageHeaders Headers
@@ -57,6 +66,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _content?.Dispose();
             _content = null;
+        }
+
+        private void UpdateContentProperties()
+        {
+            if (_content is null)
+                return;
+
+            if (_properties.ContentType is not null)
+                _content.Headers.ContentType = new MediaTypeHeaderValue(_properties.ContentType);
+
+            if (_properties.ContentEncoding is not null)
+                _content.Headers.ContentEncoding.Add(_properties.ContentEncoding);
         }
     }
 }

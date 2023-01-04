@@ -1,12 +1,9 @@
 using System;
-using System.Linq;
 using System.Net.Http.Formatting;
-using System.Net.Http.Headers;
 using System.Net.Http.Json.Formatting;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
-using Byndyusoft.Messaging.RabbitMq.Messages;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -61,7 +58,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 {
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
-                    SetConsumedMessageProperties(message);
                     _activitySource.Events.MessageGot(activity, message);
                     return message;
                 });
@@ -91,8 +87,6 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
-
-            SetPublishingMessageProperties(message);
 
             var activity = _activitySource.Activities.StartPublishMessage(_handler.Endpoint, message);
             await _activitySource.ExecuteAsync(activity,
@@ -193,6 +187,20 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        public async Task UnbindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotDisposed(this);
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(queueName, nameof(queueName));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
+
+            await _handler.UnbindQueueAsync(exchangeName, routingKey, queueName, cancellationToken)
+                .ConfigureAwait(false);
+        }
+
         public IRabbitMqConsumer Subscribe(string queueName, ReceivedRabbitMqMessageHandler onMessage)
         {
             Preconditions.CheckNotDisposed(this);
@@ -202,68 +210,31 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(this, queueName, onMessage);
         }
 
-        public async Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message, CancellationToken cancellationToken = default)
+        public async Task<ReceivedRabbitMqMessage> MakeRpc(RabbitMqMessage message,
+            CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(message, nameof(message));
-
-            SetPublishingMessageProperties(message);
 
             var activity = _activitySource.Activities.StartRpc(_handler.Endpoint, message);
             return await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
                     _activitySource.Events.MessagePublishing(activity, message);
-                    var response =  await _rpcClient.Rpc(message, cancellationToken)
+                    var response = await _rpcClient.MakeRpc(message, cancellationToken)
                         .ConfigureAwait(false);
                     _activitySource.Events.MessageReplied(activity, response);
                     return response;
-                });
+                }).ConfigureAwait(false);
         }
 
-        public IRabbitMqConsumer SubscribeRpc(string queueName, ReceivedRabbitMqMessageHandler onMessage)
+        public IRabbitMqConsumer SubscribeRpc(string queueName, RabbitMqRpcHandler onMessage)
         {
             Preconditions.CheckNotDisposed(this);
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage, CancellationToken cancellationToken)
-            {
-                var replyTo = requestMessage.Properties.ReplyTo;
-                if (replyTo is null)
-                    return ConsumeResult.Error("RPC message must have ReplyTo property");
-
-                var correlationId = requestMessage.Properties.CorrelationId;
-                if (correlationId is null)
-                    return ConsumeResult.Error("RPC message must have CorrelationId property");
-
-                var result = await onMessage(requestMessage, cancellationToken)
-                    .ConfigureAwait(false);
-
-                switch (result)
-                {
-                    case RpcSuccessResult rpcConsumeResult:
-                    {
-                        var responseMessage =
-                            RabbitMqMessageFactory.CreateRpcSuccessResponseMessage(requestMessage, rpcConsumeResult);
-                        await _handler.PublishMessageAsync(responseMessage, cancellationToken)
-                            .ConfigureAwait(false);
-                        return ConsumeResult.Ack;
-                    }
-                    case RpcErrorResult rpcErrorResult:
-                    {
-                        var responseMessage =
-                            RabbitMqMessageFactory.CreateRpcErrorResponseMessage(requestMessage, rpcErrorResult);
-                        await _handler.PublishMessageAsync(responseMessage, cancellationToken)
-                            .ConfigureAwait(false);
-                        return ConsumeResult.Ack;
-                    }
-                }
-
-                return result;
-            }
-
-            return new RabbitMqConsumer(this, queueName, OnRpcCall);
+            return _rpcClient.SubscribeRpc(this, queueName, onMessage);
         }
 
         public event ReturnedRabbitMqMessageHandler? MessageReturned;
@@ -271,8 +242,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
             CancellationToken cancellationToken)
         {
-            async Task<HandlerConsumeResult> HandlersOnMessageHandler(ReceivedRabbitMqMessage message,
-                CancellationToken ct)
+            async Task<HandlerConsumeResult> OnMessageHandler(ReceivedRabbitMqMessage message, CancellationToken ct)
             {
                 try
                 {
@@ -280,7 +250,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     return await _activitySource.ExecuteAsync(activity, async () =>
                         {
                             _activitySource.Events.MessageGot(activity, message);
-
                             try
                             {
                                 var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
@@ -303,7 +272,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             return await _handler
                 .StartConsumeAsync(consumer.QueueName, consumer.Exclusive, consumer.PrefetchCount,
-                    HandlersOnMessageHandler, cancellationToken)
+                    OnMessageHandler, cancellationToken)
                 .ConfigureAwait(false);
         }
 
@@ -368,28 +337,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var task = MessageReturned?.Invoke(message, cancellationToken);
                     if (task is not null)
                         await task.Value;
-                });
-        }
-
-        protected void SetPublishingMessageProperties(RabbitMqMessage message)
-        {
-            message.Properties.ContentEncoding ??= message.Content.Headers.ContentEncoding?.FirstOrDefault();
-            message.Properties.ContentType ??= message.Content.Headers.ContentType?.MediaType;
-        }
-
-        protected void SetConsumedMessageProperties(ReceivedRabbitMqMessage? message)
-        {
-            if (message is null)
-                return;
-
-            var properties = message.Properties;
-            var content = message.Content;
-
-            if (properties.ContentType is not null)
-                content.Headers.ContentType = new MediaTypeHeaderValue(properties.ContentType);
-
-            if (properties.ContentEncoding is not null)
-                content.Headers.ContentEncoding.Add(properties.ContentEncoding);
+                }).ConfigureAwait(false);
         }
     }
 }

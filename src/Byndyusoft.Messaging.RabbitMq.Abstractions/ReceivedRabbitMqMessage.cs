@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Net.Http.Headers;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -9,21 +10,12 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly RabbitMqMessageHeaders _headers = new();
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
-        private readonly long _retryCount;
         private readonly string _routingKey = default!;
         private HttpContent? _content;
 
         public bool Persistent { get; init; }
 
-        public long RetryCount
-        {
-            get => _retryCount;
-            init
-            {
-                Preconditions.Check(_retryCount >= 0, $"{nameof(RetryCount)} should be positive number");
-                _retryCount = value;
-            }
-        }
+        public ulong RetryCount { get; init; }
 
         /// <summary>
         ///     Consumer (subscription) identifier
@@ -70,13 +62,21 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitMqMessageProperties Properties
         {
             get => _properties;
-            init => _properties = Preconditions.CheckNotNull(value, nameof(Properties));
+            init
+            {
+                _properties = Preconditions.CheckNotNull(value, nameof(Properties));
+                UpdateContentProperties();
+            }
         }
 
         public HttpContent Content
         {
             get => _content!;
-            init => _content = Preconditions.CheckNotNull(value, nameof(Content));
+            init
+            {
+                _content = Preconditions.CheckNotNull(value, nameof(Content));
+                UpdateContentProperties();
+            }
         }
 
         public RabbitMqMessageHeaders Headers
@@ -93,6 +93,18 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _content?.Dispose();
             _content = null;
+        }
+
+        private void UpdateContentProperties()
+        {
+            if (_content is null)
+                return;
+
+            if (_properties.ContentType is not null)
+                _content.Headers.ContentType = new MediaTypeHeaderValue(_properties.ContentType);
+
+            if (_properties.ContentEncoding is not null)
+                _content.Headers.ContentEncoding.Add(_properties.ContentEncoding);
         }
     }
 }

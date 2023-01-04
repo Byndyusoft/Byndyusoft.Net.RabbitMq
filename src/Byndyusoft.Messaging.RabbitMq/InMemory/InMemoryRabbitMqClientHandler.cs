@@ -221,6 +221,18 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             return Task.CompletedTask;
         }
 
+        public Task UnbindQueueAsync(string exchangeName,
+            string routingKey,
+            string queueName,
+            CancellationToken cancellationToken)
+        {
+            Preconditions.CheckNotDisposed(this);
+
+            var exchange = GetRequiredExchange(exchangeName);
+            exchange.Unbind(routingKey, queueName);
+            return Task.CompletedTask;
+        }
+
         private async Task ReturnMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
         {
             await using var returnedMessage = new ReturnedRabbitMqMessage
