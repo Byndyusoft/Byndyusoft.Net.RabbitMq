@@ -21,7 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             get => _retryCount;
             init
             {
-                Preconditions.Check(_retryCount >= 0, $"{nameof(RetryCount)} should be positive number");
+                Preconditions.Check(value >= 0, $"{nameof(RetryCount)} should be positive number");
                 _retryCount = value;
             }
         }
