@@ -1,8 +1,10 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqMessageProperties
+    public class RabbitMqMessageProperties : IEnumerable<KeyValuePair<string, object>>
     {
         /// <summary>
         ///     Application Id.
@@ -58,5 +60,36 @@ namespace Byndyusoft.Messaging.RabbitMq
         ///     User Id.
         /// </summary>
         public string? UserId { get; set; }
+
+        public IEnumerator<KeyValuePair<string, object>> GetEnumerator()
+        {
+            if (AppId is not null)
+                yield return new KeyValuePair<string, object>(nameof(AppId), AppId);
+            if (ContentType is not null)
+                yield return new KeyValuePair<string, object>(nameof(ContentType), ContentType);
+            if (ContentEncoding is not null)
+                yield return new KeyValuePair<string, object>(nameof(ContentEncoding), ContentEncoding);
+            if (Priority is not null)
+                yield return new KeyValuePair<string, object>(nameof(Priority), Priority);
+            if (CorrelationId is not null)
+                yield return new KeyValuePair<string, object>(nameof(CorrelationId), CorrelationId);
+            if (ReplyTo is not null)
+                yield return new KeyValuePair<string, object>(nameof(ReplyTo), ReplyTo);
+            if (Type is not null)
+                yield return new KeyValuePair<string, object>(nameof(Type), Type);
+            if (MessageId is not null)
+                yield return new KeyValuePair<string, object>(nameof(MessageId), MessageId);
+            if (Expiration is not null)
+                yield return new KeyValuePair<string, object>(nameof(Expiration), Expiration);
+            if (Timestamp is not null)
+                yield return new KeyValuePair<string, object>(nameof(Timestamp), Timestamp);
+            if (UserId is not null)
+                yield return new KeyValuePair<string, object>(nameof(UserId), UserId);
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
