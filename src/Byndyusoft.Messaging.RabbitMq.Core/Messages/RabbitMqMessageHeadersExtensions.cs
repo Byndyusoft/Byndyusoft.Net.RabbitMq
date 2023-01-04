@@ -5,13 +5,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     public static class RabbitMqMessageHeadersExtensions
     {
-        public static long? GetRetryCount(this RabbitMqMessageHeaders headers)
+        public static ulong? GetRetryCount(this RabbitMqMessageHeaders headers)
         {
             var list = headers.GetValue("x-death") as List<object>;
             if (list is null || list.Count == 0) return null;
 
             var dic = (Dictionary<string, object?>) list[0];
-            return dic.GetValue("count") as long?;
+            return (ulong?)(dic.GetValue("count") as long?);
         }
 
         public static void SetException(this RabbitMqMessageHeaders headers, Exception? exception)

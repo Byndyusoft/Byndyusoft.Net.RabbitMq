@@ -10,21 +10,12 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly RabbitMqMessageHeaders _headers = new();
         private readonly RabbitMqMessageProperties _properties = new();
         private readonly string _queue = default!;
-        private readonly long _retryCount;
         private readonly string _routingKey = default!;
         private HttpContent? _content;
 
         public bool Persistent { get; init; }
 
-        public long RetryCount
-        {
-            get => _retryCount;
-            init
-            {
-                Preconditions.Check(value >= 0, $"{nameof(RetryCount)} should be positive number");
-                _retryCount = value;
-            }
-        }
+        public ulong RetryCount { get; init; }
 
         /// <summary>
         ///     Consumer (subscription) identifier

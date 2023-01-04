@@ -11,7 +11,7 @@ namespace Byndyusoft.Messaging.RabbitMq
     public static class RabbitMqConsumerConstantTimeoutRetryStrategyExtensions
     {
         public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
-            TimeSpan delay, int? maxRetryCount, Action<QueueOptions> optionsSetup)
+            TimeSpan delay, ulong? maxRetryCount, Action<QueueOptions> optionsSetup)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
@@ -23,7 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         public static IRabbitMqConsumer WithConstantTimeoutRetryStrategy(this IRabbitMqConsumer consumer,
-            TimeSpan delay, int? maxRetryCount, QueueOptions? retryQueueOptions = null)
+            TimeSpan delay, ulong? maxRetryCount, QueueOptions? retryQueueOptions = null)
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
