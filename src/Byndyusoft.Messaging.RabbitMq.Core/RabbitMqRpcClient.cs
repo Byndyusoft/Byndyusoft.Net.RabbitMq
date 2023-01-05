@@ -157,7 +157,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                                     cancellationToken)
                                 .ConfigureAwait(false);
  
-                        _timer = new Timer(OnTick, null, TimeSpan.Zero, TimeSpan.FromMinutes(1));
+                        _timer = new Timer(OnTick, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
                     }
                 }
                 finally
