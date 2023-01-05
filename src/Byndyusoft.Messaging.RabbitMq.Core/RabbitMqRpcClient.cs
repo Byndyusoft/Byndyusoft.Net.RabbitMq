@@ -17,8 +17,9 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly string _rpcQueueName;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
         private IDisposable? _rpcQueueConsumer;
-        private Timer? _timer;
-        private long _lastCallTimeBinary; 
+        private Timer? _livenessCheckTimer;
+        private Timer? _idleCheckTimer;
+        private long _lastCallTimeBinary;
 
         public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
         {
@@ -54,9 +55,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public IRabbitMqConsumer SubscribeRpc(RabbitMqClientCore coreClient, string queueName, RabbitMqRpcHandler onMessage)
+        public IRabbitMqConsumer SubscribeRpc(RabbitMqClientCore coreClient, string queueName,
+            RabbitMqRpcHandler onMessage)
         {
-            async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage, CancellationToken cancellationToken)
+            async Task<ConsumeResult> OnRpcCall(ReceivedRabbitMqMessage requestMessage,
+                CancellationToken cancellationToken)
             {
                 var replyTo = requestMessage.Properties.ReplyTo;
                 if (replyTo is null)
@@ -122,8 +125,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             _rpcQueueConsumer?.Dispose();
             _rpcQueueConsumer = null!;
 
-            _timer?.Dispose();
-            _timer = null!;
+            _livenessCheckTimer?.Dispose();
+            _livenessCheckTimer = null!;
 
             _mutex?.Dispose();
             _mutex = null!;
@@ -156,8 +159,18 @@ namespace Byndyusoft.Messaging.RabbitMq
                                     OnReply,
                                     cancellationToken)
                                 .ConfigureAwait(false);
- 
-                        _timer = new Timer(OnTick, null, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+
+                        if (_options.RpcLivenessCheckPeriod is not null)
+                        {
+                            var livenessCheckPeriod = _options.RpcLivenessCheckPeriod.Value;
+                            _livenessCheckTimer = new Timer(OnLivenessCheck, null, livenessCheckPeriod, livenessCheckPeriod);
+                        }
+
+                        if (_options.RpcIdleLifetime is not null)
+                        {
+                            var idleLifetime = _options.RpcIdleLifetime.Value;
+                            _idleCheckTimer = new Timer(OnIdleCheck, null, idleLifetime, idleLifetime);
+                        }
                     }
                 }
                 finally
@@ -173,6 +186,9 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         private async Task StopRpc(bool force, CancellationToken cancellationToken)
         {
+            if (IsRpcStarted == false)
+                return;
+
             await _mutex!.WaitAsync(cancellationToken)
                 .ConfigureAwait(false);
 
@@ -184,8 +200,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _rpcQueueConsumer?.Dispose();
                 _rpcQueueConsumer = null;
 
-                _timer?.Dispose();
-                _timer = null!;
+                _idleCheckTimer?.Dispose();
+                _idleCheckTimer = null!;
+
+                _livenessCheckTimer?.Dispose();
+                _livenessCheckTimer = null!;
 
                 _rpcCalls.Values.ToList().ForEach(tcs => tcs.SetCanceled());
                 _rpcCalls.Clear();
@@ -195,8 +214,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _mutex.Release();
             }
         }
-        
-        private async void OnTick(object state)
+
+        private async void OnLivenessCheck(object state)
         {
             var cancellationToken = CancellationToken.None;
 
@@ -209,7 +228,19 @@ namespace Byndyusoft.Messaging.RabbitMq
                     await StopRpc(true, cancellationToken)
                         .ConfigureAwait(false);
                 }
+            }
+            catch
+            {
+                // do nothing
+            }
+        }
 
+        private async void OnIdleCheck(object state)
+        {
+            var cancellationToken = CancellationToken.None;
+
+            try
+            {
                 var isIdle = DateTime.UtcNow.Subtract(LastCallTime) > _options.RpcIdleLifetime;
                 if (isIdle)
                 {
