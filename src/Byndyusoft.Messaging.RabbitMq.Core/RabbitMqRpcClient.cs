@@ -11,15 +11,15 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     internal class RabbitMqRpcClient : Disposable
     {
-        private SemaphoreSlim? _mutex = new(1, 1);
         private readonly IRabbitMqClientHandler _handler;
         private readonly RabbitMqClientCoreOptions _options;
-        private readonly string _rpcQueueName;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
-        private IDisposable? _rpcQueueConsumer;
-        private Timer? _livenessCheckTimer;
+        private readonly string _rpcQueueName;
         private Timer? _idleCheckTimer;
         private long _lastCallTimeBinary;
+        private Timer? _livenessCheckTimer;
+        private SemaphoreSlim? _mutex = new(1, 1);
+        private IDisposable? _rpcQueueConsumer;
 
         public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
         {
@@ -27,6 +27,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             _options = options;
             _rpcQueueName = options.GetRpcReplyQueueName();
         }
+
+        private bool IsRpcStarted => _rpcQueueConsumer is not null;
+
+        private DateTime LastCallTime => DateTime.FromBinary(_lastCallTimeBinary);
 
         public async Task<ReceivedRabbitMqMessage> MakeRpc(
             RabbitMqMessage message,
@@ -122,67 +126,54 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             if (disposing == false) return;
 
-            _rpcQueueConsumer?.Dispose();
-            _rpcQueueConsumer = null!;
-
-            _livenessCheckTimer?.Dispose();
-            _livenessCheckTimer = null!;
-
-            _mutex?.Dispose();
-            _mutex = null!;
-
-            _rpcCalls.Values.ToList().ForEach(tcs => tcs.SetCanceled());
-            _rpcCalls.Clear();
+            StopCore();
         }
 
         private async Task StartRpc(CancellationToken cancellationToken)
         {
-            if (IsRpcStarted == false)
+            if (IsRpcStarted)
+                return;
+
+            await _mutex!.WaitAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            try
             {
-                await _mutex!.WaitAsync(cancellationToken)
+                if (IsRpcStarted)
+                    return;
+
+                await _handler.CreateQueueAsync(_rpcQueueName,
+                        QueueOptions.Default
+                            .AsExclusive(true)
+                            .AsAutoDelete(true),
+                        cancellationToken)
                     .ConfigureAwait(false);
+                _rpcQueueConsumer =
+                    await _handler.StartConsumeAsync(_rpcQueueName,
+                            true,
+                            null,
+                            OnReply,
+                            cancellationToken)
+                        .ConfigureAwait(false);
 
-                try
+                if (_options.RpcLivenessCheckPeriod is not null)
                 {
-                    if (IsRpcStarted == false)
-                    {
-                        await _handler.CreateQueueAsync(_rpcQueueName,
-                                QueueOptions.Default
-                                    .AsExclusive(true)
-                                    .AsAutoDelete(true),
-                                cancellationToken)
-                            .ConfigureAwait(false);
-                        _rpcQueueConsumer =
-                            await _handler.StartConsumeAsync(_rpcQueueName,
-                                    true,
-                                    null,
-                                    OnReply,
-                                    cancellationToken)
-                                .ConfigureAwait(false);
-
-                        if (_options.RpcLivenessCheckPeriod is not null)
-                        {
-                            var livenessCheckPeriod = _options.RpcLivenessCheckPeriod.Value;
-                            _livenessCheckTimer = new Timer(OnLivenessCheck, null, livenessCheckPeriod, livenessCheckPeriod);
-                        }
-
-                        if (_options.RpcIdleLifetime is not null)
-                        {
-                            var idleLifetime = _options.RpcIdleLifetime.Value;
-                            _idleCheckTimer = new Timer(OnIdleCheck, null, idleLifetime, idleLifetime);
-                        }
-                    }
+                    var livenessCheckPeriod = _options.RpcLivenessCheckPeriod.Value;
+                    _livenessCheckTimer = new Timer(OnLivenessCheck, null, livenessCheckPeriod,
+                        livenessCheckPeriod);
                 }
-                finally
+
+                if (_options.RpcIdleLifetime is not null)
                 {
-                    _mutex.Release();
+                    var idleLifetime = _options.RpcIdleLifetime.Value;
+                    _idleCheckTimer = new Timer(OnIdleCheck, null, idleLifetime, idleLifetime);
                 }
             }
+            finally
+            {
+                _mutex.Release();
+            }
         }
-
-        private bool IsRpcStarted => _rpcQueueConsumer is not null;
-
-        private DateTime LastCallTime => DateTime.FromBinary(_lastCallTimeBinary);
 
         private async Task StopRpc(bool force, CancellationToken cancellationToken)
         {
@@ -194,21 +185,13 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             try
             {
+                if (IsRpcStarted == false)
+                    return;
+
                 if (force == false && _rpcCalls.Any())
                     return;
 
-                _rpcQueueConsumer?.Dispose();
-                _rpcQueueConsumer = null;
-
-                _livenessCheckTimer?.Dispose();
-                _livenessCheckTimer = null!;
-
-                _idleCheckTimer?.Dispose();
-                _idleCheckTimer = null!;
-
-
-                _rpcCalls.Values.ToList().ForEach(tcs => tcs.SetCanceled());
-                _rpcCalls.Clear();
+                StopCore();
             }
             finally
             {
@@ -225,10 +208,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                 var rcpQueueExists = await _handler.QueueExistsAsync(_rpcQueueName, cancellationToken)
                     .ConfigureAwait(false);
                 if (rcpQueueExists == false)
-                {
                     await StopRpc(true, cancellationToken)
                         .ConfigureAwait(false);
-                }
             }
             catch
             {
@@ -244,15 +225,28 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 var isIdle = DateTime.UtcNow.Subtract(LastCallTime) > _options.RpcIdleLifetime;
                 if (isIdle)
-                {
                     await StopRpc(false, cancellationToken)
                         .ConfigureAwait(false);
-                }
             }
             catch
             {
                 // do nothing
             }
+        }
+
+        private void StopCore()
+        {
+            _rpcQueueConsumer?.Dispose();
+            _rpcQueueConsumer = null;
+
+            _livenessCheckTimer?.Dispose();
+            _livenessCheckTimer = null!;
+
+            _idleCheckTimer?.Dispose();
+            _idleCheckTimer = null!;
+
+            _rpcCalls.Values.ToList().ForEach(tcs => tcs.SetCanceled());
+            _rpcCalls.Clear();
         }
     }
 }
