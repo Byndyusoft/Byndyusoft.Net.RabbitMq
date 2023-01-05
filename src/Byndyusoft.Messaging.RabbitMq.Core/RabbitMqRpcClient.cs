@@ -200,11 +200,12 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _rpcQueueConsumer?.Dispose();
                 _rpcQueueConsumer = null;
 
+                _livenessCheckTimer?.Dispose();
+                _livenessCheckTimer = null!;
+
                 _idleCheckTimer?.Dispose();
                 _idleCheckTimer = null!;
 
-                _livenessCheckTimer?.Dispose();
-                _livenessCheckTimer = null!;
 
                 _rpcCalls.Values.ToList().ForEach(tcs => tcs.SetCanceled());
                 _rpcCalls.Clear();
