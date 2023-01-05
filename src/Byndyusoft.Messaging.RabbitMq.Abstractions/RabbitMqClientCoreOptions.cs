@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Reflection;
-using System.Threading;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
@@ -27,6 +26,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             set => _diagnosticsOptions = Preconditions.CheckNotNull(value, nameof(RabbitMqDiagnosticsOptions));
         }
 
-        public TimeSpan RpcIdleLifetime { get; set; } = Timeout.InfiniteTimeSpan;
+        public TimeSpan? RpcLivenessCheckPeriod { get; set; } = TimeSpan.FromMinutes(1);
+
+        public TimeSpan? RpcIdleLifetime { get; set; } = null;
     }
 }
