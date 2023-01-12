@@ -296,10 +296,10 @@ namespace Byndyusoft.Messaging.RabbitMq
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
                 }
-                case RetryConsumeResult:
+                case RetryConsumeResult retry:
                 {
                     await _handler
-                        .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, cancellationToken)
+                        .PublishMessageToRetryQueueAsync(message, Options.NamingConventions, retry.Reason, cancellationToken)
                         .ConfigureAwait(false);
                     return HandlerConsumeResult.Ack;
                 }

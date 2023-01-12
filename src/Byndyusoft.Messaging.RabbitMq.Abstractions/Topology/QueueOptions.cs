@@ -25,7 +25,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         /// </summary>
         /// <param name="isAutoDelete">The autoDelete flag to set</param>
         /// <returns>QueueOptions</returns>
-        public QueueOptions AsAutoDelete(bool isAutoDelete)
+        public QueueOptions AsAutoDelete(bool isAutoDelete = true)
         {
             AutoDelete = isAutoDelete;
             return this;
@@ -36,7 +36,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         /// </summary>
         /// <param name="isDurable">The durable flag to set</param>
         /// <returns>QueueOptions</returns>
-        public QueueOptions AsDurable(bool isDurable)
+        public QueueOptions AsDurable(bool isDurable = true)
         {
             Durable = isDurable;
             return this;
@@ -48,7 +48,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         /// </summary>
         /// <param name="isExclusive">The exclusive flag to set</param>
         /// <returns>QueueOptions</returns>
-        public QueueOptions AsExclusive(bool isExclusive)
+        public QueueOptions AsExclusive(bool isExclusive = true)
         {
             Exclusive = isExclusive;
             return this;

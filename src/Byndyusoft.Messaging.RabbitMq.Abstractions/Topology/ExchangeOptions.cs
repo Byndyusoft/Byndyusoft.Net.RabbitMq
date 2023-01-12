@@ -35,7 +35,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         /// </summary>
         /// <param name="isDurable">The durable flag to set</param>
         /// <returns>ExchangeOptions</returns>
-        public ExchangeOptions AsDurable(bool isDurable)
+        public ExchangeOptions AsDurable(bool isDurable = true)
         {
             Durable = isDurable;
             return this;
@@ -46,7 +46,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Topology
         /// </summary>
         /// <param name="isAutoDelete">The autoDelete flag to set</param>
         /// <returns>ExchangeOptions</returns>
-        public ExchangeOptions AsAutoDelete(bool isAutoDelete)
+        public ExchangeOptions AsAutoDelete(bool isAutoDelete = true)
         {
             AutoDelete = isAutoDelete;
             return this;

@@ -16,7 +16,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         }
 
         public static async Task PublishMessageToRetryQueueAsync(this IRabbitMqClientHandler handler,
-            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions,
+            ReceivedRabbitMqMessage message, QueueNamingConventions queueNamingConventions, string? reason,
             CancellationToken cancellationToken)
         {
             var retryQueueName = queueNamingConventions.RetryQueueName(message.Queue);
@@ -26,7 +26,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .WithDeadLetterExchange(null)
                 .WithDeadLetterRoutingKey(message.Queue), cancellationToken).ConfigureAwait(false);
 
-            var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName);
+            var retryMessage = RabbitMqMessageFactory.CreateRetryMessage(message, retryQueueName, reason);
             await handler.PublishMessageAsync(retryMessage, cancellationToken).ConfigureAwait(false);
         }
 

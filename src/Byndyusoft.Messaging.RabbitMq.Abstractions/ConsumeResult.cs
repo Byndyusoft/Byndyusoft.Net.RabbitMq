@@ -1,5 +1,4 @@
 using System;
-using System.Net.Http;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
@@ -11,7 +10,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
         public static readonly ConsumeResult RejectWithoutRequeue = new RejectWithoutRequeueConsumeResult();
 
-        public static readonly ConsumeResult Retry = new RetryConsumeResult();
+        public static ConsumeResult Retry(string? reason = null) => new RetryConsumeResult(reason);
 
         public static ConsumeResult Error(Exception? e = null) => new ErrorConsumeResult(e);
 
@@ -37,7 +36,14 @@ namespace Byndyusoft.Messaging.RabbitMq
 
     public sealed class RetryConsumeResult : ConsumeResult
     {
-        public override string GetDescription() => "Retry";
+        public RetryConsumeResult(string? reason)
+        {
+            Reason = reason;
+        }
+
+        public string? Reason { get; }
+
+        public override string GetDescription() => Reason is null ? "Retry" : $"Retry: {Reason}";
     }
 
     public sealed class ErrorConsumeResult : ConsumeResult

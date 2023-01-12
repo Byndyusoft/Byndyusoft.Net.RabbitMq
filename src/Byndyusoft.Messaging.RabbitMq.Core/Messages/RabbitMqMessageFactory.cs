@@ -7,9 +7,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 {
     internal static class RabbitMqMessageFactory
     {
-        public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName)
+        public static RabbitMqMessage CreateRetryMessage(ReceivedRabbitMqMessage consumedMessage, string retryQueueName, string? reason = null)
         {
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
+            headers.SetRetryReason(reason);
 
             var activity = Activity.Current;
             ActivityContextPropagation.InjectContext(activity, headers);

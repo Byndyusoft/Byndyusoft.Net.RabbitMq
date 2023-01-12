@@ -50,7 +50,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     if (maxRetryCount != null && message.RetryCount >= maxRetryCount)
                         return ConsumeResult.Error(handledException);
 
-                    return ConsumeResult.Retry;
+                    return ConsumeResult.Retry(handledException?.GetType().FullName);
                 }
                 catch (Exception exception)
                 {

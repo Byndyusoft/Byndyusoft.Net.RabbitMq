@@ -28,6 +28,18 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             }
         }
 
+        public static void SetRetryReason(this RabbitMqMessageHeaders headers, string? reason)
+        {
+            if (reason is not null)
+            {
+                headers["retry-reason"] = reason;
+            }
+            else
+            {
+                headers.Remove("retry-reason");
+            }
+        }
+
         public static Exception? GetException(this RabbitMqMessageHeaders headers)
         {
             if (headers.TryGetValue("exception-message", out var message))
