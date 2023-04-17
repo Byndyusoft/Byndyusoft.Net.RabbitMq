@@ -59,7 +59,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         {
             Preconditions.Check(IsConsuming == false, "Can't consume already consuming message");
 
-            DeliveryTag = (ulong) BitConverter.ToInt64(Guid.NewGuid().ToByteArray());
+            DeliveryTag = (ulong) BitConverter.ToInt64(Guid.NewGuid().ToByteArray(), 0);
 
             return new ReceivedRabbitMqMessage
             {

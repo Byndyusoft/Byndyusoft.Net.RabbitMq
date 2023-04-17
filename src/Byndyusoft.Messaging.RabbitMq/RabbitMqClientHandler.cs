@@ -199,8 +199,8 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .AsExclusive(options.Exclusive)
                     .WithQueueType(queueType);
 
-                foreach (var (key, value) in options.Arguments)
-                    config.WithArgument(key, value);
+                foreach (var argument in options.Arguments)
+                    config.WithArgument(argument.Key, argument.Value);
             }
 
             var advancedBus = await ConnectIfNeededAsync(cancellationToken)
