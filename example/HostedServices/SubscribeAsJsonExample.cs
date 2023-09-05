@@ -1,9 +1,9 @@
 using System;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 
 namespace Byndyusoft.Net.RabbitMq.HostedServices
 {
@@ -23,7 +23,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
             using var consumer = _rabbitMqClient.SubscribeAsJson<Message>(queueName,
                     (model, _) =>
                     {
-                        Console.WriteLine(JsonConvert.SerializeObject(model));
+                        Console.WriteLine(JsonSerializer.Serialize(model));
                         return Task.FromResult(ConsumeResult.Ack);
                     })
                 .WithPrefetchCount(20)
