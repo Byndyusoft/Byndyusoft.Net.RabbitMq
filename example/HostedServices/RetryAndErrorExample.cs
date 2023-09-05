@@ -1,11 +1,11 @@
 using System;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 
 namespace Byndyusoft.Net.RabbitMq.HostedServices
 {
@@ -26,7 +26,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                     async (queueMessage, cancellationToken) =>
                     {
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
-                        Console.WriteLine($"{JsonConvert.SerializeObject(model)}, Retried: {queueMessage.RetryCount}");
+                        Console.WriteLine($"{JsonSerializer.Serialize(model)}, Retried: {queueMessage.RetryCount}");
 
                         return ConsumeResult.Retry;
                     })

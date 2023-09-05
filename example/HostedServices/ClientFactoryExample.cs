@@ -1,10 +1,10 @@
 using System;
 using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 
 namespace Byndyusoft.Net.RabbitMq.HostedServices
 {
@@ -40,7 +40,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                             {
                                 var model = await message.Content.ReadFromJsonAsync<Message>(
                                     cancellationToken: stoppingToken);
-                                Console.WriteLine(JsonConvert.SerializeObject(model));
+                                Console.WriteLine(JsonSerializer.Serialize(model));
                                 await rabbitClient.CompleteMessageAsync(message, ConsumeResult.Ack, stoppingToken);
                                 continue;
                             }
