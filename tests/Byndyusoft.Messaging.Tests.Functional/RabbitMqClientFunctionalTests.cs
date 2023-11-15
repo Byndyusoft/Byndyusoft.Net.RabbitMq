@@ -221,7 +221,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var message = await _client.GetMessageAsync(queueName);
 
             message.Should().NotBeNull();
-            message!.Content.ReadFromJsonAsync<Message>().GetAwaiter().GetResult().Should().BeEquivalentTo(data);
+            var json = await message!.Content.ReadFromJsonAsync<Message>();
+            json.Should().BeEquivalentTo(data);
             message.Headers["key"].Should().Be("value");
 
             CheckProperties(message.Properties, properties);
