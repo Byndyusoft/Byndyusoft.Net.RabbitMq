@@ -3,6 +3,7 @@
   <PropertyGroup>
 	  <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
 	  <RootNamespace>Byndyusoft.Messaging.RabbitMq.DataAnnotations</RootNamespace>
+	  <AssemblyName>Byndyusoft.Messaging.RabbitMq.Annotations</AssemblyName>
   </PropertyGroup>
 
 </Project>

@@ -1,8 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<VersionPrefix>0.6.2</VersionPrefix>
-		<AssemblyName>Byndyusoft.Net.$(MSBuildProjectName)</AssemblyName>
-		<RootNamespace>Byndyusoft.Net.$(MSBuildProjectName)</RootNamespace>
+		<VersionPrefix>0.6.3</VersionPrefix>
 		<Authors>Byndyusoft</Authors>
 		<PackageTags>Byndyusoft;RabbitMq</PackageTags>
 		<RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq</RepositoryUrl>
