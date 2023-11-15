@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<VersionPrefix>0.6.1</VersionPrefix>
+		<VersionPrefix>0.6.2</VersionPrefix>
 		<AssemblyName>Byndyusoft.Net.$(MSBuildProjectName)</AssemblyName>
 		<RootNamespace>Byndyusoft.Net.$(MSBuildProjectName)</RootNamespace>
 		<Authors>Byndyusoft</Authors>
@@ -10,5 +10,6 @@
 		<Nullable>enable</Nullable>
 		<LangVersion>9</LangVersion>
 		<IsPackable>false</IsPackable>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
 </Project>
