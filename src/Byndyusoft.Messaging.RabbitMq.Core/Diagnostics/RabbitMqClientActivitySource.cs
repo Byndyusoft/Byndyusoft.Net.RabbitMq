@@ -52,7 +52,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 return;
 
             activity.SetStatus(ActivityStatusCode.Ok);
-            activity.SetTag("otel.status_code", "OK");
             activity.Dispose();
         }
 
@@ -75,8 +74,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             var activityEvent = new ActivityEvent("exception", tags: tags);
             activity.AddEvent(activityEvent);
             activity.SetTag("error", "true");
-            activity.SetTag("otel.status_code", "ERROR");
-            activity.SetTag("otel.status_description", exception.Message);
+            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
             activity.Dispose();
         }
 

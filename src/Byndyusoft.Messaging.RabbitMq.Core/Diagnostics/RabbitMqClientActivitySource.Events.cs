@@ -68,30 +68,28 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             private ActivityTagsCollection GetReturnedMessageEventTags(ReturnedRabbitMqMessage message)
             {
-                var tags = new ActivityTagsCollection();
-
-                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
-                tags.Add("amqp.message.routing_key", message.RoutingKey);
-                tags.Add("amqp.message.return_reason", message.ReturnReason);
-                tags.Add("amqp.message.content",
-                    message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-                tags.Add("amqp.message.properties",
-                    JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                var tags = new ActivityTagsCollection
+                {
+                    { "amqp.message.exchange", message.Exchange ?? string.Empty },
+                    { "amqp.message.routing_key", message.RoutingKey },
+                    { "amqp.message.return_reason", message.ReturnReason },
+                    { "amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult() },
+                    { "amqp.message.properties", JsonSerializer.Serialize(message.Properties, _activitySource._options) }
+                };
 
                 return tags;
             }
 
             private ActivityTagsCollection GetPublishedMessageEventTags(RabbitMqMessage message)
             {
-                var tags = new ActivityTagsCollection();
-
-                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
-                tags.Add("amqp.message.routing_key", message.RoutingKey);
-                tags.Add("amqp.message.mandatory", message.Mandatory);
-                tags.Add("amqp.message.content",
-                    message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-                tags.Add("amqp.message.properties",
-                    JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                var tags = new ActivityTagsCollection
+                {
+                    { "amqp.message.exchange", message.Exchange ?? string.Empty },
+                    { "amqp.message.routing_key", message.RoutingKey },
+                    { "amqp.message.mandatory", message.Mandatory },
+                    { "amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult() },
+                    { "amqp.message.properties", JsonSerializer.Serialize(message.Properties, _activitySource._options) }
+                };
 
                 return tags;
             }
