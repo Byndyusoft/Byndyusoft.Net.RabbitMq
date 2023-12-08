@@ -55,14 +55,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             activity.Dispose();
         }
 
+        // TODO Убрать escape
         private static void SetException(Activity? activity, Exception exception, bool escaped = true)
         {
             Preconditions.CheckNotNull(exception, nameof(exception));
 
             if (activity is null)
                 return;
-
-            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
 
             var tags = new ActivityTagsCollection
             {
