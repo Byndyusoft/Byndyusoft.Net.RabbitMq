@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
 using Byndyusoft.Messaging.RabbitMq.Serialization;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
@@ -8,6 +9,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         public class RabbitMqClientActivitySourceEvents
         {
             private readonly RabbitMqClientActivitySource _activitySource;
+            private static readonly DiagnosticListener EventLogger = new(DiagnosticNames.RabbitMq);
 
             public RabbitMqClientActivitySourceEvents(RabbitMqClientActivitySource activitySource)
             {
@@ -16,6 +18,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public void MessagePublishing(Activity? activity, RabbitMqMessage message)
             {
+                if (EventLogger.IsEnabled(EventNames.MessagePublishing))
+                    EventLogger.Write(EventNames.MessagePublishing, message);
+
                 if (activity is null)
                     return;
 
@@ -26,6 +31,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public void MessageReturned(Activity? activity, ReturnedRabbitMqMessage message)
             {
+                if (EventLogger.IsEnabled(EventNames.MessageReturned))
+                    EventLogger.Write(EventNames.MessageReturned, message);
+
                 if (activity is null)
                     return;
 
@@ -36,6 +44,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public void MessageGot(Activity? activity, ReceivedRabbitMqMessage? message)
             {
+                if (EventLogger.IsEnabled(EventNames.MessageGot))
+                    EventLogger.Write(EventNames.MessageGot, message);
+
                 if (activity is null)
                     return;
 
@@ -48,6 +59,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public void MessageReplied(Activity? activity, ReceivedRabbitMqMessage message)
             {
+                if (EventLogger.IsEnabled(EventNames.MessageReplied))
+                    EventLogger.Write(EventNames.MessageReplied, message);
+
                 if (activity is null)
                     return;
 
@@ -58,6 +72,9 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public void MessageConsumed(Activity? activity, ReceivedRabbitMqMessage _, ConsumeResult result)
             {
+                if (EventLogger.IsEnabled(EventNames.MessageConsumed))
+                    EventLogger.Write(EventNames.MessageConsumed, result);
+
                 if (activity is null)
                     return;
 

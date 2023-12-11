@@ -11,12 +11,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
     {
         private readonly ILogger<RabbitMqLogListener> _logger;
         private readonly RabbitMqClientCoreOptions _options;
-        private const string DiagnosticSourceName = "Byndyusoft.RabbitMq";
 
         public RabbitMqLogListener(
             ILogger<RabbitMqLogListener> logger,
             RabbitMqClientCoreOptions options) 
-            : base(DiagnosticSourceName)
+            : base(DiagnosticNames.RabbitMq)
         {
             _logger = logger;
             _options = options;
