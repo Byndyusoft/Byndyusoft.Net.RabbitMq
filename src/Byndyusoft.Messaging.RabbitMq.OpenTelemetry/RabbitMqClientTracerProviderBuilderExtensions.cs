@@ -1,10 +1,15 @@
 // ReSharper disable CheckNamespace
 
 using System;
+using System.Net;
+using System.Xml.Linq;
+using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Settings;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace OpenTelemetry.Trace
 {
@@ -28,6 +33,23 @@ namespace OpenTelemetry.Trace
             }
 
             return builder.AddSource(RabbitMqClientActivitySource.Name);
+        }
+
+        /// <summary>
+        ///     Subscribes to the RabbitMqClient activity source to enable log tracing.
+        /// </summary>
+        public static TracerProviderBuilder AddRabbitMqClientLogInstrumentation(
+            this TracerProviderBuilder builder)
+        {
+            Preconditions.CheckNotNull(builder, nameof(builder));
+
+            return builder.AddInstrumentation(sp =>
+            {
+                var logger = sp.GetRequiredService<ILogger<RabbitMqLogListener>>();
+                var options = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
+                var listener = new RabbitMqLogListener(logger, options.Value);
+                return new RabbitMqLogInstrumentation(listener);
+            });
         }
     }
 }

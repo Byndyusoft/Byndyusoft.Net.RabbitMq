@@ -3,15 +3,15 @@ using Byndyusoft.Messaging.RabbitMq.Diagnostics.Base;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
-    public class RabbitMqSourceSubscriber : IDisposable
+    public class RabbitMqLogInstrumentation : IDisposable
     {
         private readonly Func<string, object?, object?, bool> _isEnabled = (_, _, _) => true;
 
         private readonly DiagnosticSourceSubscriber _diagnosticSourceSubscriber;
 
-        public RabbitMqSourceSubscriber(RabbitMqListener rabbitMqListener)
+        public RabbitMqLogInstrumentation(RabbitMqLogListener rabbitMqLogListener)
         {
-            _diagnosticSourceSubscriber = new DiagnosticSourceSubscriber(rabbitMqListener, _isEnabled);
+            _diagnosticSourceSubscriber = new DiagnosticSourceSubscriber(rabbitMqLogListener, _isEnabled);
             _diagnosticSourceSubscriber.Subscribe();
         }
 

@@ -7,14 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
-    public class RabbitMqListener : ListenerHandler
+    public class RabbitMqLogListener : ListenerHandler
     {
-        private readonly ILogger<RabbitMqListener> _logger;
+        private readonly ILogger<RabbitMqLogListener> _logger;
         private readonly RabbitMqClientCoreOptions _options;
         private const string DiagnosticSourceName = "Byndyusoft.RabbitMq";
 
-        public RabbitMqListener(
-            ILogger<RabbitMqListener> logger,
+        public RabbitMqLogListener(
+            ILogger<RabbitMqLogListener> logger,
             RabbitMqClientCoreOptions options) 
             : base(DiagnosticSourceName)
         {
