@@ -1,8 +1,6 @@
 // ReSharper disable CheckNamespace
 
 using System;
-using System.Net;
-using System.Xml.Linq;
 using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Settings;

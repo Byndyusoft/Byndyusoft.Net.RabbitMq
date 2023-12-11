@@ -27,6 +27,8 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                         {
                             Console.WriteLine($"Retry count {message.RetryCount}");
 
+                            // TODO Expression is alway true. Возможно, проверка не нужна
+                            // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                             if (message.RetryCount >= 0)
                                 return Task.FromResult(ConsumeResult.Retry);
 

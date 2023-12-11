@@ -2,6 +2,7 @@ using System;
 using Byndyusoft.Messaging.RabbitMq.Topology;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
+// ReSharper disable once CheckNamespace
 namespace Byndyusoft.Messaging.RabbitMq
 {
     /// <summary>
