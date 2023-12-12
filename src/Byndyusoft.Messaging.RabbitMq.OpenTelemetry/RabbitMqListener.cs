@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -46,6 +47,8 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 OnMessageReplied(activity, payload);
             else if (name.Equals(EventNames.MessageConsumed))
                 OnMessageConsumed(activity, payload);
+            else if (name.Equals(EventNames.UnhandledException))
+                OnUnhandledException(activity, payload);
         }
 
         private bool IsProcessingNeeded(Activity? activity)
@@ -153,6 +156,43 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "message.consumed");
         }
 
+        private EventItem[]? BuildMessageConsumedEventItems(object? payload)
+        {
+            if (payload is not ConsumeResult result)
+                return null;
+
+            var eventItems = new EventItem[]
+            {
+                new("result", result.GetDescription(), "Result")
+            };
+
+            return eventItems;
+        }
+
+        private void OnUnhandledException(Activity? activity, object? payload)
+        {
+            if (_options.RecordExceptions == false)
+                return;
+
+            var eventItems = BuildUnhandledExceptionEventItems(payload);
+            Log(activity, eventItems, "exception");
+        }
+
+        private EventItem[]? BuildUnhandledExceptionEventItems(object? payload)
+        {
+            if (payload is not Exception exception)
+                return null;
+
+            var eventItems = new EventItem[]
+            {
+                new("exception.type", exception.GetType().FullName, "Type"),
+                new("exception.message", exception.Message, "Message"),
+                new("exception.stacktrace", exception.ToString(), "StackTrace")
+            };
+
+            return eventItems;
+        }
+
         private void Log(Activity? activity, EventItem[]? eventItems, string eventName)
         {
             if (eventItems is null)
@@ -187,19 +227,6 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             }
 
             _logger.LogInformation(messageBuilder.ToString(), parameters.ToArray());
-        }
-
-        private EventItem[]? BuildMessageConsumedEventItems(object? payload)
-        {
-            if (payload is not ConsumeResult result)
-                return null;
-
-            var eventItems = new EventItem[]
-            {
-                new("result", result.GetDescription(), "Result")
-            };
-
-            return eventItems;
         }
     }
 }

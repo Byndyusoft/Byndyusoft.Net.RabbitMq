@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading.Tasks;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
@@ -9,6 +10,8 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
     public partial class RabbitMqClientActivitySource
     {
         public static readonly string Name = typeof(RabbitMqClientActivitySource).Assembly.GetName().Name;
+
+        private static readonly DiagnosticListener EventLogger = new(DiagnosticNames.RabbitMq);
 
         private static readonly string? Version = typeof(RabbitMqClientActivitySource)
             .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
@@ -53,18 +56,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         private static void SetException(Activity? activity, Exception exception)
         {
             Preconditions.CheckNotNull(exception, nameof(exception));
+            if (EventLogger.IsEnabled(EventNames.UnhandledException))
+                EventLogger.Write(EventNames.UnhandledException, exception);
 
             if (activity is null)
                 return;
 
-            var tags = new ActivityTagsCollection
-            {
-                {"exception.type", exception.GetType().FullName},
-                {"exception.message", exception.Message},
-                {"exception.stacktrace", exception.ToString()}
-            };
-            var activityEvent = new ActivityEvent("exception", tags: tags);
-            activity.AddEvent(activityEvent);
             activity.SetTag("error", "true");
             activity.SetStatus(ActivityStatusCode.Error, exception.Message);
             activity.Dispose();

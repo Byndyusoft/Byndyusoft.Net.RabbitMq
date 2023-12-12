@@ -15,5 +15,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
         public bool LogEventsInTrace { get; set; } = false;
 
         public bool LogEventsInLogs { get; set; } = true;
+
+        public bool RecordExceptions { get; set; } = true;
     }
 }

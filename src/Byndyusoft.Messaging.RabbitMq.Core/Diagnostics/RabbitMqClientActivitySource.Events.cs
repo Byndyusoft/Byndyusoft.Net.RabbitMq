@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
@@ -7,8 +6,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
     {
         public class RabbitMqClientActivitySourceEvents
         {
-            private static readonly DiagnosticListener EventLogger = new(DiagnosticNames.RabbitMq);
-
             public void MessagePublishing(RabbitMqMessage message)
             {
                 if (EventLogger.IsEnabled(EventNames.MessagePublishing))
