@@ -9,31 +9,31 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         {
             private static readonly DiagnosticListener EventLogger = new(DiagnosticNames.RabbitMq);
 
-            public void MessagePublishing(Activity? activity, RabbitMqMessage message)
+            public void MessagePublishing(RabbitMqMessage message)
             {
                 if (EventLogger.IsEnabled(EventNames.MessagePublishing))
                     EventLogger.Write(EventNames.MessagePublishing, message);
             }
 
-            public void MessageReturned(Activity? activity, ReturnedRabbitMqMessage message)
+            public void MessageReturned(ReturnedRabbitMqMessage message)
             {
                 if (EventLogger.IsEnabled(EventNames.MessageReturned))
                     EventLogger.Write(EventNames.MessageReturned, message);
             }
 
-            public void MessageGot(Activity? activity, ReceivedRabbitMqMessage? message)
+            public void MessageGot(ReceivedRabbitMqMessage? message)
             {
                 if (EventLogger.IsEnabled(EventNames.MessageGot))
                     EventLogger.Write(EventNames.MessageGot, message);
             }
 
-            public void MessageReplied(Activity? activity, ReceivedRabbitMqMessage message)
+            public void MessageReplied(ReceivedRabbitMqMessage message)
             {
                 if (EventLogger.IsEnabled(EventNames.MessageReplied))
                     EventLogger.Write(EventNames.MessageReplied, message);
             }
 
-            public void MessageConsumed(Activity? activity, ReceivedRabbitMqMessage _, ConsumeResult result)
+            public void MessageConsumed(ConsumeResult result)
             {
                 if (EventLogger.IsEnabled(EventNames.MessageConsumed))
                     EventLogger.Write(EventNames.MessageConsumed, result);

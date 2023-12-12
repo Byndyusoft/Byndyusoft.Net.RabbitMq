@@ -50,8 +50,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             activity.Dispose();
         }
 
-        // TODO Убрать escape
-        private static void SetException(Activity? activity, Exception exception, bool escaped = true)
+        private static void SetException(Activity? activity, Exception exception)
         {
             Preconditions.CheckNotNull(exception, nameof(exception));
 
@@ -62,8 +61,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             {
                 {"exception.type", exception.GetType().FullName},
                 {"exception.message", exception.Message},
-                {"exception.stacktrace", exception.ToString()},
-                {"exception.escaped", escaped}
+                {"exception.stacktrace", exception.ToString()}
             };
             var activityEvent = new ActivityEvent("exception", tags: tags);
             activity.AddEvent(activityEvent);

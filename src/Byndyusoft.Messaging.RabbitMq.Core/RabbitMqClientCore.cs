@@ -58,7 +58,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 {
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
-                    _activitySource.Events.MessageGot(activity, message);
+                    _activitySource.Events.MessageGot(message);
                     return message;
                 });
         }
@@ -92,7 +92,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessagePublishing(activity, message);
+                    _activitySource.Events.MessagePublishing(message);
                     await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
                 });
         }
@@ -220,10 +220,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             return await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessagePublishing(activity, message);
+                    _activitySource.Events.MessagePublishing(message);
                     var response = await _rpcClient.MakeRpc(message, cancellationToken)
                         .ConfigureAwait(false);
-                    _activitySource.Events.MessageReplied(activity, response);
+                    _activitySource.Events.MessageReplied(response);
                     return response;
                 }).ConfigureAwait(false);
         }
@@ -251,11 +251,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
                     return await _activitySource.ExecuteAsync(activity, async () =>
                         {
-                            _activitySource.Events.MessageGot(activity, message);
+                            _activitySource.Events.MessageGot(message);
                             try
                             {
                                 var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
-                                _activitySource.Events.MessageConsumed(activity, message, consumeResult);
+                                _activitySource.Events.MessageConsumed(consumeResult);
                                 return await ProcessConsumeResultAsync(message, consumeResult, ct);
                             }
                             catch (Exception exception)
@@ -334,7 +334,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessageReturned(activity, message);
+                    _activitySource.Events.MessageReturned(message);
 
                     var task = MessageReturned?.Invoke(message, cancellationToken);
                     if (task is not null)
