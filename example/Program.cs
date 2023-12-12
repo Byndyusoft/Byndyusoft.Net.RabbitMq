@@ -42,6 +42,7 @@ namespace Byndyusoft.Net.RabbitMq
                             {
                                 o.LogEventsInTrace = true;
                                 o.LogEventsInLogs = true;
+                                o.RecordExceptions = true;
                             }));
                     services.AddRabbitMqRpc();
                     services.AddSingleton<MathRpcServiceClient>();
