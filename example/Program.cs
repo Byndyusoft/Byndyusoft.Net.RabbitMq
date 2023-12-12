@@ -5,7 +5,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -39,8 +38,11 @@ namespace Byndyusoft.Net.RabbitMq
                                 jaeger.AgentHost = "localhost";
                                 jaeger.AgentPort = 6831;
                             })
-                            .AddRabbitMqClientInstrumentation()
-                            .AddRabbitMqClientLogInstrumentation());
+                            .AddRabbitMqClientInstrumentation(o =>
+                            {
+                                o.LogEventsInTrace = true;
+                                o.LogEventsInLogs = true;
+                            }));
                     services.AddRabbitMqRpc();
                     services.AddSingleton<MathRpcServiceClient>();
                     services.AddRpcService<MathRpcService>();

@@ -1,7 +1,6 @@
 // ReSharper disable CheckNamespace
 
 using System;
-using Byndyusoft.Messaging.RabbitMq;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Settings;
 using Byndyusoft.Messaging.RabbitMq.Utils;
@@ -34,27 +33,11 @@ namespace OpenTelemetry.Trace
                 .AddSource(RabbitMqClientActivitySource.Name)
                 .AddInstrumentation(sp =>
                 {
-                    var options = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
-                    var listener = new RabbitMqActivityListener(options.Value);
-                    return new RabbitMqActivityInstrumentation(listener);
+                    var logger = sp.GetRequiredService<ILogger<RabbitMqListener>>();
+                    var options = sp.GetRequiredService<IOptions<RabbitMqTracingOptions>>();
+                    var listener = new RabbitMqListener(logger, options.Value);
+                    return new RabbitMqInstrumentation(listener);
                 });
-        }
-
-        /// <summary>
-        ///     Subscribes to the RabbitMqClient activity source to enable log tracing.
-        /// </summary>
-        public static TracerProviderBuilder AddRabbitMqClientLogInstrumentation(
-            this TracerProviderBuilder builder)
-        {
-            Preconditions.CheckNotNull(builder, nameof(builder));
-
-            return builder.AddInstrumentation(sp =>
-            {
-                var options = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
-                var logger = sp.GetRequiredService<ILogger<RabbitMqLogListener>>();
-                var listener = new RabbitMqLogListener(logger, options.Value);
-                return new RabbitMqLogInstrumentation(listener);
-            });
         }
     }
 }
