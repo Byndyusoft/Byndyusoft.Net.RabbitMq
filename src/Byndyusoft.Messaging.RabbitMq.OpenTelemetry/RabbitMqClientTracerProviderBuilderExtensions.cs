@@ -50,8 +50,8 @@ namespace OpenTelemetry.Trace
 
             return builder.AddInstrumentation(sp =>
             {
-                var logger = sp.GetRequiredService<ILogger<RabbitMqLogListener>>();
                 var options = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
+                var logger = sp.GetRequiredService<ILogger<RabbitMqLogListener>>();
                 var listener = new RabbitMqLogListener(logger, options.Value);
                 return new RabbitMqLogInstrumentation(listener);
             });

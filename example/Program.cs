@@ -17,19 +17,6 @@ namespace Byndyusoft.Net.RabbitMq
 
         public static async Task Main(string[] args)
         {
-            using var tracerProvider = Sdk.CreateTracerProviderBuilder()
-                .SetResourceBuilder(ResourceBuilder.CreateDefault()
-                    .AddService("Byndyusoft.Net.RabbitMq"))
-                .SetSampler(new AlwaysOnSampler())
-                .AddSource(ActivitySource.Name)
-                .AddJaegerExporter(jaeger =>
-                {
-                    jaeger.AgentHost = "localhost";
-                    jaeger.AgentPort = 6831;
-                })
-                .AddRabbitMqClientInstrumentation()
-                .Build();
-
             await CreateHostBuilder(args).RunConsoleAsync();
         }
 
@@ -44,6 +31,16 @@ namespace Byndyusoft.Net.RabbitMq
                 .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
                 .ConfigureServices((_, services) =>
                 {
+                    services.AddOpenTelemetry()
+                        .WithTracing(builder => builder
+                            .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Byndyusoft.Net.RabbitMq"))
+                            .AddJaegerExporter(jaeger =>
+                            {
+                                jaeger.AgentHost = "localhost";
+                                jaeger.AgentPort = 6831;
+                            })
+                            .AddRabbitMqClientInstrumentation()
+                            .AddRabbitMqClientLogInstrumentation());
                     services.AddRabbitMqRpc();
                     services.AddSingleton<MathRpcServiceClient>();
                     services.AddRpcService<MathRpcService>();
