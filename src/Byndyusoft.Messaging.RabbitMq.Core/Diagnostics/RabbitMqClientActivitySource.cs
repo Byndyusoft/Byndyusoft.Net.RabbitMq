@@ -13,18 +13,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         private static readonly string? Version = typeof(RabbitMqClientActivitySource)
             .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
 
-        private readonly RabbitMqDiagnosticsOptions _options;
-
         private readonly ActivitySource _source;
 
-        public RabbitMqClientActivitySource(RabbitMqDiagnosticsOptions options)
+        public RabbitMqClientActivitySource()
         {
-            Preconditions.CheckNotNull(options, nameof(options));
-
             _source = new ActivitySource(Name, Version);
-            _options = options;
 
-            Events = new RabbitMqClientActivitySourceEvents(this);
+            Events = new RabbitMqClientActivitySourceEvents();
             Activities = new RabbitMqClientActivitySourceActivities(this);
         }
 

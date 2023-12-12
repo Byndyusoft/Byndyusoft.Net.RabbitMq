@@ -1,23 +1,18 @@
-using System.Collections.Generic;
-using System.Text;
+using System.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Base;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Builders;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
-using Microsoft.Extensions.Logging;
 
 namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
-    public class RabbitMqLogListener : ListenerHandler
+    public class RabbitMqActivityListener : ListenerHandler
     {
-        private readonly ILogger<RabbitMqLogListener> _logger;
         private readonly RabbitMqClientCoreOptions _options;
 
-        public RabbitMqLogListener(
-            ILogger<RabbitMqLogListener> logger,
-            RabbitMqClientCoreOptions options) 
+        public RabbitMqActivityListener(
+            RabbitMqClientCoreOptions options)
             : base(DiagnosticNames.RabbitMq)
         {
-            _logger = logger;
             _options = options;
         }
 
@@ -39,49 +34,65 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
         private void OnMessagePublishing(object? payload)
         {
+            var activity = Activity.Current;
+            if (activity is null)
+                return;
+
             var eventItems = EventItemBuilder.BuildFromMessagePublishing(payload, _options.DiagnosticsOptions);
-            Log(eventItems, "Message publishing");
+            LogEvent(activity, eventItems, "message.publishing");
         }
 
         private void OnMessageReturned(object? payload)
         {
+            var activity = Activity.Current;
+            if (activity is null)
+                return;
+
             var eventItems = EventItemBuilder.BuildFromMessageReturned(payload, _options.DiagnosticsOptions);
-            Log(eventItems, "Message returned");
+            LogEvent(activity, eventItems, "message.returned");
         }
 
         private void OnMessageGot(object? payload)
         {
+            var activity = Activity.Current;
+            if (activity is null)
+                return;
+
             var eventItems = EventItemBuilder.BuildFromMessageGot(payload, _options.DiagnosticsOptions);
-            Log(eventItems, "Message got");
+            LogEvent(activity, eventItems, "message.got");
         }
 
         private void OnMessageReplied(object? payload)
         {
+            var activity = Activity.Current;
+            if (activity is null)
+                return;
+
             var eventItems = EventItemBuilder.BuildFromMessageReplied(payload, _options.DiagnosticsOptions);
-            Log(eventItems, "Message replied");
+            LogEvent(activity, eventItems, "message.replied");
         }
 
         private void OnMessageConsumed(object? payload)
         {
+            var activity = Activity.Current;
+            if (activity is null)
+                return;
+
             var eventItems = EventItemBuilder.BuildFromMessageConsumed(payload, _options.DiagnosticsOptions);
-            Log(eventItems, "Message consumed");
+            LogEvent(activity, eventItems, "message.consumed");
         }
 
-        private void Log(EventItem[]? eventItems, string logPrefix)
+        private void LogEvent(Activity activity, EventItem[]? eventItems, string eventName)
         {
             if (eventItems is null)
                 return;
 
-            var messageBuilder = new StringBuilder($"{logPrefix}: ");
-            var parameters = new List<object?>();
-            foreach (var eventItem in eventItems)
-            {
-                var itemName = eventItem.Name.Replace('.', '_');
-                messageBuilder.Append($"{eventItem.Description} = {{{itemName}}}; ");
-                parameters.Add(eventItem.Value);
-            }
+            var tags = new ActivityTagsCollection();
+            foreach (var eventItem in eventItems) 
+                tags.Add(eventItem.Name, eventItem.Value);
 
-            _logger.LogInformation(messageBuilder.ToString(), parameters.ToArray());
+            var activityEvent = new ActivityEvent(eventName, tags: tags);
+            activity.AddEvent(activityEvent);
         }
     }
 }

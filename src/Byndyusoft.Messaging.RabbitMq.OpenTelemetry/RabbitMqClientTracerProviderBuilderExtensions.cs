@@ -30,7 +30,14 @@ namespace OpenTelemetry.Trace
                 builder.ConfigureServices(services => services.Configure(configureTracingOptions));
             }
 
-            return builder.AddSource(RabbitMqClientActivitySource.Name);
+            return builder
+                .AddSource(RabbitMqClientActivitySource.Name)
+                .AddInstrumentation(sp =>
+                {
+                    var options = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
+                    var listener = new RabbitMqActivityListener(options.Value);
+                    return new RabbitMqActivityInstrumentation(listener);
+                });
         }
 
         /// <summary>

@@ -31,7 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _options = options;
             _handler = handler;
             _handler.MessageReturned += OnMessageReturned;
-            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource();
             _disposeHandler = disposeHandler;
             _rpcClient = new RabbitMqRpcClient(_handler, options);
         }
