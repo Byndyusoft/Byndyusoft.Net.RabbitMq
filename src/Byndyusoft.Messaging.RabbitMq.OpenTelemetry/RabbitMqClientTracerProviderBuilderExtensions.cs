@@ -2,7 +2,8 @@
 
 using System;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
-using Byndyusoft.Messaging.RabbitMq.Settings;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;

@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
-using Byndyusoft.Messaging.RabbitMq.Diagnostics.Base;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
-using Byndyusoft.Messaging.RabbitMq.Serialization;
-using Byndyusoft.Messaging.RabbitMq.Settings;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Serialization;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings;
 using Microsoft.Extensions.Logging;
 
-namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 {
     public class RabbitMqListener : ListenerHandler
     {
@@ -28,8 +29,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             _logger = logger;
             _options = options;
         }
-
-        public override bool SupportsNullActivity => true;
 
         public override void OnEventWritten(string name, object? payload)
         {

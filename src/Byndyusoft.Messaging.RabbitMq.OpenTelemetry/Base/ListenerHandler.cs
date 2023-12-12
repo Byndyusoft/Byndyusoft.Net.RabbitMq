@@ -1,6 +1,4 @@
-using System.Diagnostics;
-
-namespace Byndyusoft.Messaging.RabbitMq.Diagnostics.Base
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base
 {
     /// <summary>
     /// ListenerHandler base class.
@@ -14,18 +12,12 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics.Base
         protected ListenerHandler(string sourceName)
         {
             SourceName = sourceName;
-            SupportsNullActivity = false;
         }
 
         /// <summary>
         /// Gets the name of the <see cref="ListenerHandler"/>.
         /// </summary>
         public string SourceName { get; }
-
-        /// <summary>
-        /// Gets a value indicating whether the <see cref="ListenerHandler"/> supports NULL <see cref="Activity"/>.
-        /// </summary>
-        public virtual bool SupportsNullActivity { get; }
 
         /// <summary>
         /// Method called for an event which does not have 'Start', 'Stop' or 'Exception' as suffix.

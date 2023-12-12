@@ -1,7 +1,7 @@
 using System;
-using Byndyusoft.Messaging.RabbitMq.Diagnostics.Base;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base;
 
-namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 {
     public class RabbitMqInstrumentation : IDisposable
     {

@@ -2,7 +2,7 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
 {
     public class RabbitMqDiagnosticsOptions
     {

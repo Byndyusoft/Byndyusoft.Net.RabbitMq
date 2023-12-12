@@ -1,6 +1,6 @@
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Settings
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
 {
     public class RabbitMqTracingOptions
     {

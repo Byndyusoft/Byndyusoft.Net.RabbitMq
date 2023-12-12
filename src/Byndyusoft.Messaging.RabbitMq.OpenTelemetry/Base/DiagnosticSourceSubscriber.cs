@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.Threading;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
-namespace Byndyusoft.Messaging.RabbitMq.Diagnostics.Base
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base
 {
     internal sealed class DiagnosticSourceSubscriber : IDisposable, IObserver<DiagnosticListener>
     {
