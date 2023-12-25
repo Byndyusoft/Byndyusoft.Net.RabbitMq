@@ -43,5 +43,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             if (EventLogger.IsEnabled(EventNames.UnhandledException))
                 EventLogger.Write(EventNames.UnhandledException, exception);
         }
+
+        public static void OnMessageModelRead(object? model)
+        {
+            if (EventLogger.IsEnabled(EventNames.MessageModelRead))
+                EventLogger.Write(EventNames.MessageModelRead, model);
+        }
     }
 }

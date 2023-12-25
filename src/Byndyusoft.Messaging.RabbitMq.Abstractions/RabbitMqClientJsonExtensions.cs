@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
@@ -51,6 +52,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
+                RabbitMqClientEvents.OnMessageModelRead(model);
                 var result = await onMessage(model, token).ConfigureAwait(false);
                 return result;
             }
@@ -90,6 +92,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
                 var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
+                RabbitMqClientEvents.OnMessageModelRead(model);
                 var result = await onMessage(model, token).ConfigureAwait(false);
                 return result;
             }
@@ -131,6 +134,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 var request = await message.Content.ReadFromJsonAsync<TRequest>(options, token)
                     .ConfigureAwait(false);
+                RabbitMqClientEvents.OnMessageModelRead(request);
                 var response = await onMessage(request, token)
                     .ConfigureAwait(false);
                 return RpcResult.Success(JsonContent.Create(response, options: options));
