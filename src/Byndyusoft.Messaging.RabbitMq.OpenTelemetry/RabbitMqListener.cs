@@ -7,6 +7,9 @@ using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
 using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base;
 using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Serialization;
 using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings;
+using Byndyusoft.Telemetry;
+using Byndyusoft.Telemetry.Logging;
+using Byndyusoft.Telemetry.OpenTelemetry;
 using Microsoft.Extensions.Logging;
 
 namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
@@ -49,14 +52,16 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 OnMessageConsumed(activity, payload);
             else if (name.Equals(EventNames.UnhandledException))
                 OnUnhandledException(activity, payload);
+            else if (name.Equals(EventNames.MessageModelRead))
+                OnMessageModelRead(activity, payload);
         }
 
         private bool IsProcessingNeeded(Activity? activity)
         {
-            if (_options.LogEventsInLogs)
+            if (_options.LogEventsInLogs || _options.EnrichLogsWithParams)
                 return true;
 
-            return activity is not null && _options.LogEventsInTrace;
+            return activity is not null && (_options.LogEventsInTrace || _options.TagRequestParamsInTrace);
         }
 
         private void OnMessagePublishing(Activity? activity, object? payload)
@@ -109,6 +114,8 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
         private void OnMessageGot(Activity? activity, object? payload)
         {
+            LogPropertyDataAccessor.InitAsyncContext();
+
             var eventItems = BuildMessageConsumingEventItems(payload, _options.DiagnosticsOptions);
             Log(activity, eventItems, "message.got");
         }
@@ -191,6 +198,22 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             };
 
             return eventItems;
+        }
+
+        private void OnMessageModelRead(Activity? activity, object? payload)
+        {
+            if (_options.EnrichLogsWithParams == false &&
+                (activity is null || _options.TagRequestParamsInTrace == false))
+                return;
+
+            var telemetryItems =
+                ObjectTelemetryItemsCollector.Collect("rabbitMqModel", payload, "amqp.message.params.");
+
+            if (_options.EnrichLogsWithParams)
+                LogPropertyDataAccessor.AddTelemetryItems(telemetryItems);
+
+            if (activity is not null && _options.TagRequestParamsInTrace)
+                ActivityTagEnricher.Enrich(activity, telemetryItems);
         }
 
         private void Log(Activity? activity, EventItem[]? eventItems, string eventName)

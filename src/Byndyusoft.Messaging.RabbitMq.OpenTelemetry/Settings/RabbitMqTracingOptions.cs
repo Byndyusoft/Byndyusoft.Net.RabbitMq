@@ -4,6 +4,15 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
 {
     public class RabbitMqTracingOptions
     {
+        public RabbitMqTracingOptions()
+        {
+            LogEventsInTrace = false;
+            LogEventsInLogs = true;
+            TagRequestParamsInTrace = true;
+            EnrichLogsWithParams = true;
+            RecordExceptions = true;
+        }
+
         private RabbitMqDiagnosticsOptions _diagnosticsOptions = new();
 
         public RabbitMqDiagnosticsOptions DiagnosticsOptions
@@ -12,10 +21,14 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
             set => _diagnosticsOptions = Preconditions.CheckNotNull(value, nameof(RabbitMqDiagnosticsOptions));
         }
 
-        public bool LogEventsInTrace { get; set; } = false;
+        public bool LogEventsInTrace { get; set; }
 
-        public bool LogEventsInLogs { get; set; } = true;
+        public bool LogEventsInLogs { get; set; }
 
-        public bool RecordExceptions { get; set; } = true;
+        public bool TagRequestParamsInTrace { get; set; }
+
+        public bool EnrichLogsWithParams { get; set; }
+
+        public bool RecordExceptions { get; set; }
     }
 }
