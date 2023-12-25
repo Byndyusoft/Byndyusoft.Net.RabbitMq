@@ -58,7 +58,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
         private bool IsProcessingNeeded(Activity? activity)
         {
-            if (_options.LogEventsInLogs || _options.EnrichLogsWithParams)
+            if (_options.LogEventsInLogs || _options.EnrichLogsWithParams || _options.EnrichLogsWithQueueInfo)
                 return true;
 
             return activity is not null && (_options.LogEventsInTrace || _options.TagRequestParamsInTrace);
@@ -114,10 +114,28 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
         private void OnMessageGot(Activity? activity, object? payload)
         {
-            LogPropertyDataAccessor.InitAsyncContext();
+            EnrichLogsWithQueueInfo(payload);
 
             var eventItems = BuildMessageConsumingEventItems(payload, _options.DiagnosticsOptions);
             Log(activity, eventItems, "message.got");
+        }
+
+        private void EnrichLogsWithQueueInfo(object? payload)
+        {
+            if (_options.EnrichLogsWithQueueInfo == false)
+                return;
+
+            var queueInfo = GetQueueInfo(payload);
+            if (queueInfo is not null)
+                LogPropertyDataAccessor.AddTelemetryItem(queueInfo.Name, queueInfo.Value);
+        }
+
+        private EventItem? GetQueueInfo(object? payload)
+        {
+            if (payload is not ReceivedRabbitMqMessage message)
+                return null;
+
+            return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
         }
 
         private EventItem[]? BuildMessageConsumingEventItems(object? payload, RabbitMqDiagnosticsOptions options)
@@ -153,6 +171,8 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
         private void OnMessageReplied(Activity? activity, object? payload)
         {
+            EnrichLogsWithQueueInfo(payload);
+
             var eventItems = BuildMessageConsumingEventItems(payload, _options.DiagnosticsOptions);
             Log(activity, eventItems, "message.replied");
         }

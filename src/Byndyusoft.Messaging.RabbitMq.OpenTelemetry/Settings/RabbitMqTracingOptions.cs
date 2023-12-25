@@ -10,6 +10,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
             LogEventsInLogs = true;
             TagRequestParamsInTrace = true;
             EnrichLogsWithParams = true;
+            EnrichLogsWithQueueInfo = true;
             RecordExceptions = true;
         }
 
@@ -28,6 +29,8 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
         public bool TagRequestParamsInTrace { get; set; }
 
         public bool EnrichLogsWithParams { get; set; }
+
+        public bool EnrichLogsWithQueueInfo { get; set; }
 
         public bool RecordExceptions { get; set; }
     }
