@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.HostedServices;
 using Microsoft.Extensions.Configuration;
@@ -12,8 +11,6 @@ namespace Byndyusoft.Net.RabbitMq
 {
     public static class Program
     {
-        private static readonly ActivitySource ActivitySource = new(nameof(Program));
-
         public static async Task Main(string[] args)
         {
             await CreateHostBuilder(args).RunConsoleAsync();
