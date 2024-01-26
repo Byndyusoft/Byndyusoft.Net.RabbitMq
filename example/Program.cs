@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings;
 using Byndyusoft.Net.RabbitMq.HostedServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

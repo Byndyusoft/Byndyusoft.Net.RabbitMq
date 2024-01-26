@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq;
+using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using MessagePack;
 using Microsoft.Extensions.Hosting;
@@ -25,6 +26,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
             {
                 var model = await message.Content.ReadFromMessagePackAsync<T>(options, token)
                     .ConfigureAwait(false);
+                RabbitMqClientEvents.OnMessageModelRead(model);
                 var result = await onMessage(model, token).ConfigureAwait(false);
                 return result;
             }
@@ -83,7 +85,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                 var rand = new Random();
                 while (stoppingToken.IsCancellationRequested == false)
                 {
-                    var message = new Message { Property = "messagepack-example" };
+                    var message = new Message { Property = "messagepack-example", Secret = "pwd" };
                     await _rabbitMqClient.PublishAsMessagePackAsync(null, queueName, message, null, stoppingToken);
                     await Task.Delay(TimeSpan.FromSeconds(rand.NextDouble()), stoppingToken);
                 }
