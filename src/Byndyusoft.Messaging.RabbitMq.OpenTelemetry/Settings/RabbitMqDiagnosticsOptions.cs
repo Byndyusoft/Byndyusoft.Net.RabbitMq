@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Byndyusoft.MaskedSerialization.Extensions;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
@@ -14,7 +15,10 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
         public RabbitMqDiagnosticsOptions()
         {
             _jsonSerializerOptions = new JsonSerializerOptions
-                {DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull};
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+            };
+            _jsonSerializerOptions.SetupSettingsForMaskedSerialization();
             _jsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             _valueMaxStringLength = DefaultValueMaxStringLength;
         }
