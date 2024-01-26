@@ -12,6 +12,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
             EnrichLogsWithParams = true;
             EnrichLogsWithQueueInfo = true;
             RecordExceptions = true;
+            LogContentType = LogContentType.ReadModel;
         }
 
         private RabbitMqDiagnosticsOptions _diagnosticsOptions = new();
@@ -33,5 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings
         public bool EnrichLogsWithQueueInfo { get; set; }
 
         public bool RecordExceptions { get; set; }
+
+        public LogContentType LogContentType { get; set; }
     }
 }

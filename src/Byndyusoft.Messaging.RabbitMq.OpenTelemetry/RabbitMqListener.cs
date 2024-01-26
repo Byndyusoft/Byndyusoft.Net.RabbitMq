@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Text;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
@@ -116,7 +117,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
         {
             EnrichLogsWithQueueInfo(payload);
 
-            var eventItems = BuildMessageConsumingEventItems(payload, _options.DiagnosticsOptions);
+            var eventItems = BuildMessageConsumingEventItems(payload);
             Log(activity, eventItems, "message.got");
         }
 
@@ -138,7 +139,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
         }
 
-        private EventItem[]? BuildMessageConsumingEventItems(object? payload, RabbitMqDiagnosticsOptions options)
+        private EventItem[]? BuildMessageConsumingEventItems(object? payload)
         {
             if (payload is null)
             {
@@ -151,29 +152,35 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             if (payload is not ReceivedRabbitMqMessage message)
                 return null;
 
-            var eventItems = new EventItem[]
-            {
-                new("amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult(),
-                    ContentDescription),
-                new("amqp.message.exchange", message.Exchange, ExchangeDescription),
-                new("amqp.message.queue", message.Queue, QueueDescription),
-                new("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription),
-                new("amqp.message.delivery_tag", message.DeliveryTag, "DeliveryTag"),
-                new("amqp.message.redelivered", message.Redelivered, "Redelivered"),
-                new("amqp.message.consumer_tag", message.ConsumerTag, "ConsumerTag"),
-                new("amqp.message.retry_count", message.RetryCount, "RetryCount"),
-                new("amqp.message.properties", JsonSerializer.Serialize(message.Properties, options),
-                    PropertiesDescription)
-            };
+            return EnumerateMessageConsumingEventItems(message).ToArray();
+        }
 
-            return eventItems;
+        private IEnumerable<EventItem> EnumerateMessageConsumingEventItems(ReceivedRabbitMqMessage message)
+        {
+            if (_options.LogContentType == LogContentType.RawString)
+                yield return new EventItem(
+                    "amqp.message.content.raw",
+                    message.Content.ReadAsStringAsync().GetAwaiter().GetResult(),
+                    ContentDescription);
+
+            yield return new EventItem("amqp.message.exchange", message.Exchange, ExchangeDescription);
+            yield return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
+            yield return new EventItem("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription);
+            yield return new EventItem("amqp.message.delivery_tag", message.DeliveryTag, "DeliveryTag");
+            yield return new EventItem("amqp.message.redelivered", message.Redelivered, "Redelivered");
+            yield return new EventItem("amqp.message.consumer_tag", message.ConsumerTag, "ConsumerTag");
+            yield return new EventItem("amqp.message.retry_count", message.RetryCount, "RetryCount");
+            yield return new EventItem(
+                "amqp.message.properties",
+                JsonSerializer.Serialize(message.Properties, _options.DiagnosticsOptions),
+                PropertiesDescription);
         }
 
         private void OnMessageReplied(Activity? activity, object? payload)
         {
             EnrichLogsWithQueueInfo(payload);
 
-            var eventItems = BuildMessageConsumingEventItems(payload, _options.DiagnosticsOptions);
+            var eventItems = BuildMessageConsumingEventItems(payload);
             Log(activity, eventItems, "message.replied");
         }
 
@@ -222,6 +229,12 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
         private void OnMessageModelRead(Activity? activity, object? payload)
         {
+            EnrichWithModelTelemetryItems(activity, payload);
+            LogModelRead(activity, payload);
+        }
+
+        private void EnrichWithModelTelemetryItems(Activity? activity, object? payload)
+        {
             if (_options.EnrichLogsWithParams == false &&
                 (activity is null || _options.TagRequestParamsInTrace == false))
                 return;
@@ -234,6 +247,20 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
             if (activity is not null && _options.TagRequestParamsInTrace)
                 ActivityTagEnricher.Enrich(activity, telemetryItems);
+        }
+
+        private void LogModelRead(Activity? activity, object? payload)
+        {
+            if (_options.LogContentType != LogContentType.ReadModel)
+                return;
+
+            var eventItems = new EventItem[]
+            {
+                new("amqp.message.content.model",
+                    JsonSerializer.Serialize(payload, _options.DiagnosticsOptions),
+                    ContentDescription)
+            };
+            Log(activity, eventItems, "message.model.read");
         }
 
         private void Log(Activity? activity, EventItem[]? eventItems, string eventName)
