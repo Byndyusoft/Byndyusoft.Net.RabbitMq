@@ -7,7 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Byndyusoft.MaskedSerialization" Version="2.1.2" />
+    <PackageReference Include="Byndyusoft.MaskedSerialization" Version="3.0.0" />
     <PackageReference Include="Byndyusoft.Telemetry.Logging" Version="0.0.4-tags-v0.0.4-alpha-2" />
     <PackageReference Include="Byndyusoft.Telemetry.OpenTelemetry" Version="0.0.4-tags-v0.0.4-alpha-2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.0" />
