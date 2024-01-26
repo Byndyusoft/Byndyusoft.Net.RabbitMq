@@ -161,7 +161,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 yield return new EventItem(
                     "amqp.message.content.raw",
                     message.Content.ReadAsStringAsync().GetAwaiter().GetResult(),
-                    ContentDescription);
+                    "RawContent");
 
             yield return new EventItem("amqp.message.exchange", message.Exchange, ExchangeDescription);
             yield return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
@@ -258,7 +258,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             {
                 new("amqp.message.content.model",
                     JsonSerializer.Serialize(payload, _options.DiagnosticsOptions),
-                    ContentDescription)
+                    "ModelRead")
             };
             Log(activity, eventItems, "message.model.read");
         }
