@@ -4,7 +4,6 @@ using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.InMemory;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.DependencyInjection.Extensions;
-using Microsoft.Extensions.Options;
 
 // ReSharper disable once CheckNamespace
 namespace Microsoft.Extensions.DependencyInjection
@@ -23,11 +22,7 @@ namespace Microsoft.Extensions.DependencyInjection
         {
             services.Configure(setupOptions);
 
-            services.AddSingleton(sp =>
-            {
-                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
-                return new RabbitMqClientActivitySource(clientOptions.Value.DiagnosticsOptions);
-            });
+            services.AddSingleton(_ => new RabbitMqClientActivitySource());
 
             services.TryAddSingleton<InMemoryRabbitMqClient>();
             services.TryAddSingleton<InMemoryRabbitMqClientHandler>();

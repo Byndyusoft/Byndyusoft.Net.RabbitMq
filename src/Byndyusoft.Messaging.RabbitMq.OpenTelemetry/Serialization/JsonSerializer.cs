@@ -1,4 +1,6 @@
-namespace Byndyusoft.Messaging.RabbitMq.Serialization
+using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Settings;
+
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Serialization
 {
     internal static class JsonSerializer
     {

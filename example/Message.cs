@@ -1,7 +1,12 @@
+using Byndyusoft.MaskedSerialization.Annotations.Attributes;
+using Byndyusoft.Telemetry.Abstraction.Attributes;
+
 namespace Byndyusoft.Net.RabbitMq
 {
     public class Message
     {
-        public string Property { get; set; } = default!;
+        [TelemetryItem] public string Property { get; set; } = default!;
+
+        [Masked] public string Secret { get; set; } = default!;
     }
 }

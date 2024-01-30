@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 
-namespace Byndyusoft.Messaging.RabbitMq.Serialization
+namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Serialization
 {
     [ExcludeFromCodeCoverage]
     internal class StringLimitStream : Stream

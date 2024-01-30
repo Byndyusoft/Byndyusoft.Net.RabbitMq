@@ -31,7 +31,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _options = options;
             _handler = handler;
             _handler.MessageReturned += OnMessageReturned;
-            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource();
             _disposeHandler = disposeHandler;
             _rpcClient = new RabbitMqRpcClient(_handler, options);
         }
@@ -58,7 +58,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 {
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
-                    _activitySource.Events.MessageGot(activity, message);
+                    RabbitMqClientEvents.OnMessageGot(message);
                     return message;
                 });
         }
@@ -92,7 +92,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessagePublishing(activity, message);
+                    RabbitMqClientEvents.OnMessagePublishing(message);
                     await _handler.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
                 });
         }
@@ -220,10 +220,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             return await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessagePublishing(activity, message);
+                    RabbitMqClientEvents.OnMessagePublishing(message);
                     var response = await _rpcClient.MakeRpc(message, cancellationToken)
                         .ConfigureAwait(false);
-                    _activitySource.Events.MessageReplied(activity, response);
+                    RabbitMqClientEvents.OnMessageReplied(response);
                     return response;
                 }).ConfigureAwait(false);
         }
@@ -251,11 +251,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);
                     return await _activitySource.ExecuteAsync(activity, async () =>
                         {
-                            _activitySource.Events.MessageGot(activity, message);
+                            RabbitMqClientEvents.OnMessageGot(message);
                             try
                             {
                                 var consumeResult = await consumer.OnMessage(message, ct).ConfigureAwait(false);
-                                _activitySource.Events.MessageConsumed(activity, message, consumeResult);
+                                RabbitMqClientEvents.OnMessageConsumed(consumeResult);
                                 return await ProcessConsumeResultAsync(message, consumeResult, ct);
                             }
                             catch (Exception exception)
@@ -334,7 +334,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             await _activitySource.ExecuteAsync(activity,
                 async () =>
                 {
-                    _activitySource.Events.MessageReturned(activity, message);
+                    RabbitMqClientEvents.OnMessageReturned(message);
 
                     var task = MessageReturned?.Invoke(message, cancellationToken);
                     if (task is not null)
