@@ -2,8 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using Byndyusoft.Messaging.RabbitMq.Diagnostics;
+using Byndyusoft.Logging;
+using Byndyusoft.Logging.Extensions;
 using Byndyusoft.Messaging.RabbitMq.Diagnostics.Consts;
 using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Base;
 using Byndyusoft.Messaging.RabbitMq.OpenTelemetry.Serialization;
@@ -71,12 +71,12 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "message.publishing");
         }
 
-        private EventItem[]? BuildMessagePublishingEventItems(object? payload, RabbitMqDiagnosticsOptions options)
+        private StructuredActivityEventItem[]? BuildMessagePublishingEventItems(object? payload, RabbitMqDiagnosticsOptions options)
         {
             if (payload is not RabbitMqMessage message)
                 return null;
 
-            var eventItems = new EventItem[]
+            var eventItems = new StructuredActivityEventItem[]
             {
                 new("amqp.message.exchange", message.Exchange ?? string.Empty, ExchangeDescription),
                 new("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription),
@@ -94,12 +94,12 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "message.returned");
         }
 
-        private EventItem[]? BuildMessageReturnedEventItems(object? payload, RabbitMqDiagnosticsOptions options)
+        private StructuredActivityEventItem[]? BuildMessageReturnedEventItems(object? payload, RabbitMqDiagnosticsOptions options)
         {
             if (payload is not ReturnedRabbitMqMessage message)
                 return null;
 
-            var eventItems = new EventItem[]
+            var eventItems = new StructuredActivityEventItem[]
             {
                 new("amqp.message.exchange", message.Exchange ?? string.Empty, ExchangeDescription),
                 new("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription),
@@ -131,19 +131,19 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 LogPropertyDataAccessor.AddTelemetryItem(queueInfo.Name, queueInfo.Value);
         }
 
-        private EventItem? GetQueueInfo(object? payload)
+        private StructuredActivityEventItem? GetQueueInfo(object? payload)
         {
             if (payload is not ReceivedRabbitMqMessage message)
                 return null;
 
-            return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
+            return new StructuredActivityEventItem("amqp.message.queue", message.Queue, QueueDescription);
         }
 
-        private EventItem[]? BuildMessageConsumingEventItems(object? payload)
+        private StructuredActivityEventItem[]? BuildMessageConsumingEventItems(object? payload)
         {
             if (payload is null)
             {
-                return new EventItem[]
+                return new StructuredActivityEventItem[]
                 {
                     new("amqp.message", null, "Message")
                 };
@@ -155,22 +155,22 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             return EnumerateMessageConsumingEventItems(message).ToArray();
         }
 
-        private IEnumerable<EventItem> EnumerateMessageConsumingEventItems(ReceivedRabbitMqMessage message)
+        private IEnumerable<StructuredActivityEventItem> EnumerateMessageConsumingEventItems(ReceivedRabbitMqMessage message)
         {
             if (_options.LogContentType == LogContentType.RawString)
-                yield return new EventItem(
+                yield return new StructuredActivityEventItem(
                     "amqp.message.content.raw",
                     message.Content.ReadAsStringAsync().GetAwaiter().GetResult(),
                     "RawContent");
 
-            yield return new EventItem("amqp.message.exchange", message.Exchange, ExchangeDescription);
-            yield return new EventItem("amqp.message.queue", message.Queue, QueueDescription);
-            yield return new EventItem("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription);
-            yield return new EventItem("amqp.message.delivery_tag", message.DeliveryTag, "DeliveryTag");
-            yield return new EventItem("amqp.message.redelivered", message.Redelivered, "Redelivered");
-            yield return new EventItem("amqp.message.consumer_tag", message.ConsumerTag, "ConsumerTag");
-            yield return new EventItem("amqp.message.retry_count", message.RetryCount, "RetryCount");
-            yield return new EventItem(
+            yield return new StructuredActivityEventItem("amqp.message.exchange", message.Exchange, ExchangeDescription);
+            yield return new StructuredActivityEventItem("amqp.message.queue", message.Queue, QueueDescription);
+            yield return new StructuredActivityEventItem("amqp.message.routing_key", message.RoutingKey, RoutingKeyDescription);
+            yield return new StructuredActivityEventItem("amqp.message.delivery_tag", message.DeliveryTag, "DeliveryTag");
+            yield return new StructuredActivityEventItem("amqp.message.redelivered", message.Redelivered, "Redelivered");
+            yield return new StructuredActivityEventItem("amqp.message.consumer_tag", message.ConsumerTag, "ConsumerTag");
+            yield return new StructuredActivityEventItem("amqp.message.retry_count", message.RetryCount, "RetryCount");
+            yield return new StructuredActivityEventItem(
                 "amqp.message.properties",
                 JsonSerializer.Serialize(message.Properties, _options.DiagnosticsOptions),
                 PropertiesDescription);
@@ -190,12 +190,12 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "message.consumed");
         }
 
-        private EventItem[]? BuildMessageConsumedEventItems(object? payload)
+        private StructuredActivityEventItem[]? BuildMessageConsumedEventItems(object? payload)
         {
             if (payload is not ConsumeResult result)
                 return null;
 
-            var eventItems = new EventItem[]
+            var eventItems = new StructuredActivityEventItem[]
             {
                 new("result", result.GetDescription(), "Result")
             };
@@ -212,12 +212,12 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "exception");
         }
 
-        private EventItem[]? BuildUnhandledExceptionEventItems(object? payload)
+        private StructuredActivityEventItem[]? BuildUnhandledExceptionEventItems(object? payload)
         {
             if (payload is not Exception exception)
                 return null;
 
-            var eventItems = new EventItem[]
+            var eventItems = new StructuredActivityEventItem[]
             {
                 new("exception.type", exception.GetType().FullName, "Type"),
                 new("exception.message", exception.Message, "Message"),
@@ -254,7 +254,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             if (_options.LogContentType != LogContentType.ReadModel)
                 return;
 
-            var eventItems = new EventItem[]
+            var eventItems = new StructuredActivityEventItem[]
             {
                 new("amqp.message.content.model",
                     JsonSerializer.Serialize(payload, _options.DiagnosticsOptions),
@@ -263,7 +263,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             Log(activity, eventItems, "message.model.read");
         }
 
-        private void Log(Activity? activity, EventItem[]? eventItems, string eventName)
+        private void Log(Activity? activity, StructuredActivityEventItem[]? eventItems, string eventName)
         {
             if (eventItems is null)
                 return;
@@ -275,7 +275,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 LogEventInLog(eventItems, eventName);
         }
 
-        private void LogEventInTrace(Activity activity, EventItem[] eventItems, string eventName)
+        private void LogEventInTrace(Activity activity, StructuredActivityEventItem[] eventItems, string eventName)
         {
             var tags = new ActivityTagsCollection();
             foreach (var eventItem in eventItems) 
@@ -285,18 +285,9 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             activity.AddEvent(activityEvent);
         }
 
-        private void LogEventInLog(EventItem[] eventItems, string logPrefix)
+        private void LogEventInLog(StructuredActivityEventItem[] eventItems, string eventName)
         {
-            var messageBuilder = new StringBuilder($"{logPrefix}: ");
-            var parameters = new List<object?>();
-            foreach (var eventItem in eventItems)
-            {
-                var itemName = eventItem.Name.Replace('.', '_');
-                messageBuilder.Append($"{eventItem.Description} = {{{itemName}}}; ");
-                parameters.Add(eventItem.Value);
-            }
-
-            _logger.LogInformation(messageBuilder.ToString(), parameters.ToArray());
+            _logger.LogStructuredActivityEvent(eventName, eventItems);
         }
     }
 }

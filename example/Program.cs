@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Byndyusoft.Net.RabbitMq.HostedServices;
-using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -19,15 +20,23 @@ namespace Byndyusoft.Net.RabbitMq
         private static IHostBuilder CreateHostBuilder(string[] args)
         {
             return Host.CreateDefaultBuilder(args)
-                .ConfigureHostOptions(options =>
+                .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    options.BackgroundServiceExceptionBehavior = BackgroundServiceExceptionBehavior.Ignore;
-                })
-                .ConfigureLogging(log => log.AddConsole())
-                .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
-                .ConfigureServices((_, services) =>
-                {
-                    services.AddOpenTelemetry()
+                    webBuilder.UseStartup<Startup>();
+                    webBuilder.ConfigureLogging(i => i.AddConsole());
+                    //webBuilder.UseSerilog((context, configuration) => configuration
+                    //    .UseDefaultSettings(context.Configuration)
+                    //    .UseOpenTelemetryTraces()
+                    //    .WriteToOpenTelemetry(activityEventBuilder: StructuredActivityEventBuilder.Instance));
+                });
+        }
+    }
+
+    public class Startup
+    {
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddOpenTelemetry()
                         .WithTracing(builder => builder
                             .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Byndyusoft.Net.RabbitMq"))
                             .AddJaegerExporter(jaeger =>
@@ -41,35 +50,38 @@ namespace Byndyusoft.Net.RabbitMq
                                 o.LogEventsInLogs = true;
                                 o.RecordExceptions = true;
                             }));
-                    services.AddRabbitMqRpc();
-                    services.AddSingleton<MathRpcServiceClient>();
-                    services.AddRpcService<MathRpcService>();
+            services.AddRabbitMqRpc();
+            services.AddSingleton<MathRpcServiceClient>();
+            services.AddRpcService<MathRpcService>();
 
-                    //services.AddHostedService<PullingExample>();
-                    //services.AddHostedService<RetryAndErrorExample>();
-                    //services.AddHostedService<RpcExample>();
+            //services.AddHostedService<PullingExample>();
+            //services.AddHostedService<RetryAndErrorExample>();
+            //services.AddHostedService<RpcExample>();
 
-                    services.AddHostedService<SubscribeAsMessagePackExample>();
+            services.AddHostedService<SubscribeAsMessagePackExample>();
 
-                    //services.AddHostedService<RpcServerExample>();
-                    //services.AddHostedService<SubscribeAsExample>();
-                    //services.AddHostedService<SubscribeAsJsonExample>();
-                    //services.AddHostedService<SubscribeExchangeExample>();
-                    //services.AddHostedService<ClientFactoryExample>();
+            //services.AddHostedService<RpcServerExample>();
+            //services.AddHostedService<SubscribeAsExample>();
+            //services.AddHostedService<SubscribeAsJsonExample>();
+            //services.AddHostedService<SubscribeExchangeExample>();
+            //services.AddHostedService<ClientFactoryExample>();
 
-                    //services.AddHostedService<QueueInstallerHostedService>();
+            //services.AddHostedService<QueueInstallerHostedService>();
 
-                    services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
+            services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
 
-                    //services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
-                    //services.AddInMemoryRabbitMqClient();
+            //services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
+            //services.AddInMemoryRabbitMqClient();
 
-                    services.BuildServiceProvider(new ServiceProviderOptions
-                    {
-                        ValidateOnBuild = true,
-                        ValidateScopes = true
-                    });
-                });
+            services.BuildServiceProvider(new ServiceProviderOptions
+            {
+                ValidateOnBuild = true,
+                ValidateScopes = true
+            });
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
         }
     }
 }
