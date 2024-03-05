@@ -8,7 +8,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 {
     public partial class RabbitMqClientActivitySource
     {
-        public static readonly string Name = typeof(RabbitMqClientActivitySource).Assembly.GetName().Name;
+        public static readonly string Name = typeof(RabbitMqClientActivitySource).Assembly.GetName().Name!;
 
         private static readonly string? Version = typeof(RabbitMqClientActivitySource)
             .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;

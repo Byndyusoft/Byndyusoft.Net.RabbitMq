@@ -94,9 +94,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(coreClient, queueName, OnRpcCall);
         }
 
-        private void OnCancelled(object state)
+        private void OnCancelled(object? state)
         {
-            var correlationId = (string) state;
+            var correlationId = (string) state!;
             if (_rpcCalls.TryRemove(correlationId, out var tcs) == false)
                 return;
 
@@ -200,7 +200,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        private async void OnLivenessCheck(object state)
+        private async void OnLivenessCheck(object? state)
         {
             var cancellationToken = CancellationToken.None;
 
@@ -218,7 +218,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        private async void OnIdleCheck(object state)
+        private async void OnIdleCheck(object? state)
         {
             var cancellationToken = CancellationToken.None;
 

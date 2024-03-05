@@ -8,7 +8,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="System.Text.Json" Version="7.0.0" />
-		<PackageReference Include="Byndyusoft.Net.Http.Json" Version="0.3.0" />
+		<PackageReference Include="Byndyusoft.Net.Http.Json" Version="0.3.1" />
 	</ItemGroup>
 
 </Project>
