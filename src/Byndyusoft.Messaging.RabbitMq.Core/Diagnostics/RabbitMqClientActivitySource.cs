@@ -46,6 +46,25 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             return activity;
         }
 
+        private Activity? StartConsumeActivity(string name, RabbitMqEndpoint endpoint, ActivityKind kind, RabbitMqMessageHeaders messageHeaders)
+        {
+            Preconditions.CheckNotNull(name, nameof(name));
+            Preconditions.CheckNotNull(endpoint, nameof(endpoint));
+
+            var propagationContext = RabbitMqMessageContextPropagation.ExtractContext(messageHeaders);
+
+            var activity = _source.StartActivity(name, kind, propagationContext.ActivityContext);
+            if (activity is not { IsAllDataRequested: true })
+                return activity;
+
+            foreach (var baggage in propagationContext.Baggage) 
+                activity.SetBaggage(baggage.Key, baggage.Value);
+            
+            SetConnectionTags(activity, endpoint);
+
+            return activity;
+        }
+        
         private static void StopActivity(Activity? activity)
         {
             if (activity is null)

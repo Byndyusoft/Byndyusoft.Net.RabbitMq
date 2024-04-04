@@ -49,6 +49,11 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
             }
         }
 
+#pragma warning disable CS0067
+        public event EventHandler? Blocked;
+        public event EventHandler? Unblocked;
+#pragma warning restore CS0067
+
         public Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotDisposed(this);

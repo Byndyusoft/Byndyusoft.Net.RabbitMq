@@ -30,7 +30,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private IBus? _bus;
         private RabbitMqEndpoint? _endPoint;
         private SemaphoreSlim? _mutex = new(1, 1);
-
+        
         public RabbitMqClientHandler(
             IOptions<RabbitMqClientOptions> options,
             IBusFactory busFactory,
@@ -62,6 +62,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                     };
             }
         }
+
+        public event EventHandler? Blocked;
+        public event EventHandler? Unblocked;
 
         public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken)
@@ -381,8 +384,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (_bus != null)
             {
                 _bus.Advanced.MessageReturned -= OnMessageReturned;
-                _bus.Dispose();
+                _bus.Advanced.Blocked -= OnBlocked;
+                _bus.Advanced.Unblocked -= OnUnblocked;
                 _bus.Advanced.Dispose();
+                _bus.Dispose();
                 _bus = null;
             }
 
@@ -424,6 +429,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 _bus = _busFactory.CreateBus(Options, _connectionConfiguration);
                 _bus.Advanced.MessageReturned += OnMessageReturned;
+                _bus.Advanced.Blocked += OnBlocked;
+                _bus.Advanced.Unblocked += OnUnblocked;
             }
 
             var advancedBus = _bus.Advanced;
@@ -451,6 +458,16 @@ namespace Byndyusoft.Messaging.RabbitMq
                 await Task.Delay(interval, cancellationToken)
                     .ConfigureAwait(false);
             }
+        }
+
+        private void OnUnblocked(object sender, UnblockedEventArgs e)
+        {
+            Unblocked?.Invoke(this, e);
+        }
+
+        private void OnBlocked(object sender, BlockedEventArgs e)
+        {
+            Blocked?.Invoke(sender, e);
         }
 
         private async void OnMessageReturned(object sender, MessageReturnedEventArgs args)

@@ -31,9 +31,21 @@ namespace Byndyusoft.Messaging.RabbitMq
             _options = options;
             _handler = handler;
             _handler.MessageReturned += OnMessageReturned;
+            _handler.Blocked += OnBlocked;
+            _handler.Unblocked += OnUnblocked;
             _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
             _rpcClient = new RabbitMqRpcClient(_handler, options);
+        }
+
+        private void OnUnblocked(object sender, EventArgs e)
+        {
+            Unblocked?.Invoke(sender, e);
+        }
+
+        private void OnBlocked(object sender, EventArgs e)
+        {
+            Blocked?.Invoke(this, e);
         }
 
         public RabbitMqClientCoreOptions Options
@@ -44,6 +56,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 return _options;
             }
         }
+
+        public event EventHandler? Blocked;
+        public event EventHandler? Unblocked;
 
         public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
@@ -317,6 +332,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (disposing == false) return;
 
             _handler.MessageReturned -= OnMessageReturned;
+            _handler.Blocked -= OnBlocked;
+            _handler.Unblocked -= OnUnblocked;
 
             if (_disposeHandler)
             {

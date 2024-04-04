@@ -2,9 +2,15 @@
 
 using Byndyusoft.Messaging.RabbitMq.Diagnostics;
 using Byndyusoft.Messaging.RabbitMq.Utils;
+using System;
 
 namespace OpenTelemetry.Trace
 {
+    public class SqlClientTraceInstrumentationOptions
+    {
+
+    }
+
     /// <summary>
     ///     Extension method for setting up RabbitMqClient OpenTelemetry tracing.
     /// </summary>
@@ -13,7 +19,8 @@ namespace OpenTelemetry.Trace
         /// <summary>
         ///     Subscribes to the RabbitMqClient activity source to enable OpenTelemetry tracing.
         /// </summary>
-        public static TracerProviderBuilder AddRabbitMqClientInstrumentation(this TracerProviderBuilder builder)
+        public static TracerProviderBuilder AddRabbitMqClientInstrumentation(
+            this TracerProviderBuilder builder)
         {
             Preconditions.CheckNotNull(builder, nameof(builder));
 

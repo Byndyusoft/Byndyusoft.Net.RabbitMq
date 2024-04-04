@@ -39,8 +39,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return;
 
-                ActivityContextPropagation.ExtractContext(activity, message?.Headers);
-
                 var tags = GetConsumedMessageEventTags(message);
                 var activityEvent = new ActivityEvent("message.got", tags: tags);
                 activity.AddEvent(activityEvent);
