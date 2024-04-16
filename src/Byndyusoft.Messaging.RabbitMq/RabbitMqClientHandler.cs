@@ -63,10 +63,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public event EventHandler? Blocked;
-        public event EventHandler? Unblocked;
-
-        public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
+        public virtual async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -80,7 +77,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             return ReceivedRabbitMqMessageFactory.CreatePulledMessage(pullingResult, this);
         }
 
-        public async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+        public virtual async Task AckMessageAsync(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotNull(message.Queue,
@@ -96,7 +93,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
-        public async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
+        public virtual async Task RejectMessageAsync(ReceivedRabbitMqMessage message, bool requeue,
             CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
@@ -113,7 +110,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (message is PulledRabbitMqMessage pulledRabbitMqMessage) pulledRabbitMqMessage.IsCompleted = true;
         }
 
-        public async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
+        public virtual async Task PublishMessageAsync(RabbitMqMessage message, CancellationToken cancellationToken)
         {
             Preconditions.CheckNotNull(message, nameof(message));
             Preconditions.CheckNotDisposed(this);
@@ -134,7 +131,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task<IDisposable> StartConsumeAsync(string queueName,
+        public virtual async Task<IDisposable> StartConsumeAsync(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
             Func<ReceivedRabbitMqMessage, CancellationToken, Task<HandlerConsumeResult>> onMessage,
@@ -179,7 +176,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             return advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
         }
 
-        public async Task CreateQueueAsync(string queueName,
+        public virtual async Task CreateQueueAsync(string queueName,
             QueueOptions options,
             CancellationToken cancellationToken = default)
         {
@@ -212,7 +209,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
@@ -231,7 +228,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
+        public virtual async Task PurgeQueueAsync(string queueName, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotDisposed(this);
@@ -256,7 +253,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task<ulong> GetQueueMessageCountAsync(string queueName,
+        public virtual async Task<ulong> GetQueueMessageCountAsync(string queueName,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(queueName, nameof(queueName));
@@ -269,7 +266,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             return stats.MessagesCount;
         }
 
-        public async Task CreateExchangeAsync(string exchangeName,
+        public virtual async Task CreateExchangeAsync(string exchangeName,
             ExchangeOptions options,
             CancellationToken cancellationToken = default)
         {
@@ -302,7 +299,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken = default)
+        public virtual async Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotDisposed(this);
@@ -321,7 +318,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public async Task DeleteExchangeAsync(string exchangeName,
+        public virtual async Task DeleteExchangeAsync(string exchangeName,
             bool ifUnused = false,
             CancellationToken cancellationToken = default)
         {
@@ -334,7 +331,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task BindQueueAsync(string exchangeName,
+        public virtual async Task BindQueueAsync(string exchangeName,
             string routingKey,
             string queueName,
             CancellationToken cancellationToken = default)
@@ -352,7 +349,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public async Task UnbindQueueAsync(string exchangeName,
+        public virtual async Task UnbindQueueAsync(string exchangeName,
             string routingKey,
             string queueName,
             CancellationToken cancellationToken = default)
@@ -370,7 +367,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        public event ReturnedRabbitMqMessageHandler? MessageReturned;
+        public virtual event EventHandler? Blocked;
+        
+        public virtual event EventHandler? Unblocked;
+
+        public virtual event ReturnedRabbitMqMessageHandler? MessageReturned;
 
         protected override void Dispose(bool disposing)
         {
