@@ -68,13 +68,22 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             {
                 var tags = new ActivityTagsCollection();
 
-                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
-                tags.Add("amqp.message.routing_key", message.RoutingKey);
-                tags.Add("amqp.message.return_reason", message.ReturnReason);
-                tags.Add("amqp.message.content",
+                // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+                // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
+                tags.Add("messaging.operation", "return");
+                tags.Add("messaging.system", "rabbitmq");
+                tags.Add("messaging.message.client_id", message.Properties.AppId);
+                tags.Add("messaging.message.id", message.Properties.MessageId);
+                tags.Add("messaging.message.conversation_id", message.Properties.CorrelationId);
+                tags.Add("messaging.message.body",
                     message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-                tags.Add("amqp.message.properties",
+                tags.Add("messaging.message.body.size",
+                    message.Content.Headers.ContentLength);
+                tags.Add("messaging.rabbitmq.message.properties",
                     JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                tags.Add("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty);
+                tags.Add("messaging.rabbitmq.destination.routing_key", message.RoutingKey);
+                tags.Add("messaging.rabbitmq.return.reason", message.ReturnReason);
 
                 return tags;
             }
@@ -83,13 +92,22 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             {
                 var tags = new ActivityTagsCollection();
 
-                tags.Add("amqp.message.exchange", message.Exchange ?? string.Empty);
-                tags.Add("amqp.message.routing_key", message.RoutingKey);
-                tags.Add("amqp.message.mandatory", message.Mandatory);
-                tags.Add("amqp.message.content",
+                // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+                // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
+                tags.Add("messaging.operation", "publish");
+                tags.Add("messaging.system", "rabbitmq");
+                tags.Add("messaging.message.client_id", message.Properties.AppId);
+                tags.Add("messaging.message.id", message.Properties.MessageId);
+                tags.Add("messaging.message.conversation_id", message.Properties.CorrelationId);
+                tags.Add("messaging.message.body",
                     message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-                tags.Add("amqp.message.properties",
+                tags.Add("messaging.message.body.size",
+                    message.Content.Headers.ContentLength);
+                tags.Add("messaging.rabbitmq.message.properties",
                     JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                tags.Add("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty);
+                tags.Add("messaging.rabbitmq.destination.routing_key", message.RoutingKey);
+                tags.Add("messaging.rabbitmq.message.mandatory", message.Mandatory);
 
                 return tags;
             }
@@ -100,20 +118,29 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
                 if (message is null)
                 {
-                    tags.Add("amqp.message", "null");
+                    tags.Add("messaging.message", "null");
                 }
                 else
                 {
-                    tags.Add("amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
-                    tags.Add("amqp.message.exchange", message.Exchange);
-                    tags.Add("amqp.message.queue", message.Queue);
-                    tags.Add("amqp.message.routing_key", message.RoutingKey);
-                    tags.Add("amqp.message.delivery_tag", message.DeliveryTag);
-                    tags.Add("amqp.message.redelivered", message.Redelivered);
-                    tags.Add("amqp.message.consumer_tag", message.ConsumerTag);
-                    tags.Add("amqp.message.retry_count", message.RetryCount);
-                    tags.Add("amqp.message.properties",
+                    // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+                    // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
+                    tags.Add("messaging.operation", "receive");
+                    tags.Add("messaging.system", "rabbitmq");
+                    tags.Add("messaging.message.client_id", message.Properties.AppId);
+                    tags.Add("messaging.message.id", message.Properties.MessageId);
+                    tags.Add("messaging.message.conversation_id", message.Properties.CorrelationId);
+                    tags.Add("messaging.message.body", 
+                        message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
+                    tags.Add("messaging.message.body.size",
+                        message.Content.Headers.ContentLength);
+                    tags.Add("messaging.rabbitmq.message.properties",
                         JsonSerializer.Serialize(message.Properties, _activitySource._options));
+                    tags.Add("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty);
+                    tags.Add("messaging.rabbitmq.destination.routing_key", message.RoutingKey);
+                    tags.Add("messaging.rabbitmq.message.delivery_tag", message.DeliveryTag);
+                    tags.Add("messaging.rabbitmq.message.redelivered", message.Redelivered);
+                    tags.Add("messaging.rabbitmq.message.consumer_tag", message.ConsumerTag);
+                    tags.Add("messaging.rabbitmq.message.retry_count", message.RetryCount);
                 }
 
                 return tags;
