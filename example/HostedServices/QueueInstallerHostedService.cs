@@ -11,9 +11,9 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
     {
         private readonly IRabbitMqClient _rabbitMqClient;
 
-        public QueueInstallerHostedService(IRabbitMqClient rabbitMqClient)
+        public QueueInstallerHostedService(IRabbitMqClientFactory rabbitMqClientFactory)
         {
-            _rabbitMqClient = rabbitMqClient;
+            _rabbitMqClient = rabbitMqClientFactory.CreateClient();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

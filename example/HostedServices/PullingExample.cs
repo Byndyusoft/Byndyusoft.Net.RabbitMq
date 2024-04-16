@@ -12,9 +12,9 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
     {
         private readonly IRabbitMqClient _rabbitMqClient;
 
-        public PullingExample(IRabbitMqClient rabbitMqClient)
+        public PullingExample(IRabbitMqClientFactory rabbitMqClientFactory)
         {
-            _rabbitMqClient = rabbitMqClient;
+            _rabbitMqClient = rabbitMqClientFactory.CreateClient();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)

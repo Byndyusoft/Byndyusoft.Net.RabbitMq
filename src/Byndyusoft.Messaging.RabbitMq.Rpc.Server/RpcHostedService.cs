@@ -24,13 +24,13 @@ namespace Byndyusoft.Messaging.RabbitMq.Rpc
         private readonly ILogger<RpcHostedService> _logger;
 
         public RpcHostedService(
-            IRabbitMqClient rabbitMqClient,
+            IRabbitMqClientFactory rabbitMqClientFactory,
             IOptions<RabbitMqRpcOptions> options,
             IEnumerable<IRpcService> rcpServices,
             IServiceProvider serviceProvider,
             ILogger<RpcHostedService> logger)
         {
-            _rabbitMqClient = rabbitMqClient;
+            _rabbitMqClient = rabbitMqClientFactory.CreateClient();
             _options = options.Value;
             _rcpServices = rcpServices;
             _serviceProvider = serviceProvider;

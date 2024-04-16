@@ -34,9 +34,9 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
 
         private readonly IRabbitMqClient _rabbitMqClient;
 
-        public MathRpcServiceClient(IRabbitMqClient rabbitMqClient)
+        public MathRpcServiceClient(IRabbitMqClientFactory rabbitMqClientFactory)
         {
-            _rabbitMqClient = rabbitMqClient;
+            _rabbitMqClient = rabbitMqClientFactory.CreateClient();
         }
 
         public async Task<int> Sum(int x, int y, CancellationToken cancellationToken)
