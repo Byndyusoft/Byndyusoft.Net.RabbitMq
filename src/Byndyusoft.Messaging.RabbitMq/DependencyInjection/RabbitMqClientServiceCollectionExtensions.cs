@@ -71,12 +71,22 @@ namespace Microsoft.Extensions.DependencyInjection
             Preconditions.CheckNotNull(name, nameof(name));
             Preconditions.CheckNotNull(setupOptions, nameof(setupOptions));
 
+            services.AddRabbitMqClientFactory();
+
             services.AddOptions();
             services.Configure(name, setupOptions);
 
             services.TryAddSingleton<IBusFactory, BusFactory>();
-            services.TryAddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
             services.TryAddSingleton<IRabbitMqClientHandlerFactory, RabbitMqClientHandlerFactory>();
+
+            return services;
+        }
+
+        internal static IServiceCollection AddRabbitMqClientFactory(this IServiceCollection services)
+        {
+            Preconditions.CheckNotNull(services, nameof(services));
+
+            services.TryAddSingleton<IRabbitMqClientFactory, RabbitMqClientFactory>();
 
             return services;
         }

@@ -18,7 +18,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _busFactory = Preconditions.CheckNotNull(busFactory, nameof(busFactory));
         }
 
-        public RabbitMqClientHandler CreateHandler(string name, RabbitMqClientOptions options)
+        public IRabbitMqClientHandler CreateHandler(RabbitMqClientOptions options)
         {
             var logger = _loggerFactory.CreateLogger<RabbitMqClientHandler>();
             return new RabbitMqClientHandler(options, _busFactory, logger);

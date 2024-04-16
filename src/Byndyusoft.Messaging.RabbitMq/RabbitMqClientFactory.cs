@@ -42,17 +42,14 @@ namespace Byndyusoft.Messaging.RabbitMq
                         return factoryOptions.CreateHandlerFunc(_serviceProvider);
 
                     var clientOptions = _clientOptions.Get(name);
-                    return _handlerFactory.CreateHandler(name, clientOptions);
+                    return _handlerFactory.CreateHandler(clientOptions);
                 });
             return new RabbitMqClient(handler);
         }
 
         public void Dispose()
         {
-            foreach (var handler in _activeHandlers.Values)
-            {
-                handler.Dispose();
-            }
+            Disposable.MultiDispose(_activeHandlers.Values);
         }
     }
 }
