@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqClientHandlerFactory : IRabbitMqClientHandlerFactory
+    internal class RabbitMqClientHandlerFactory : IRabbitMqClientHandlerFactory
     {
         private readonly IBusFactory _busFactory;
         private readonly ILoggerFactory _loggerFactory;
@@ -21,7 +21,6 @@ namespace Byndyusoft.Messaging.RabbitMq
         public RabbitMqClientHandler CreateHandler(string name, RabbitMqClientOptions options)
         {
             var logger = _loggerFactory.CreateLogger<RabbitMqClientHandler>();
-
             return new RabbitMqClientHandler(options, _busFactory, logger);
         }
     }

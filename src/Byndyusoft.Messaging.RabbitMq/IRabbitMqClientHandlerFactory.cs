@@ -7,7 +7,7 @@ namespace Byndyusoft.Messaging.RabbitMq
     public interface IRabbitMqClientHandlerFactory
     {
         /// <summary>
-        ///     Creates and configures an <see cref="RabbitMqClientHandler" /> instance using the configuration that corresponds
+        ///     Creates and configures a <see cref="RabbitMqClientHandler" /> instance using the configuration that corresponds
         ///     to the logical name specified by <paramref name="name" />.
         /// </summary>
         /// <param name="name">The logical name of the message handler to create.</param>

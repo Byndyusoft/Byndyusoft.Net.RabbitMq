@@ -140,11 +140,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
             Preconditions.CheckNotDisposed(this);
 
-            void ConfigureConsumer(ISimpleConsumeConfiguration configuration)
-            {
-                if (exclusive is not null) configuration.WithExclusive(exclusive.Value);
-                if (prefetchCount is not null) configuration.WithPrefetchCount(prefetchCount.Value);
-            }
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            return advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
 
             async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties,
                 MessageReceivedInfo info)
@@ -170,9 +168,11 @@ namespace Byndyusoft.Messaging.RabbitMq
                 }
             }
 
-            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
-                .ConfigureAwait(false);
-            return advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+            void ConfigureConsumer(ISimpleConsumeConfiguration configuration)
+            {
+                if (exclusive is not null) configuration.WithExclusive(exclusive.Value);
+                if (prefetchCount is not null) configuration.WithPrefetchCount(prefetchCount.Value);
+            }
         }
 
         public virtual async Task CreateQueueAsync(string queueName,
@@ -182,6 +182,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotDisposed(this);
+
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
+                .ConfigureAwait(false);
+            return;
 
             void ConfigureQueue(IQueueDeclareConfiguration config)
             {
@@ -201,11 +207,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 foreach (var argument in options.Arguments)
                     config.WithArgument(argument.Key, argument.Value);
             }
-
-            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
-                .ConfigureAwait(false);
-            await advancedBus.QueueDeclareAsync(queueName, ConfigureQueue, cancellationToken)
-                .ConfigureAwait(false);
         }
 
         public virtual async Task<bool> QueueExistsAsync(string queueName, CancellationToken cancellationToken = default)
@@ -273,6 +274,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(options, nameof(options));
             Preconditions.CheckNotDisposed(this);
 
+            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                .ConfigureAwait(false);
+            await advancedBus.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
+                .ConfigureAwait(false);
+            return;
+
             void ConfigureExchange(IExchangeDeclareConfiguration config)
             {
                 var exchangeType = options.Type switch
@@ -291,11 +298,6 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                 foreach (var argument in options.Arguments) config.WithArgument(argument.Key, argument.Value);
             }
-
-            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
-                .ConfigureAwait(false);
-            await advancedBus.ExchangeDeclareAsync(exchangeName, ConfigureExchange, cancellationToken)
-                .ConfigureAwait(false);
         }
 
         public virtual async Task<bool> ExchangeExistsAsync(string exchangeName, CancellationToken cancellationToken = default)

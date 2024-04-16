@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq
 { 
-    public class RabbitMqClientFactory : IRabbitMqClientFactory
+    internal class RabbitMqClientFactory : IRabbitMqClientFactory, IDisposable
     {
         private readonly ConcurrentDictionary<string, IRabbitMqClientHandler> _activeHandlers = new();
         private readonly IRabbitMqClientHandlerFactory _handlerFactory;
@@ -44,9 +44,15 @@ namespace Byndyusoft.Messaging.RabbitMq
                     var clientOptions = _clientOptions.Get(name);
                     return _handlerFactory.CreateHandler(name, clientOptions);
                 });
-            var client = new RabbitMqClient(handler);
+            return new RabbitMqClient(handler);
+        }
 
-            return client;
+        public void Dispose()
+        {
+            foreach (var handler in _activeHandlers.Values)
+            {
+                handler.Dispose();
+            }
         }
     }
 }
