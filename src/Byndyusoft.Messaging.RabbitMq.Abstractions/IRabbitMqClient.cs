@@ -7,7 +7,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqClient : IDisposable
     {
-        RabbitMqClientCoreOptions Options { get; }
+        RabbitMqClientOptions Options { get; }
 
         #region Работа с подключением
 

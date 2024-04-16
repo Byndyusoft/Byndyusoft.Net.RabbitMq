@@ -16,8 +16,10 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         private readonly Dictionary<string, InMemoryRabbitMqQueue> _queues = new();
         private readonly Timer _timer;
 
-        public InMemoryRabbitMqClientHandler()
+        public InMemoryRabbitMqClientHandler(RabbitMqClientOptions options)
         {
+            Options = Preconditions.CheckNotNull(options, nameof(options));
+
             _timer = new Timer(DoService, null, 0, 1000);
             _endpoint = new RabbitMqEndpoint {Host = "in-memory"};
         }
@@ -50,6 +52,7 @@ namespace Byndyusoft.Messaging.RabbitMq.InMemory
         }
 
 #pragma warning disable CS0067
+        public RabbitMqClientOptions Options { get; }
         public event EventHandler? Blocked;
         public event EventHandler? Unblocked;
 #pragma warning restore CS0067

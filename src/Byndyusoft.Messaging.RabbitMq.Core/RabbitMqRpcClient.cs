@@ -12,7 +12,7 @@ namespace Byndyusoft.Messaging.RabbitMq
     internal class RabbitMqRpcClient : Disposable
     {
         private readonly IRabbitMqClientHandler _handler;
-        private readonly RabbitMqClientCoreOptions _options;
+        private readonly RabbitMqClientOptions _options;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
         private readonly string _rpcReplyQueueName;
         private Timer? _idleCheckTimer;
@@ -21,7 +21,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         private SemaphoreSlim? _mutex = new(1, 1);
         private IDisposable? _rpcQueueConsumer;
 
-        public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
+        public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientOptions options)
         {
             _handler = handler;
             _options = options;

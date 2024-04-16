@@ -11,7 +11,8 @@ namespace Byndyusoft.Messaging.RabbitMq
         ///     to the logical name specified by <paramref name="name" />.
         /// </summary>
         /// <param name="name">The logical name of the message handler to create.</param>
+        /// <param name="options"></param>
         /// <returns>A new <see cref="RabbitMqClientHandler" /> instance.</returns>
-        RabbitMqClientHandler CreateHandler(string name);
+        RabbitMqClientHandler CreateHandler(string name, RabbitMqClientOptions options);
     }
 }

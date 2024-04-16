@@ -15,21 +15,21 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly bool _disposeHandler;
         private IRabbitMqClientHandler _handler;
         private RabbitMqRpcClient _rpcClient;
-        private readonly RabbitMqClientCoreOptions _options;
+        private readonly RabbitMqClientOptions _options;
 
         static RabbitMqClientCore()
         {
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
         }
 
-        protected RabbitMqClientCore(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options,
-            bool disposeHandler = false)
+        protected RabbitMqClientCore(IRabbitMqClientHandler handler, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
-            Preconditions.CheckNotNull(options, nameof(options));
 
-            _options = options;
+            var options = handler.Options;
+
             _handler = handler;
+            _options = options;
             _handler.MessageReturned += OnMessageReturned;
             _handler.Blocked += OnBlocked;
             _handler.Unblocked += OnUnblocked;
@@ -48,7 +48,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Blocked?.Invoke(this, e);
         }
 
-        public RabbitMqClientCoreOptions Options
+        public RabbitMqClientOptions Options
         {
             get
             {

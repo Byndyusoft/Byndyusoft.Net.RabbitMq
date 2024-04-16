@@ -19,13 +19,13 @@ namespace Microsoft.Extensions.DependencyInjection
         }
 
         public static IServiceCollection AddInMemoryRabbitMqClient(this IServiceCollection services,
-            Action<RabbitMqClientCoreOptions> setupOptions)
+            Action<RabbitMqClientOptions> setupOptions)
         {
             services.Configure(setupOptions);
 
             services.AddSingleton(sp =>
             {
-                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientCoreOptions>>();
+                var clientOptions = sp.GetRequiredService<IOptions<RabbitMqClientOptions>>();
                 return new RabbitMqClientActivitySource(clientOptions.Value.DiagnosticsOptions);
             });
 

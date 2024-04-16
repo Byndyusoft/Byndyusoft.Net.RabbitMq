@@ -49,10 +49,10 @@ namespace Byndyusoft.Net.RabbitMq
                     services.AddRpcService<MathRpcService>();
 
                     //services.AddHostedService<PullingExample>();
-                    //services.AddHostedService<RetryAndErrorExample>();
+                    services.AddHostedService<RetryAndErrorExample>();
                     //services.AddHostedService<RpcExample>();
 
-                    services.AddHostedService<SubscribeAsMessagePackExample>();
+                    //services.AddHostedService<SubscribeAsMessagePackExample>();
 
                     //services.AddHostedService<RpcServerExample>();
                     //services.AddHostedService<SubscribeAsExample>();

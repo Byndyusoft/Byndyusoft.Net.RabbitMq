@@ -24,7 +24,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
     {
         private readonly IBus _bus;
         private readonly IRabbitMqClient _client;
-        private readonly RabbitMqClientCoreOptions _options;
+        private readonly RabbitMqClientOptions _options;
         private readonly IAdvancedBus _rabbit;
 
         public RabbitMqClientFunctionalTests()
@@ -35,7 +35,8 @@ namespace Byndyusoft.Messaging.Tests.Functional
             _client = new ServiceCollection()
                 .AddRabbitMqClient(connectionString)
                 .BuildServiceProvider()
-                .GetRequiredService<IRabbitMqClient>();
+                .GetRequiredService<IRabbitMqClientFactory>()
+                .CreateClient();
 
             _bus = RabbitHutch.CreateBus(connectionString, _ => { });
             _rabbit = _bus.Advanced;

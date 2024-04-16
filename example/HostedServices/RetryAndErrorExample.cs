@@ -28,6 +28,8 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine($"{JsonSerializer.Serialize(model)}, Retried: {queueMessage.RetryCount}");
 
+                        await _rabbitMqClient.PublishAsJsonAsync(null, "queue", new{id = 10}, cancellationToken);
+
                         return ConsumeResult.Retry;
                     })
                 .WithPrefetchCount(20)

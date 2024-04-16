@@ -1,7 +1,7 @@
 using Byndyusoft.Messaging.RabbitMq.Abstractions;
 using Byndyusoft.Messaging.RabbitMq.Utils;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
@@ -9,24 +9,20 @@ namespace Byndyusoft.Messaging.RabbitMq
     {
         private readonly IBusFactory _busFactory;
         private readonly ILoggerFactory _loggerFactory;
-        private readonly IOptionsMonitor<RabbitMqClientOptions> _options;
 
         public RabbitMqClientHandlerFactory(
             IBusFactory busFactory,
-            IOptionsMonitor<RabbitMqClientOptions> options,
-            ILoggerFactory loggerFactory)
+            ILoggerFactory? loggerFactory = null)
         {
-            _loggerFactory = loggerFactory;
+            _loggerFactory = loggerFactory ?? new NullLoggerFactory();
             _busFactory = Preconditions.CheckNotNull(busFactory, nameof(busFactory));
-            _options = Preconditions.CheckNotNull(options, nameof(options));
         }
 
-        public RabbitMqClientHandler CreateHandler(string name)
+        public RabbitMqClientHandler CreateHandler(string name, RabbitMqClientOptions options)
         {
-            var options = _options.Get(name);
             var logger = _loggerFactory.CreateLogger<RabbitMqClientHandler>();
 
-            return new RabbitMqClientHandler(Options.Create(options), _busFactory, logger);
+            return new RabbitMqClientHandler(options, _busFactory, logger);
         }
     }
 }

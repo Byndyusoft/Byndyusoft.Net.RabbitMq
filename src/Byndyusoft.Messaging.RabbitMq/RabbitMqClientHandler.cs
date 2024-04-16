@@ -13,7 +13,6 @@ using EasyNetQ.Consumer;
 using EasyNetQ.Topology;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 using RabbitMQ.Client.Exceptions;
 using ExchangeType = Byndyusoft.Messaging.RabbitMq.Topology.ExchangeType;
 using QueueType = Byndyusoft.Messaging.RabbitMq.Topology.QueueType;
@@ -32,21 +31,21 @@ namespace Byndyusoft.Messaging.RabbitMq
         private SemaphoreSlim? _mutex = new(1, 1);
         
         public RabbitMqClientHandler(
-            IOptions<RabbitMqClientOptions> options,
-            IBusFactory busFactory,
+            RabbitMqClientOptions options,
+            IBusFactory? busFactory = null,
             ILogger<RabbitMqClientHandler>? logger = null)
         {
             Preconditions.CheckNotNull(options, nameof(options));
-            Preconditions.CheckNotNull(options.Value.ConnectionString, nameof(RabbitMqClientOptions.ConnectionString));
+            Preconditions.CheckNotNull(options.ConnectionString, nameof(RabbitMqClientOptions.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
-            _connectionConfiguration = ConnectionStringParser.Parse(options.Value.ConnectionString);
-            _busFactory = busFactory;
+            _connectionConfiguration = ConnectionStringParser.Parse(options.ConnectionString);
+            _busFactory = busFactory ?? new BusFactory();
             _logger = logger ?? NullLogger<RabbitMqClientHandler>.Instance;
-            Options = options.Value;
+            Options = options;
         }
 
-        internal RabbitMqClientOptions Options { get; }
+        public RabbitMqClientOptions Options { get; }
 
         RabbitMqEndpoint IRabbitMqEndpointContainer.Endpoint
         {
