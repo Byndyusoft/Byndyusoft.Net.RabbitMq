@@ -70,13 +70,21 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             if (payload is not RabbitMqMessage message)
                 return null;
 
+            // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+            // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
             var eventItems = new StructuredActivityEventItem[]
             {
-                new("amqp.message.exchange", message.Exchange ?? string.Empty),
-                new("amqp.message.routing_key", message.RoutingKey),
-                new("amqp.message.mandatory", message.Mandatory),
-                new("amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
-                new("amqp.message.properties", JsonSerializer.Serialize(message.Properties, options))
+                new("messaging.operation", "publish"),
+                new("messaging.system", "rabbitmq"),
+                new("messaging.message.client_id", message.Properties.AppId),
+                new("messaging.message.id", message.Properties.MessageId),
+                new("messaging.message.conversation_id", message.Properties.CorrelationId),
+                new("messaging.message.body", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
+                new("messaging.message.body.size", message.Content.Headers.ContentLength),
+                new("messaging.rabbitmq.message.properties", JsonSerializer.Serialize(message.Properties, options)),
+                new("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty),
+                new("messaging.rabbitmq.destination.routing_key", message.RoutingKey),
+                new("messaging.rabbitmq.message.mandatory", message.Mandatory)
             };
 
             return eventItems;
@@ -93,13 +101,21 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             if (payload is not ReturnedRabbitMqMessage message)
                 return null;
 
+            // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+            // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
             var eventItems = new StructuredActivityEventItem[]
             {
-                new("amqp.message.exchange", message.Exchange ?? string.Empty),
-                new("amqp.message.routing_key", message.RoutingKey),
-                new("amqp.message.return_reason", message.ReturnReason),
-                new("amqp.message.content", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
-                new("amqp.message.properties", JsonSerializer.Serialize(message.Properties, options))
+                new("messaging.operation", "return"),
+                new("messaging.system", "rabbitmq"),
+                new("messaging.message.client_id", message.Properties.AppId),
+                new("messaging.message.id", message.Properties.MessageId),
+                new("messaging.message.conversation_id", message.Properties.CorrelationId),
+                new("messaging.message.body", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
+                new("messaging.message.body.size", message.Content.Headers.ContentLength),
+                new("messaging.rabbitmq.message.properties", JsonSerializer.Serialize(message.Properties, options)),
+                new("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty),
+                new("messaging.rabbitmq.destination.routing_key", message.RoutingKey),
+                new("messaging.rabbitmq.return.reason", message.ReturnReason)
             };
 
             return eventItems;
@@ -137,7 +153,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             {
                 return new StructuredActivityEventItem[]
                 {
-                    new("amqp.message", null)
+                    new("messaging.message", null)
                 };
             }
 
@@ -147,23 +163,37 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             return EnumerateMessageConsumingEventItems(message).ToArray();
         }
 
-        private IEnumerable<StructuredActivityEventItem> EnumerateMessageConsumingEventItems(ReceivedRabbitMqMessage message)
+        private IEnumerable<StructuredActivityEventItem> EnumerateMessageConsumingEventItems(
+            ReceivedRabbitMqMessage message)
         {
             if (_options.LogContentType == LogContentType.RawString)
                 yield return new StructuredActivityEventItem(
-                    "amqp.message.content.raw",
+                    "messaging.message.body",
                     message.Content.ReadAsStringAsync().GetAwaiter().GetResult());
 
-            yield return new StructuredActivityEventItem("amqp.message.exchange", message.Exchange);
-            yield return new StructuredActivityEventItem("amqp.message.queue", message.Queue);
-            yield return new StructuredActivityEventItem("amqp.message.routing_key", message.RoutingKey);
-            yield return new StructuredActivityEventItem("amqp.message.delivery_tag", message.DeliveryTag);
-            yield return new StructuredActivityEventItem("amqp.message.redelivered", message.Redelivered);
-            yield return new StructuredActivityEventItem("amqp.message.consumer_tag", message.ConsumerTag);
-            yield return new StructuredActivityEventItem("amqp.message.retry_count", message.RetryCount);
-            yield return new StructuredActivityEventItem(
-                "amqp.message.properties",
+            // https://opentelemetry.io/docs/specs/semconv/attributes-registry/messaging/
+            // https://opentelemetry.io/docs/specs/semconv/messaging/rabbitmq/
+            yield return new StructuredActivityEventItem("messaging.operation", "receive");
+            yield return new StructuredActivityEventItem("messaging.system", "rabbitmq");
+            yield return new StructuredActivityEventItem("messaging.message.client_id", message.Properties.AppId);
+            yield return new StructuredActivityEventItem("messaging.message.id", message.Properties.MessageId);
+            yield return new StructuredActivityEventItem("messaging.message.conversation_id",
+                message.Properties.CorrelationId);
+            yield return new StructuredActivityEventItem("messaging.message.body.size",
+                message.Content.Headers.ContentLength);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.message.properties",
                 JsonSerializer.Serialize(message.Properties, _options.DiagnosticsOptions));
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.destination.exchange",
+                message.Exchange ?? string.Empty);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.destination.routing_key",
+                message.RoutingKey);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.message.delivery_tag",
+                message.DeliveryTag);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.message.redelivered", message.Redelivered);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.message.consumer_tag",
+                message.ConsumerTag);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.message.retry_count", message.RetryCount);
+            yield return new StructuredActivityEventItem("messaging.rabbitmq.destination.queue", message.Queue);
         }
 
         private void OnMessageReplied(Activity? activity, object? payload)

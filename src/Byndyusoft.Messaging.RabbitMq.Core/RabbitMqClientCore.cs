@@ -33,7 +33,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             _handler.MessageReturned += OnMessageReturned;
             _handler.Blocked += OnBlocked;
             _handler.Unblocked += OnUnblocked;
-            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
+            _activitySource = new RabbitMqClientActivitySource();
             _disposeHandler = disposeHandler;
             _rpcClient = new RabbitMqRpcClient(_handler, options);
         }
@@ -73,9 +73,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 {
                     var message = await _handler.GetMessageAsync(queueName, cancellationToken)
                         .ConfigureAwait(false);
-
-                    if (message != null)
-                        ActivityContextPropagation.ExtractContext(activity, message.Headers);
 
                     RabbitMqClientEvents.OnMessageGot(message);
                     return message;
