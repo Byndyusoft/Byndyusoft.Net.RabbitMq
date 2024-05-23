@@ -12,7 +12,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             var headers = new RabbitMqMessageHeaders(consumedMessage.Headers);
 
             var activity = Activity.Current;
-            ActivityContextPropagation.InjectContext(activity, headers);
+            RabbitMqMessageContextPropagation.InjectContext(activity, headers);
 
             return new RabbitMqMessage
             {
@@ -34,7 +34,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             headers.RemoveRetryData();
 
             var activity = Activity.Current;
-            ActivityContextPropagation.InjectContext(activity, headers);
+            RabbitMqMessageContextPropagation.InjectContext(activity, headers);
 
             return new RabbitMqMessage
             {
@@ -65,7 +65,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
             var correlationId = requestMessage.Properties.CorrelationId!;
 
             var headers = new RabbitMqMessageHeaders();
-            ActivityContextPropagation.InjectContext(Activity.Current, headers);
+            RabbitMqMessageContextPropagation.InjectContext(Activity.Current, headers);
 
             return new RabbitMqMessage
             {
@@ -90,7 +90,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Messages
 
             var headers = new RabbitMqMessageHeaders();
             headers.SetException(response.Exception);
-            ActivityContextPropagation.InjectContext(Activity.Current, headers);
+            RabbitMqMessageContextPropagation.InjectContext(Activity.Current, headers);
 
             return new RabbitMqMessage
             {

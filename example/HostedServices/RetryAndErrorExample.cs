@@ -13,9 +13,9 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
     {
         private readonly IRabbitMqClient _rabbitMqClient;
 
-        public RetryAndErrorExample(IRabbitMqClient rabbitMqClient)
+        public RetryAndErrorExample(IRabbitMqClientFactory rabbitMqClientFactory)
         {
-            _rabbitMqClient = rabbitMqClient;
+            _rabbitMqClient = rabbitMqClientFactory.CreateClient();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -27,6 +27,8 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                     {
                         var model = await queueMessage.Content.ReadAsAsync<Message>(cancellationToken);
                         Console.WriteLine($"{JsonSerializer.Serialize(model)}, Retried: {queueMessage.RetryCount}");
+
+                        await _rabbitMqClient.PublishAsJsonAsync(null, "queue", new{id = 10}, cancellationToken);
 
                         return ConsumeResult.Retry;
                     })

@@ -23,7 +23,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return activity;
 
-                ActivityContextPropagation.InjectContext(activity, message.Headers);
+                RabbitMqMessageContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
             }
@@ -52,9 +52,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return activity;
 
-                // we need to restore context to link complete activity with push one.
-                ActivityContextPropagation.ExtractContext(activity, message.Headers);
-
                 activity.SetTag("amqp.message.consume_result", consumeResult.GetDescription());
                 activity.SetTag("amqp.message.delivery_tag", message.DeliveryTag);
 
@@ -63,7 +60,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
             public Activity? StartConsume(RabbitMqEndpoint endpoint, ReceivedRabbitMqMessage message)
             {
-                var activity = _activitySource.StartActivity("Consume", endpoint, ActivityKind.Consumer);
+                var activity = _activitySource.StartConsumeActivity("Consume", endpoint, ActivityKind.Consumer, message.Headers);
 
                 if (activity is not { IsAllDataRequested: true })
                 {
@@ -79,12 +76,10 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 Preconditions.CheckNotNull(endpoint, nameof(endpoint));
                 Preconditions.CheckNotNull(message, nameof(message));
 
-                var activity = _activitySource.StartActivity("Return", endpoint, ActivityKind.Producer);
+                var activity = _activitySource.StartConsumeActivity("Return", endpoint, ActivityKind.Producer, message.Headers);
                 if (activity is null)
                     return activity;
                 
-                ActivityContextPropagation.ExtractContext(activity, message.Headers);
-
                 return activity;
             }
 
@@ -97,7 +92,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 if (activity is null)
                     return activity;
 
-                ActivityContextPropagation.InjectContext(activity, message.Headers);
+                RabbitMqMessageContextPropagation.InjectContext(activity, message.Headers);
 
                 return activity;
             }

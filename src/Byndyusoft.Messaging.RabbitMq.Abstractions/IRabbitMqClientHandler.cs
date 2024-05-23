@@ -7,6 +7,16 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqClientHandler : IDisposable, IRabbitMqEndpointContainer
     {
+        RabbitMqClientOptions Options { get; }
+
+        #region Работа с подключением
+
+        event EventHandler Blocked;
+
+        event EventHandler Unblocked;
+
+        #endregion
+
         #region Работа с сообщениями
 
         Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName, CancellationToken cancellationToken);

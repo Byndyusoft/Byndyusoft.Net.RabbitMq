@@ -40,6 +40,32 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
+        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
+            string exchangeName,
+            string routingKey,
+            ReceivedRabbitMqMessageHandler onMessage)
+        {
+            return Subscribe(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
+        }
+
+        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
+            string exchangeName,
+            string routingKey,
+            string consumerName,
+            ReceivedRabbitMqMessageHandler onMessage)
+        {
+            Preconditions.CheckNotNull(client, nameof(client));
+            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
+            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+
+            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
+
+            return client.Subscribe(queueName, onMessage)
+                .WithSubscribingQueueBinding(exchangeName, routingKey);
+        }
+
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string queueName,
             Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
@@ -74,21 +100,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             return client.SubscribeAs<T>(queueName, OnMessage);
         }
 
-        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
+        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,
-            ReceivedRabbitMqMessageHandler onMessage)
+            Func<T?, CancellationToken, Task> onMessage)
         {
-            Preconditions.CheckNotNull(client, nameof(client));
-            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
-            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            var application = client.Options.ApplicationName;
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
-
-            return client.Subscribe(queueName, onMessage)
-                .WithSubscribingQueueBinding(exchangeName, routingKey);
+            return SubscribeAs(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
         }
 
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
@@ -96,13 +113,22 @@ namespace Byndyusoft.Messaging.RabbitMq
             string routingKey,
             Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
         {
+            return SubscribeAs(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
+        }
+
+        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
+            string exchangeName,
+            string routingKey,
+            string consumerName,
+            Func<T?, CancellationToken, Task> onMessage)
+        {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            var application = client.Options.ApplicationName;
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
+            
+            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
 
             return client.SubscribeAs(queueName, onMessage)
                 .WithSubscribingQueueBinding(exchangeName, routingKey);
@@ -111,15 +137,16 @@ namespace Byndyusoft.Messaging.RabbitMq
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string exchangeName,
             string routingKey,
-            Func<T?, CancellationToken, Task> onMessage)
+            string consumerName,
+            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            var application = client.Options.ApplicationName;
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, application);
+            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
 
             return client.SubscribeAs(queueName, onMessage)
                 .WithSubscribingQueueBinding(exchangeName, routingKey);

@@ -12,20 +12,20 @@ namespace Byndyusoft.Messaging.RabbitMq
     internal class RabbitMqRpcClient : Disposable
     {
         private readonly IRabbitMqClientHandler _handler;
-        private readonly RabbitMqClientCoreOptions _options;
+        private readonly RabbitMqClientOptions _options;
         private readonly ConcurrentDictionary<string, TaskCompletionSource<ReceivedRabbitMqMessage>> _rpcCalls = new();
-        private readonly string _rpcQueueName;
+        private readonly string _rpcReplyQueueName;
         private Timer? _idleCheckTimer;
         private long _lastCallTimeBinary;
         private Timer? _livenessCheckTimer;
         private SemaphoreSlim? _mutex = new(1, 1);
         private IDisposable? _rpcQueueConsumer;
 
-        public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options)
+        public RabbitMqRpcClient(IRabbitMqClientHandler handler, RabbitMqClientOptions options)
         {
             _handler = handler;
             _options = options;
-            _rpcQueueName = options.GetRpcReplyQueueName();
+            _rpcReplyQueueName = options.GetRpcReplyQueueName();
         }
 
         private bool IsRpcStarted => _rpcQueueConsumer is not null;
@@ -44,7 +44,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
 
             var correlationId = message.Properties.CorrelationId ??= Guid.NewGuid().ToString();
-            message.Properties.ReplyTo = _rpcQueueName;
+            message.Properties.ReplyTo = _rpcReplyQueueName;
 
             var tcs = new TaskCompletionSource<ReceivedRabbitMqMessage>();
 
@@ -94,9 +94,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             return new RabbitMqConsumer(coreClient, queueName, OnRpcCall);
         }
 
-        private void OnCancelled(object state)
+        private void OnCancelled(object? state)
         {
-            var correlationId = (string) state;
+            var correlationId = (string) state!;
             if (_rpcCalls.TryRemove(correlationId, out var tcs) == false)
                 return;
 
@@ -142,14 +142,15 @@ namespace Byndyusoft.Messaging.RabbitMq
                 if (IsRpcStarted)
                     return;
 
-                await _handler.CreateQueueAsync(_rpcQueueName,
+                await _handler.CreateQueueAsync(_rpcReplyQueueName,
                         QueueOptions.Default
+                            .WithType(QueueType.Classic) // Only classic queue may be AutoDelete
                             .AsExclusive(true)
                             .AsAutoDelete(true),
                         cancellationToken)
                     .ConfigureAwait(false);
                 _rpcQueueConsumer =
-                    await _handler.StartConsumeAsync(_rpcQueueName,
+                    await _handler.StartConsumeAsync(_rpcReplyQueueName,
                             true,
                             null,
                             OnReply,
@@ -199,13 +200,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        private async void OnLivenessCheck(object state)
+        private async void OnLivenessCheck(object? state)
         {
             var cancellationToken = CancellationToken.None;
 
             try
             {
-                var rcpQueueExists = await _handler.QueueExistsAsync(_rpcQueueName, cancellationToken)
+                var rcpQueueExists = await _handler.QueueExistsAsync(_rpcReplyQueueName, cancellationToken)
                     .ConfigureAwait(false);
                 if (rcpQueueExists == false)
                     await StopRpc(true, cancellationToken)
@@ -217,7 +218,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        private async void OnIdleCheck(object state)
+        private async void OnIdleCheck(object? state)
         {
             var cancellationToken = CancellationToken.None;
 

@@ -15,28 +15,40 @@ namespace Byndyusoft.Messaging.RabbitMq
         private readonly bool _disposeHandler;
         private IRabbitMqClientHandler _handler;
         private RabbitMqRpcClient _rpcClient;
-        private readonly RabbitMqClientCoreOptions _options;
+        private readonly RabbitMqClientOptions _options;
 
         static RabbitMqClientCore()
         {
             MediaTypeFormatterCollection.Default.Add(new JsonMediaTypeFormatter());
         }
 
-        protected RabbitMqClientCore(IRabbitMqClientHandler handler, RabbitMqClientCoreOptions options,
-            bool disposeHandler = false)
+        protected RabbitMqClientCore(IRabbitMqClientHandler handler, bool disposeHandler = false)
         {
             Preconditions.CheckNotNull(handler, nameof(handler));
-            Preconditions.CheckNotNull(options, nameof(options));
 
-            _options = options;
+            var options = handler.Options;
+
             _handler = handler;
+            _options = options;
             _handler.MessageReturned += OnMessageReturned;
-            _activitySource = new RabbitMqClientActivitySource();
+            _handler.Blocked += OnBlocked;
+            _handler.Unblocked += OnUnblocked;
+            _activitySource = new RabbitMqClientActivitySource(options.DiagnosticsOptions);
             _disposeHandler = disposeHandler;
             _rpcClient = new RabbitMqRpcClient(_handler, options);
         }
 
-        public RabbitMqClientCoreOptions Options
+        private void OnUnblocked(object sender, EventArgs e)
+        {
+            Unblocked?.Invoke(sender, e);
+        }
+
+        private void OnBlocked(object sender, EventArgs e)
+        {
+            Blocked?.Invoke(this, e);
+        }
+
+        public RabbitMqClientOptions Options
         {
             get
             {
@@ -44,6 +56,9 @@ namespace Byndyusoft.Messaging.RabbitMq
                 return _options;
             }
         }
+
+        public event EventHandler? Blocked;
+        public event EventHandler? Unblocked;
 
         public async Task<ReceivedRabbitMqMessage?> GetMessageAsync(string queueName,
             CancellationToken cancellationToken = default)
@@ -321,6 +336,8 @@ namespace Byndyusoft.Messaging.RabbitMq
             if (disposing == false) return;
 
             _handler.MessageReturned -= OnMessageReturned;
+            _handler.Blocked -= OnBlocked;
+            _handler.Unblocked -= OnUnblocked;
 
             if (_disposeHandler)
             {

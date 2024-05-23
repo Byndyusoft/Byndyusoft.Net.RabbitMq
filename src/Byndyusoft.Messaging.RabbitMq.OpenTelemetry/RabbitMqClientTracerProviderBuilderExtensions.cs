@@ -11,6 +11,11 @@ using Microsoft.Extensions.Options;
 
 namespace OpenTelemetry.Trace
 {
+    public class SqlClientTraceInstrumentationOptions
+    {
+
+    }
+
     /// <summary>
     ///     Extension method for setting up RabbitMqClient OpenTelemetry tracing.
     /// </summary>

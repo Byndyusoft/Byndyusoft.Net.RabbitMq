@@ -30,7 +30,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Utils
         {
             var exceptions = new List<Exception>();
 
-            foreach (var disposable in disposables)
+            foreach (var disposable in disposables.ToArray())
                 try
                 {
                     disposable.Dispose();

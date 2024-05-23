@@ -7,7 +7,15 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public interface IRabbitMqClient : IDisposable
     {
-        RabbitMqClientCoreOptions Options { get; }
+        RabbitMqClientOptions Options { get; }
+
+        #region Работа с подключением
+
+        event EventHandler Blocked;
+
+        event EventHandler Unblocked;
+
+        #endregion
 
         #region Работа с сообщениями
 

@@ -4,19 +4,27 @@ on:
   - pull_request
 
 jobs:
-  test:
+  pull-request:
     name: test
-
     runs-on: ubuntu-latest
-
+    env:
+      DOTNET_NOLOGO: true
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v3
+      - name: checkout
+        uses: actions/checkout@v4
+
+      - name: install dotnet
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '6.0.x'
-      - name: Start RabbitMQ
+      
+      - name: install packages
+        run: dotnet restore
+
+      - name: build
+        run: dotnet build --no-restore
+
+      - name: start rabbitMQ
         uses: getong/rabbitmq-action@v1.2
         with:
           rabbitmq version: '3.10.8'
@@ -24,39 +32,6 @@ jobs:
           rabbitmq user: 'guest'
           rabbitmq password: 'guest'
           rabbitmq vhost: '/'
-      - name: Run Cake script
-        uses: cake-build/cake-action@v1
-        with:
-          script-path: ./build/build.cake
-          target: Test
-          verbosity: Verbose
-          arguments: |
-            configuration: Release
-            nuget_useinprocessclient: true
-            settings_skipverification: true
-            settings_skippackageversioncheck: true
 
-  coverage:
-    name: coverage
-    needs: test
-    
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-      - name: Install dotnet
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
-      - name: Run Cake script
-        uses: cake-build/cake-action@v1
-        with:
-          script-path: ./build/build.cake
-          target: CalculateCoverage
-          verbosity: Verbose
-          arguments: |
-            configuration: Debug
-            nuget_useinprocessclient: true
-            settings_skipverification: true
-            settings_skippackageversioncheck: true
+      - name: test
+        run: dotnet test --no-restore --verbosity normal

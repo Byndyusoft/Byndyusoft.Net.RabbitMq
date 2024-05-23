@@ -1,18 +1,16 @@
-using Byndyusoft.Messaging.RabbitMq.Internal;
 using Byndyusoft.Messaging.RabbitMq.Utils;
-using OptionsCore = Microsoft.Extensions.Options.Options;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqClient : RabbitMqClientCore
     {
-        public RabbitMqClient(RabbitMqClientHandler handler, bool disposeHandler = false)
-            : base(Preconditions.CheckNotNull(handler, nameof(handler)), handler.Options, disposeHandler)
+        public RabbitMqClient(IRabbitMqClientHandler handler, bool disposeHandler = false)
+            : base(handler, disposeHandler)
         {
         }
 
         public RabbitMqClient(RabbitMqClientOptions options)
-            : this(new RabbitMqClientHandler(OptionsCore.Create(options), new BusFactory()))
+            : this(new RabbitMqClientHandler(options), true)
         {
         }
 
@@ -23,7 +21,5 @@ namespace Byndyusoft.Messaging.RabbitMq
             })
         {
         }
-
-        public new RabbitMqClientOptions Options => (RabbitMqClientOptions) base.Options;
     }
 }
