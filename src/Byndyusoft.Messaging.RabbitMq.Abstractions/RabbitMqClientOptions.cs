@@ -8,7 +8,6 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqClientOptions
     {
-        private RabbitMqDiagnosticsOptions _diagnosticsOptions = new();
         private QueueNamingConventions _namingConventions = new();
         private string _connectionString = default!;
 
@@ -19,12 +18,6 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             get => _namingConventions;
             set => _namingConventions = Preconditions.CheckNotNull(value, nameof(NamingConventions));
-        }
-
-        public RabbitMqDiagnosticsOptions DiagnosticsOptions
-        {
-            get => _diagnosticsOptions;
-            set => _diagnosticsOptions = Preconditions.CheckNotNull(value, nameof(RabbitMqDiagnosticsOptions));
         }
 
         public TimeSpan? RpcLivenessCheckPeriod { get; set; } = TimeSpan.FromMinutes(1);

@@ -62,7 +62,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
             {
                 var activity = _activitySource.StartConsumeActivity("Consume", endpoint, ActivityKind.Consumer, message.Headers);
 
-                if (activity is not {IsAllDataRequested: true})
+                if (activity is not { IsAllDataRequested: true })
                     return activity;
 
                 return activity;

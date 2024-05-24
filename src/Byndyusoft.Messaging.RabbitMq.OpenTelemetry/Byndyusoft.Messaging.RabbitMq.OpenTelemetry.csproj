@@ -1,13 +1,23 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
-		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
-		<RootNamespace>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</RootNamespace>
-		<AssemblyName>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</AssemblyName>
-	</PropertyGroup>
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+    <RootNamespace>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</RootNamespace>
+    <AssemblyName>Byndyusoft.Messaging.RabbitMq.OpenTelemetry</AssemblyName>
+  </PropertyGroup>
 
-	<ItemGroup>
-		<ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj" />
-	</ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Byndyusoft.Logging.OpenTelemetry.Abstractions" Version="3.0.1" />
+    <PackageReference Include="Byndyusoft.MaskedSerialization" Version="3.0.0" />
+    <PackageReference Include="Byndyusoft.Telemetry.Logging" Version="0.0.4" />
+    <PackageReference Include="Byndyusoft.Telemetry.OpenTelemetry" Version="0.0.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Configuration" Version="3.1.0" />
+    <PackageReference Include="OpenTelemetry.Api.ProviderBuilderExtensions" Version="1.6.0" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.Core\Byndyusoft.Messaging.RabbitMq.Core.csproj" />
+  </ItemGroup>
 
 </Project>

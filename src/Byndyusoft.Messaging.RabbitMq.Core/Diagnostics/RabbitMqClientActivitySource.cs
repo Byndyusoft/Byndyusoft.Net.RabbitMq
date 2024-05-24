@@ -13,24 +13,16 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
         private static readonly string? Version = typeof(RabbitMqClientActivitySource)
             .GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
 
-        private readonly RabbitMqDiagnosticsOptions _options;
-
         private readonly ActivitySource _source;
 
-        public RabbitMqClientActivitySource(RabbitMqDiagnosticsOptions options)
+        public RabbitMqClientActivitySource()
         {
-            Preconditions.CheckNotNull(options, nameof(options));
-
             _source = new ActivitySource(Name, Version);
-            _options = options;
 
-            Events = new RabbitMqClientActivitySourceEvents(this);
             Activities = new RabbitMqClientActivitySourceActivities(this);
         }
 
         public RabbitMqClientActivitySourceActivities Activities { get; }
-
-        public RabbitMqClientActivitySourceEvents Events { get; }
 
         private Activity? StartActivity(string name, RabbitMqEndpoint endpoint, ActivityKind kind)
         {
@@ -71,31 +63,19 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
                 return;
 
             activity.SetStatus(ActivityStatusCode.Ok);
-            activity.SetTag("otel.status_code", "OK");
             activity.Dispose();
         }
 
-        private static void SetException(Activity? activity, Exception exception, bool escaped = true)
+        private static void SetException(Activity? activity, Exception exception)
         {
             Preconditions.CheckNotNull(exception, nameof(exception));
+            RabbitMqClientEvents.OnUnhandledException(exception);
 
             if (activity is null)
                 return;
 
-            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
-
-            var tags = new ActivityTagsCollection
-            {
-                {"exception.type", exception.GetType().FullName},
-                {"exception.message", exception.Message},
-                {"exception.stacktrace", exception.ToString()},
-                {"exception.escaped", escaped}
-            };
-            var activityEvent = new ActivityEvent("exception", tags: tags);
-            activity.AddEvent(activityEvent);
             activity.SetTag("error", "true");
-            activity.SetTag("otel.status_code", "ERROR");
-            activity.SetTag("otel.status_description", exception.Message);
+            activity.SetStatus(ActivityStatusCode.Error, exception.Message);
             activity.Dispose();
         }
 
@@ -110,7 +90,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
         private static void SetQueueNameTags(Activity activity, string queueName)
         {
-            activity.SetTag("amqp.queue_name", queueName);
+            activity.SetTag("messaging.rabbitmq.destination.queue", queueName);
         }
 
         public Task ExecuteAsync(Activity? activity, Func<Task> action)
