@@ -90,7 +90,7 @@ namespace Byndyusoft.Messaging.RabbitMq.Diagnostics
 
         private static void SetQueueNameTags(Activity activity, string queueName)
         {
-            activity.SetTag("amqp.queue_name", queueName);
+            activity.SetTag("messaging.rabbitmq.destination.queue", queueName);
         }
 
         public Task ExecuteAsync(Activity? activity, Func<Task> action)

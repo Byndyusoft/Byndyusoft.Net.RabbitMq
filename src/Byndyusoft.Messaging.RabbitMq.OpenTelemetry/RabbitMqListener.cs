@@ -79,7 +79,6 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 new("messaging.message.client_id", message.Properties.AppId),
                 new("messaging.message.id", message.Properties.MessageId),
                 new("messaging.message.conversation_id", message.Properties.CorrelationId),
-                new("messaging.message.body", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
                 new("messaging.message.body.size", message.Content.Headers.ContentLength),
                 new("messaging.rabbitmq.message.properties", JsonSerializer.Serialize(message.Properties, options)),
                 new("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty),
@@ -110,7 +109,6 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 new("messaging.message.client_id", message.Properties.AppId),
                 new("messaging.message.id", message.Properties.MessageId),
                 new("messaging.message.conversation_id", message.Properties.CorrelationId),
-                new("messaging.message.body", message.Content.ReadAsStringAsync().GetAwaiter().GetResult()),
                 new("messaging.message.body.size", message.Content.Headers.ContentLength),
                 new("messaging.rabbitmq.message.properties", JsonSerializer.Serialize(message.Properties, options)),
                 new("messaging.rabbitmq.destination.exchange", message.Exchange ?? string.Empty),
@@ -260,7 +258,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
                 return;
 
             var telemetryItems =
-                ObjectTelemetryItemsCollector.Collect("rabbitMqModel", payload, "amqp.message.params.");
+                ObjectTelemetryItemsCollector.Collect("rabbitMqModel", payload, "messaging.message.params.");
 
             if (_options.EnrichLogsWithParams)
                 LogPropertyDataAccessor.AddTelemetryItems(telemetryItems);
@@ -276,7 +274,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
 
             var eventItems = new StructuredActivityEventItem[]
             {
-                new("amqp.message.content.model",
+                new("messaging.message.body",
                     JsonSerializer.Serialize(payload, _options.DiagnosticsOptions))
             };
             Log(activity, eventItems, "message.model.read");
