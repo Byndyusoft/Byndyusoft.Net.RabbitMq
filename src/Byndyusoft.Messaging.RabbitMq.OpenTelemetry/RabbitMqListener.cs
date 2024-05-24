@@ -142,7 +142,7 @@ namespace Byndyusoft.Messaging.RabbitMq.OpenTelemetry
             if (payload is not ReceivedRabbitMqMessage message)
                 return null;
 
-            return new StructuredActivityEventItem("amqp.message.queue", message.Queue);
+            return new StructuredActivityEventItem("messaging.rabbitmq.destination.queue", message.Queue);
         }
 
         private StructuredActivityEventItem[]? BuildMessageConsumingEventItems(object? payload)
