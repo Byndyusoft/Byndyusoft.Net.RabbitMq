@@ -150,6 +150,51 @@ public class QueueHostedService : BackgroundService
 }
 ```
 
+## Конфигурация
+
+```csharp
+public class Startup
+{
+	public void ConfigureServices(IServiceCollection services)
+	{
+		services.AddOpenTelemetry()
+				.WithTracing(builder => builder
+					.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService("Byndyusoft.Net.RabbitMq"))
+					.AddJaegerExporter(jaeger =>
+					{
+						jaeger.AgentHost = "localhost";
+						jaeger.AgentPort = 6831;
+					})
+					.AddRabbitMqClientInstrumentation(o =>
+					{
+						options.LogEventsInTrace = false;
+						options.LogEventsInLogs = true;
+						options.TagRequestParamsInTrace = true;
+						options.EnrichLogsWithParams = true;
+						options.EnrichLogsWithQueueInfo = true;
+						options.RecordExceptions = true;
+						options.LogContentType = LogContentType.ReadModel;
+					}));
+		services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
+		...
+	}
+}
+```
+
+Параметры конфигурации инструментации трассировки:
+1. LogEventsInTrace — создавать события в трассировке. По умолчанию: false.
+2. LogEventsInLogs — логировать события. По умолчанию: true.
+3. TagRequestParamsInTrace — добавлять параметры сообщения в тэги трассировки. По умолчанию: true. Чтобы узнать, как извлекаются данные, см. [здесь](https://github.com/Byndyusoft/Byndyusoft.Telemetry#object-telemetry-item-collector).
+4. EnrichLogsWithParams — обогатить каждый лог параметрами сообщения в контексте обработки этого сообщения. По умолчанию: true. Чтобы узнать, как извлекаются данные, см. [здесь](https://github.com/Byndyusoft/Byndyusoft.Telemetry#object-telemetry-item-collector).
+5. EnrichLogsWithQueueInfo — обогатить каждый лог информацией об очереди в контексте обработки этого сообщения. Default: true.
+6. RecordExceptions — помечать ошибки в трассировке. По умолчанию: true.
+7. LogContentType — способ извлечения содержимого сообщения при его обработке. По умолчанию: ReadModel.
+     * ReadModel - будет логироваться десериализованная модель в отдельном событии трассировки и/или в отдельной записи лога. В этом случае можно маскировать данные. См. [здесь](https://github.com/Byndyusoft/Byndyusoft.MaskedSerialization)
+     * Skip - не будет логироваться содержимое сообщения.
+     * RawString - будет логироваться содержимое сообщения как есть (строка). Маскировка данных работать не будет.
+
+<br/> 
+
 [![(License)](https://img.shields.io/github/license/Byndyusoft/Byndyusoft.Net.RabbitMq.svg)](LICENSE)
 
 | Package name | Nuget | Downloads |
