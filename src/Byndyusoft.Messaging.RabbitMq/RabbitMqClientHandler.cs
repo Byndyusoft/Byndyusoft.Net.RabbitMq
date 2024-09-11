@@ -149,7 +149,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 try
                 {
-                    var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info);
+                    await using var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info);
                     var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
                         .ConfigureAwait(false);
 
