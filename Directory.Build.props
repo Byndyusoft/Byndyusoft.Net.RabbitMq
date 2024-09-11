@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<Version>0.8.1</Version>
+		<Version>0.8.2</Version>
 		<Authors>Byndyusoft</Authors>
 		<PackageTags>Byndyusoft;RabbitMq</PackageTags>
 		<RepositoryUrl>https://github.com/Byndyusoft/Byndyusoft.Net.RabbitMq</RepositoryUrl>
