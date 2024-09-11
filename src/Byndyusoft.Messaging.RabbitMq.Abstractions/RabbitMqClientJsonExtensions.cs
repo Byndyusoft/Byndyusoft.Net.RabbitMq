@@ -19,14 +19,12 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
-            var message = new RabbitMqMessage
-            {
-                Content = JsonContent.Create(model, options: options),
-                Exchange = exchangeName,
-                RoutingKey = routingKey,
-                Persistent = true,
-                Mandatory = true
-            };
+            await using var message = new RabbitMqMessage();
+            message.Content = JsonContent.Create(model, options: options);
+            message.Exchange = exchangeName;
+            message.RoutingKey = routingKey;
+            message.Persistent = true;
+            message.Mandatory = true;
             await client.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
         }
 
@@ -171,12 +169,10 @@ namespace Byndyusoft.Messaging.RabbitMq
             JsonSerializerOptions? options = null,
             CancellationToken cancellationToken = default)
         {
-            var requestMessage = new RabbitMqMessage
-            {
-                Mandatory = true,
-                Content = JsonContent.Create(request, options: options),
-                RoutingKey = queueName
-            };
+            await using var requestMessage = new RabbitMqMessage();
+            requestMessage.Mandatory = true;
+            requestMessage.Content = JsonContent.Create(request, options: options);
+            requestMessage.RoutingKey = queueName;
             var responseMessage = await client.MakeRpc(requestMessage, cancellationToken)
                 .ConfigureAwait(false);
             return await responseMessage.Content.ReadFromJsonAsync<TResponse>(options, cancellationToken)
