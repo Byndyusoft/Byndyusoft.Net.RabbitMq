@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
+		<RootNamespace>Byndyusoft.Messaging.RabbitMq.PubSub</RootNamespace>
+		<AssemblyName>Byndyusoft.Messaging.RabbitMq.PubSub</AssemblyName>
+	</PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.PubSub.Abstractions\Byndyusoft.Messaging.RabbitMq.PubSub.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>
