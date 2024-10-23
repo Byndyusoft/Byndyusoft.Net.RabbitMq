@@ -10,4 +10,8 @@
     <ProjectReference Include="..\Byndyusoft.Messaging.RabbitMq.PubSub.Abstractions\Byndyusoft.Messaging.RabbitMq.PubSub.Abstractions.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="8.0.0" />
+  </ItemGroup>
+
 </Project>

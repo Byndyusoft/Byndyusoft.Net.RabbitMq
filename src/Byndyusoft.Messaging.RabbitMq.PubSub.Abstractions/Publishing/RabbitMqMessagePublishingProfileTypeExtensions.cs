@@ -3,7 +3,7 @@ namespace Byndyusoft.Messaging.RabbitMq.PubSub.Publishing
     using System;
     using System.Reflection;
 
-    public static class RabbitMqMessagePublishingProfileExtensions
+    public static class RabbitMqMessagePublishingProfileTypeExtensions
     {
         public static string? GetExchange(this Type producerType)
             => producerType.GetCustomAttribute<RabbitMqMessagePublishingProfileAttribute>(false)!.Exchange;
