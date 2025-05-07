@@ -598,7 +598,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
         private static async Task WaitForAsync(Func<bool> condition, TimeSpan timeout)
         {
-            var cts = new CancellationTokenSource(timeout);
+            using var cts = new CancellationTokenSource(timeout);
             var token = cts.Token;
 
             while (token.IsCancellationRequested == false)

@@ -130,6 +130,25 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
+        private class ConsumerDisposable : IDisposable
+        {
+            private readonly IDisposable _wrapped;
+            private readonly CancellationTokenSource _cancellationTokenSource;
+
+            public ConsumerDisposable(IDisposable wrapped, CancellationTokenSource cancellationTokenSource)
+            {
+                _wrapped = wrapped;
+                _cancellationTokenSource = cancellationTokenSource;
+            }
+
+            public void Dispose()
+            {
+                _cancellationTokenSource.Cancel();
+                _wrapped.Dispose();
+                _cancellationTokenSource.Dispose();
+            }
+        }
+
         public virtual async Task<IDisposable> StartConsumeAsync(string queueName,
             bool? exclusive,
             ushort? prefetchCount,
@@ -140,17 +159,28 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
             Preconditions.CheckNotDisposed(this);
 
-            var advancedBus = await ConnectIfNeededAsync(cancellationToken)
-                .ConfigureAwait(false);
-            return advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+            var stoppingTokenSource = new CancellationTokenSource();
+            var stoppingToken = stoppingTokenSource.Token;
 
+            try
+            {
+                var advancedBus = await ConnectIfNeededAsync(cancellationToken)
+                    .ConfigureAwait(false);
+                var advancedBusConsumer = advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+                return new ConsumerDisposable(advancedBusConsumer, stoppingTokenSource);
+            }
+            catch
+            {
+               stoppingTokenSource.Dispose();
+               throw;
+            }
             async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties,
                 MessageReceivedInfo info)
             {
                 try
                 {
                     await using var consumedMessage = ReceivedRabbitMqMessageFactory.CreateReceivedMessage(body, properties, info);
-                    var consumeResult = await onMessage(consumedMessage, CancellationToken.None)
+                    var consumeResult = await onMessage(consumedMessage, stoppingToken)
                         .ConfigureAwait(false);
 
                     return consumeResult switch
