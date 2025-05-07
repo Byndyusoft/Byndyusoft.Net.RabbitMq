@@ -17,17 +17,17 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             var onMessage = consumer.OnMessage;
 
+            consumer.OnMessage = OnMessage;
+            return consumer;
+
             Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
-                var cts =
+                using var cts =
                     CancellationTokenSource.CreateLinkedTokenSource(
                         cancellationToken,
                         new CancellationTokenSource(maxConsumingTime).Token);
                 return onMessage(message, cts.Token);
             }
-
-            consumer.OnMessage = OnMessage;
-            return consumer;
         }
     }
 }

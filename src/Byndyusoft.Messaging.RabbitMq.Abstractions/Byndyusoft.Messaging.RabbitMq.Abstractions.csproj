@@ -4,6 +4,7 @@
 		<TargetFrameworks>netstandard2.0;netstandard2.1</TargetFrameworks>
 		<RootNamespace>Byndyusoft.Messaging.RabbitMq</RootNamespace>
 		<AssemblyName>Byndyusoft.Messaging.RabbitMq.Abstractions</AssemblyName>
+		<IsPackable>true</IsPackable>
 	</PropertyGroup>
 
 	<ItemGroup>
