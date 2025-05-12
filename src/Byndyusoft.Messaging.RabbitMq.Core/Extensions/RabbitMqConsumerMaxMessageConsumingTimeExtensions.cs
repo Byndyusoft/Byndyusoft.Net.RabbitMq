@@ -20,13 +20,13 @@ namespace Byndyusoft.Messaging.RabbitMq
             consumer.OnMessage = OnMessage;
             return consumer;
 
-            Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
+            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
+                using var timeoutTcs = 
+                    new CancellationTokenSource(maxConsumingTime);
                 using var cts =
-                    CancellationTokenSource.CreateLinkedTokenSource(
-                        cancellationToken,
-                        new CancellationTokenSource(maxConsumingTime).Token);
-                return onMessage(message, cts.Token);
+                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTcs.Token);
+                return await onMessage(message, cts.Token);
             }
         }
     }

@@ -257,6 +257,11 @@ namespace Byndyusoft.Messaging.RabbitMq
         internal async Task<IDisposable> StartConsumerAsync(RabbitMqConsumer consumer,
             CancellationToken cancellationToken)
         {
+            return await _handler
+                .StartConsumeAsync(consumer.QueueName, consumer.Exclusive, consumer.PrefetchCount,
+                    OnMessageHandler, cancellationToken)
+                .ConfigureAwait(false);
+
             async Task<HandlerConsumeResult> OnMessageHandler(ReceivedRabbitMqMessage message, CancellationToken ct)
             {
                 await Task.Yield();
@@ -286,11 +291,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     return HandlerConsumeResult.RejectWithRequeue;
                 }
             }
-
-            return await _handler
-                .StartConsumeAsync(consumer.QueueName, consumer.Exclusive, consumer.PrefetchCount,
-                    OnMessageHandler, cancellationToken)
-                .ConfigureAwait(false);
         }
 
         protected virtual async Task<HandlerConsumeResult> ProcessConsumeResultAsync(
