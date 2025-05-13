@@ -15,18 +15,16 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(consumer, nameof(consumer));
 
+            //Без локальной переменной будет рекурсия
             var onMessage = consumer.OnMessage;
-
             consumer.OnMessage = OnMessage;
             return consumer;
 
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
-                using var timeoutTcs = 
-                    new CancellationTokenSource(maxConsumingTime);
-                using var cts =
-                    CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutTcs.Token);
-                return await onMessage(message, cts.Token);
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                cts.CancelAfter(maxConsumingTime);
+                return await onMessage(message, cts.Token).ConfigureAwait(false);
             }
         }
     }

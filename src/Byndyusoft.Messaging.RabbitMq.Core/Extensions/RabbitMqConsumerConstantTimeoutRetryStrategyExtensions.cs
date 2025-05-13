@@ -16,7 +16,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(consumer, nameof(consumer));
             Preconditions.CheckNotNull(optionsSetup, nameof(optionsSetup));
 
-            QueueOptions options = QueueOptions.Default;
+            var options = QueueOptions.Default;
             optionsSetup.Invoke(options);
 
             return consumer.WithConstantTimeoutRetryStrategy(delay, maxRetryCount, options);
@@ -30,6 +30,19 @@ namespace Byndyusoft.Messaging.RabbitMq
             //Без локальной переменной будет рекурсия
             var onMessage = consumer.OnMessage;
 
+            consumer.OnMessage = OnMessage;
+
+            retryQueueOptions =
+                (retryQueueOptions ?? QueueOptions.Default)
+                .WithMessageTtl(delay)
+                .WithDeadLetterExchange(null)
+                .WithDeadLetterRoutingKey(consumer.QueueName);
+            var retryQueueName =
+                consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
+            consumer.WithDeclareQueue(retryQueueName, retryQueueOptions);
+
+            return consumer;
+
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
                 try
@@ -38,7 +51,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                     try
                     {
-                        var result = await onMessage(message, cancellationToken);
+                        var result = await onMessage(message, cancellationToken).ConfigureAwait(false);
                         if (result is not RetryConsumeResult)
                             return result;
                     }
@@ -57,19 +70,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                     return ConsumeResult.Error(exception);
                 }
             }
-
-            consumer.OnMessage = OnMessage;
-
-            retryQueueOptions =
-                (retryQueueOptions ?? QueueOptions.Default)
-                .WithMessageTtl(delay)
-                .WithDeadLetterExchange(null)
-                .WithDeadLetterRoutingKey(consumer.QueueName);
-            var retryQueueName =
-                consumer.Client.Options.NamingConventions.RetryQueueName(consumer.QueueName);
-            consumer.WithDeclareQueue(retryQueueName, retryQueueOptions);
-
-            return consumer;
         }
     }
 }
