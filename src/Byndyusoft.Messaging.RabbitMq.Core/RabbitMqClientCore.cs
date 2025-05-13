@@ -264,8 +264,6 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             async Task<HandlerConsumeResult> OnMessageHandler(ReceivedRabbitMqMessage message, CancellationToken ct)
             {
-                await Task.Yield();
-
                 try
                 {
                     var activity = _activitySource.Activities.StartConsume(_handler.Endpoint, message);

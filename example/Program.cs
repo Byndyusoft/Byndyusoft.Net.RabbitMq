@@ -44,19 +44,19 @@ namespace Byndyusoft.Net.RabbitMq
                 .ConfigureAppConfiguration(configuration => { configuration.AddJsonFile("appsettings.json", true); })
                 .ConfigureServices((_, services) =>
                 {
-                    services.AddRabbitMqRpc();
-                    services.AddSingleton<MathRpcServiceClient>();
-                    services.AddRpcService<MathRpcService>();
+                    //services.AddRabbitMqRpc();
+                    //services.AddSingleton<MathRpcServiceClient>();
+                    //services.AddRpcService<MathRpcService>();
 
                     //services.AddHostedService<PullingExample>();
                     //services.AddHostedService<RetryAndErrorExample>();
-                    services.AddHostedService<RpcExample>();
+                    //services.AddHostedService<RpcExample>();
 
                     //services.AddHostedService<SubscribeAsMessagePackExample>();
 
                     //services.AddHostedService<RpcServerExample>();
                     //services.AddHostedService<SubscribeAsExample>();
-                    //services.AddHostedService<SubscribeAsJsonExample>();
+                    services.AddHostedService<SubscribeAsJsonExample>();
                     //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();
 

@@ -1,5 +1,7 @@
 using System;
 using System.Net.Http;
+using System.Net.Http.Json;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Byndyusoft.Messaging.RabbitMq.Topology;
@@ -40,116 +42,79 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
-            string exchangeName,
+        public static async Task PublishAsync<T>(this IRabbitMqClient client,
+            string? exchangeName,
             string routingKey,
-            ReceivedRabbitMqMessageHandler onMessage)
-        {
-            return Subscribe(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
-        }
-
-        public static IRabbitMqConsumer Subscribe(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            string consumerName,
-            ReceivedRabbitMqMessageHandler onMessage)
+            T model,
+            Func<T, CancellationToken, ValueTask<HttpContent>> modelSerializer,
+            CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(client, nameof(client));
-            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
-            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+            Preconditions.CheckNotNull(modelSerializer, nameof(modelSerializer));
 
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
+            var content = await modelSerializer(model, cancellationToken).ConfigureAwait(false);
+            await using var message = new RabbitMqMessage();
+            message.Content = content;
+            message.Exchange = exchangeName;
+            message.RoutingKey = routingKey;
+            message.Persistent = true;
+            message.Mandatory = true;
+            await client.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
+        }
 
-            return client.Subscribe(queueName, onMessage)
-                .WithSubscribingQueueBinding(exchangeName, routingKey);
+        public static Task PublishAsync<T>(this IRabbitMqClient client,
+            string? exchangeName,
+            string routingKey,
+            T model,
+            Func<T, HttpContent> modelSerializer,
+            CancellationToken cancellationToken = default)
+        {
+            Preconditions.CheckNotNull(client, nameof(client));
+            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
+            Preconditions.CheckNotNull(modelSerializer, nameof(modelSerializer));
+
+            return PublishAsync(client, exchangeName, routingKey, model, SerializeModel, cancellationToken);
+
+            ValueTask<HttpContent> SerializeModel(T x, CancellationToken _) => new(modelSerializer(x));
         }
 
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string queueName,
-            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
+            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<T?>> modelDeserializer)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+            Preconditions.CheckNotNull(modelDeserializer, nameof(modelDeserializer));
+
+            return client.Subscribe(queueName, OnMessage);
 
             async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
             {
-                var model = await message.Content.ReadAsAsync<T>(token).ConfigureAwait(false);
+                var model = await modelDeserializer.Invoke(message, token).ConfigureAwait(false);
                 return await onMessage(model, token).ConfigureAwait(false);
             }
-
-            return client.Subscribe(queueName, OnMessage);
         }
 
         public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
             string queueName,
-            Func<T?, CancellationToken, Task> onMessage)
+            Func<T?, CancellationToken, Task> onMessage,
+            Func<ReceivedRabbitMqMessage, CancellationToken, Task<T?>> modelDeserializer)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
+            Preconditions.CheckNotNull(modelDeserializer, nameof(modelDeserializer));
+
+            return client.SubscribeAs(queueName, OnMessage, modelDeserializer);
 
             async Task<ConsumeResult> OnMessage(T? message, CancellationToken token)
             {
                 await onMessage(message, token).ConfigureAwait(false);
                 return ConsumeResult.Ack;
             }
-
-            return client.SubscribeAs<T>(queueName, OnMessage);
-        }
-
-        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            Func<T?, CancellationToken, Task> onMessage)
-        {
-            return SubscribeAs(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
-        }
-
-        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
-        {
-            return SubscribeAs(client, exchangeName, routingKey, client.Options.ApplicationName, onMessage);
-        }
-
-        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            string consumerName,
-            Func<T?, CancellationToken, Task> onMessage)
-        {
-            Preconditions.CheckNotNull(client, nameof(client));
-            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
-            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
-            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-            
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
-
-            return client.SubscribeAs(queueName, onMessage)
-                .WithSubscribingQueueBinding(exchangeName, routingKey);
-        }
-
-        public static IRabbitMqConsumer SubscribeAs<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            string consumerName,
-            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage)
-        {
-            Preconditions.CheckNotNull(client, nameof(client));
-            Preconditions.CheckNotNull(exchangeName, nameof(exchangeName));
-            Preconditions.CheckNotNull(routingKey, nameof(routingKey));
-            Preconditions.CheckNotNull(consumerName, nameof(consumerName));
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            var queueName = client.Options.NamingConventions.QueueName(exchangeName, routingKey, consumerName);
-
-            return client.SubscribeAs(queueName, onMessage)
-                .WithSubscribingQueueBinding(exchangeName, routingKey);
         }
 
         public static async Task CreateQueueAsync(this IRabbitMqClient client,

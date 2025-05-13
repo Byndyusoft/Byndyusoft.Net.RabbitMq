@@ -18,7 +18,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var queueName = "json-example";
+            const string queueName = "json-example";
 
             using var consumer = _rabbitMqClient.SubscribeAsJson<Message>(queueName,
                     (model, _) =>
@@ -26,7 +26,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
                         Console.WriteLine(JsonSerializer.Serialize(model));
                         return Task.FromResult(ConsumeResult.Ack);
                     })
-                .WithPrefetchCount(20)
+                .WithPrefetchCount(1)
                 .WithDeclareSubscribingQueue(options => options.AsAutoDelete(true))
                 .Start();
 

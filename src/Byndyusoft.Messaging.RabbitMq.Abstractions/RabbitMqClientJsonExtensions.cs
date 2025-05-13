@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Threading;
@@ -9,7 +10,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public static class RabbitMqClientJsonExtensions
     {
-        public static async Task PublishAsJsonAsync<T>(this IRabbitMqClient client,
+        public static Task PublishAsJsonAsync<T>(this IRabbitMqClient client,
             string? exchangeName,
             string routingKey,
             T model,
@@ -19,13 +20,9 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
-            await using var message = new RabbitMqMessage();
-            message.Content = JsonContent.Create(model, options: options);
-            message.Exchange = exchangeName;
-            message.RoutingKey = routingKey;
-            message.Persistent = true;
-            message.Mandatory = true;
-            await client.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
+            return client.PublishAsync(exchangeName, routingKey, model, ModelSerializer, cancellationToken);
+
+            HttpContent ModelSerializer(T x) => JsonContent.Create(x, options: options);
         }
 
         public static Task PublishAsJsonAsync<T>(this IRabbitMqClient client,
@@ -44,13 +41,11 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            return client.Subscribe(queueName, OnMessage);
+            return client.SubscribeAs(queueName, onMessage, ModelDeserializer);
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
+            async Task<T?> ModelDeserializer(ReceivedRabbitMqMessage message, CancellationToken cancellationToken)
             {
-                var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
-                var result = await onMessage(model, token).ConfigureAwait(false);
-                return result;
+                return await message.Content.ReadFromJsonAsync<T>(options, cancellationToken).ConfigureAwait(false);
             }
         }
 
@@ -61,79 +56,7 @@ namespace Byndyusoft.Messaging.RabbitMq
         {
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnMessage(T? message, CancellationToken token)
-            {
-                await onMessage(message, token).ConfigureAwait(false);
-                return ConsumeResult.Ack;
-            }
-
             return client.SubscribeAsJson<T>(queueName, OnMessage, options);
-        }
-
-        public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
-            JsonSerializerOptions? options = null)
-        {
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            return client.Subscribe(exchangeName, routingKey, OnMessage);
-
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
-            {
-                var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
-                var result = await onMessage(model, token).ConfigureAwait(false);
-                return result;
-            }
-        }
-
-        public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            string consumerName,
-            Func<T?, CancellationToken, Task<ConsumeResult>> onMessage,
-            JsonSerializerOptions? options = null)
-        {
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            return client.Subscribe(exchangeName, routingKey, consumerName, OnMessage);
-
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
-            {
-                var model = await message.Content.ReadFromJsonAsync<T>(options, token).ConfigureAwait(false);
-                var result = await onMessage(model, token).ConfigureAwait(false);
-                return result;
-            }
-        }
-
-        public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            Func<T?, CancellationToken, Task> onMessage,
-            JsonSerializerOptions? options = null)
-        {
-           Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-           return client.SubscribeAsJson<T>(exchangeName, routingKey, OnMessage, options);
-
-            async Task<ConsumeResult> OnMessage(T? message, CancellationToken token)
-            {
-                await onMessage(message, token).ConfigureAwait(false);
-                return ConsumeResult.Ack;
-            }
-        }
-
-        public static IRabbitMqConsumer SubscribeAsJson<T>(this IRabbitMqClient client,
-            string exchangeName,
-            string routingKey,
-            string consumerName,
-            Func<T?, CancellationToken, Task> onMessage,
-            JsonSerializerOptions? options = null)
-        {
-            Preconditions.CheckNotNull(onMessage, nameof(onMessage));
-
-            return client.SubscribeAsJson<T>(exchangeName, routingKey, consumerName, OnMessage, options);
 
             async Task<ConsumeResult> OnMessage(T? message, CancellationToken token)
             {

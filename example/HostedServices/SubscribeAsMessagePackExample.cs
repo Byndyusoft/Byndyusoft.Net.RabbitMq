@@ -1,4 +1,5 @@
 using System;
+using System.Net.Http;
 using System.Net.Http.MessagePack;
 using System.Text.Json;
 using System.Threading;
@@ -21,36 +22,30 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
             Preconditions.CheckNotNull(queueName, nameof(queueName));
             Preconditions.CheckNotNull(onMessage, nameof(onMessage));
 
-            async Task<ConsumeResult> OnMessage(ReceivedRabbitMqMessage message, CancellationToken token)
-            {
-                var model = await message.Content.ReadFromMessagePackAsync<T>(options, token)
-                    .ConfigureAwait(false);
-                var result = await onMessage(model, token).ConfigureAwait(false);
-                return result;
-            }
+            return client.SubscribeAs(queueName, onMessage, ModelDeserializer);
 
-            return client.Subscribe(queueName, OnMessage);
+            Task<T?> ModelDeserializer(ReceivedRabbitMqMessage message, CancellationToken token)
+            {
+                return message.Content.ReadFromMessagePackAsync<T>(options, token)!;
+            }
         }
 
-        public static async Task PublishAsMessagePackAsync<T>(this IRabbitMqClient client,
+        public static Task PublishAsMessagePackAsync<T>(this IRabbitMqClient client,
             string? exchangeName,
             string routingKey,
             T model,
-            MessagePackSerializerOptions? options,
+            MessagePackSerializerOptions? options = null,
             CancellationToken cancellationToken = default)
         {
             Preconditions.CheckNotNull(client, nameof(client));
             Preconditions.CheckNotNull(routingKey, nameof(routingKey));
 
-            var message = new RabbitMqMessage
+            return client.PublishAsync(exchangeName, routingKey, model, ModelSerializer, cancellationToken);
+
+            HttpContent ModelSerializer(T arg)
             {
-                Content = MessagePackContent.Create(model, options),
-                Exchange = exchangeName,
-                RoutingKey = routingKey,
-                Persistent = true,
-                Mandatory = true
-            };
-            await client.PublishMessageAsync(message, cancellationToken).ConfigureAwait(false);
+                return MessagePackContent.Create(model, options);
+            }
         }
     }
 
@@ -66,7 +61,7 @@ namespace Byndyusoft.Net.RabbitMq.HostedServices
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            var queueName = "messagepack-example";
+            const string queueName = "messagepack-example";
 
             using var consumer = _rabbitMqClient.SubscribeAsMessagePack<Message>(queueName,
                     (model, _) =>
