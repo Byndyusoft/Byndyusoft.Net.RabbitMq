@@ -10,6 +10,7 @@ using Byndyusoft.Messaging.RabbitMq.Utils;
 using EasyNetQ;
 using EasyNetQ.ConnectionString;
 using EasyNetQ.Consumer;
+using EasyNetQ.Persistent;
 using EasyNetQ.Topology;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -130,12 +131,12 @@ namespace Byndyusoft.Messaging.RabbitMq
                 .ConfigureAwait(false);
         }
 
-        private class ConsumerDisposable : IDisposable
+        private sealed class ConsumerDisposable : IDisposable, IAsyncDisposable
         {
-            private readonly IDisposable _wrapped;
+            private readonly IAsyncDisposable _wrapped;
             private readonly CancellationTokenSource _cancellationTokenSource;
 
-            public ConsumerDisposable(IDisposable wrapped, CancellationTokenSource cancellationTokenSource)
+            public ConsumerDisposable(IAsyncDisposable wrapped, CancellationTokenSource cancellationTokenSource)
             {
                 _wrapped = wrapped;
                 _cancellationTokenSource = cancellationTokenSource;
@@ -143,9 +144,14 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             public void Dispose()
             {
+                DisposeAsync().GetAwaiter().GetResult();
+            }
+
+            public ValueTask DisposeAsync()
+            {
                 _cancellationTokenSource.Cancel();
-                _wrapped.Dispose();
                 _cancellationTokenSource.Dispose();
+                return _wrapped.DisposeAsync();
             }
         }
 
@@ -166,7 +172,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             {
                 var advancedBus = await ConnectIfNeededAsync(cancellationToken)
                     .ConfigureAwait(false);
-                var advancedBusConsumer = advancedBus.Consume(new Queue(queueName), OnMessage, ConfigureConsumer);
+                var advancedBusConsumer = await advancedBus.ConsumeAsync(new Queue(queueName), OnMessage, ConfigureConsumer);
                 return new ConsumerDisposable(advancedBusConsumer, stoppingTokenSource);
             }
             catch
@@ -174,7 +180,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                stoppingTokenSource.Dispose();
                throw;
             }
-            async Task<AckStrategy> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties,
+            async Task<AckStrategyAsync> OnMessage(ReadOnlyMemory<byte> body, MessageProperties properties,
                 MessageReceivedInfo info)
             {
                 try
@@ -185,16 +191,16 @@ namespace Byndyusoft.Messaging.RabbitMq
 
                     return consumeResult switch
                     {
-                        HandlerConsumeResult.RejectWithRequeue => AckStrategies.NackWithRequeue,
-                        HandlerConsumeResult.RejectWithoutRequeue => AckStrategies.NackWithoutRequeue,
-                        HandlerConsumeResult.Ack => AckStrategies.Ack,
+                        HandlerConsumeResult.RejectWithRequeue => AckStrategies.NackWithRequeueAsync,
+                        HandlerConsumeResult.RejectWithoutRequeue => AckStrategies.NackWithoutRequeueAsync,
+                        HandlerConsumeResult.Ack => AckStrategies.AckAsync,
                         _ => throw new InvalidOperationException(
                             $"Unexpected ConsumeResult Value={consumeResult}, Retry or Error value should be handled previously")
                     };
                 }
                 catch
                 {
-                    return AckStrategies.NackWithRequeue;
+                    return AckStrategies.NackWithRequeueAsync;
                 }
             }
 
@@ -252,7 +258,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .ConfigureAwait(false);
                 return true;
             }
-            catch (OperationInterruptedException e) when (e.ShutdownReason.ReplyCode == 404)
+            catch (OperationInterruptedException e) when (e.ShutdownReason?.ReplyCode == 404)
             {
                 return false;
             }
@@ -343,7 +349,7 @@ namespace Byndyusoft.Messaging.RabbitMq
                     .ConfigureAwait(false);
                 return true;
             }
-            catch (OperationInterruptedException e) when (e.ShutdownReason.ReplyCode == 404)
+            catch (OperationInterruptedException e) when (e.ShutdownReason?.ReplyCode == 404)
             {
                 return false;
             }
@@ -410,7 +416,16 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             if (disposing == false) return;
 
-            MultiDispose(_pullingConsumers.Values);
+            DisposeAsync().GetAwaiter().GetResult();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            foreach (var consumer in _pullingConsumers.Values)
+            {
+                await consumer.DisposeAsync().ConfigureAwait(false);
+            }
+
             _pullingConsumers.Clear();
 
             if (_bus != null)
@@ -418,8 +433,6 @@ namespace Byndyusoft.Messaging.RabbitMq
                 _bus.Advanced.MessageReturned -= OnMessageReturned;
                 _bus.Advanced.Blocked -= OnBlocked;
                 _bus.Advanced.Unblocked -= OnUnblocked;
-                _bus.Advanced.Dispose();
-                _bus.Dispose();
                 _bus = null;
             }
 
@@ -466,29 +479,31 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
 
             var advancedBus = _bus.Advanced;
-            while (advancedBus.IsConnected == false && cancellationToken.IsCancellationRequested == false)
+
+            var interval = _connectionConfiguration.ConnectIntervalAttempt;
+
+            while (cancellationToken.IsCancellationRequested == false)
             {
-                LogLevel logLevel;
+                using var intervalCts = new CancellationTokenSource(interval);
+                using var cts = CancellationTokenSource.CreateLinkedTokenSource(intervalCts.Token, cancellationToken);
+
                 try
                 {
-                    await advancedBus.ConnectAsync(cancellationToken)
-                        .ConfigureAwait(false);
-                    if (advancedBus.IsConnected)
-                        break;
-                    logLevel = LogLevel.Information;
+                    await advancedBus.EnsureConnectedAsync(PersistentConnectionType.Consumer, cts.Token);
+                    await advancedBus.EnsureConnectedAsync(PersistentConnectionType.Producer, cts.Token);
+                    break;
                 }
                 catch (BrokerUnreachableException)
                 {
-                    logLevel = LogLevel.Error;
                 }
 
-                var interval = _connectionConfiguration.ConnectIntervalAttempt;
                 var message = $"None of the specified endpoints were reachable. Wait {interval} and try connect again";
 
-                _logger.Log(logLevel, message);
+                _logger.Log(LogLevel.Error, message);
 
                 await Task.Delay(interval, cancellationToken)
                     .ConfigureAwait(false);
+
             }
         }
 

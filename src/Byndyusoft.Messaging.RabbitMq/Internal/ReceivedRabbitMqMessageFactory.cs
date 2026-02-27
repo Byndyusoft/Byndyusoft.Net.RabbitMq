@@ -55,15 +55,18 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
         {
             var headers = new RabbitMqMessageHeaders();
 
-            foreach (var header in properties.Headers)
+            if (properties.Headers is not null)
             {
-                var value = header.Value switch
+                foreach (var header in properties.Headers)
                 {
-                    byte[] bytes => Encoding.UTF8.GetString(bytes),
-                    _ => header.Value
-                };
+                    var value = header.Value switch
+                    {
+                        byte[] bytes => Encoding.UTF8.GetString(bytes),
+                        _ => header.Value
+                    };
 
-                if (value is not null) headers.Add(header.Key, value);
+                    if (value is not null) headers.Add(header.Key, value);
+                }
             }
 
             return headers;

@@ -16,10 +16,16 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
 
         public static MessageProperties CreateEasyNetQMessageProperties(RabbitMqMessage message)
         {
-            var properties = new MessageProperties
+            long timestamp = 0;
+            if (message.Properties.Timestamp is not null)
+            {
+                timestamp = new DateTimeOffset(message.Properties.Timestamp.Value).ToUnixTimeMilliseconds();
+            }
+
+            return new MessageProperties
             {
                 Type = message.Properties.Type,
-                DeliveryMode = (byte) (message.Persistent ? 2 : 1),
+                DeliveryMode = (byte)(message.Persistent ? 2 : 1),
                 ContentEncoding = message.Properties.ContentEncoding,
                 ContentType = message.Properties.ContentType,
                 AppId = message.Properties.AppId,
@@ -27,18 +33,11 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
                 MessageId = message.Properties.MessageId,
                 ReplyTo = message.Properties.ReplyTo,
                 UserId = message.Properties.UserId,
-                Headers = message.Headers
+                Headers = message.Headers,
+                Priority = message.Properties.Priority ?? 0,
+                Expiration = message.Properties.Expiration,
+                Timestamp = timestamp
             };
-
-            if (message.Properties.Priority is not null) properties.Priority = message.Properties.Priority.Value;
-
-            if (message.Properties.Timestamp is not null)
-                properties.Timestamp = new DateTimeOffset(message.Properties.Timestamp.Value).ToUnixTimeMilliseconds();
-
-            if (message.Properties.Expiration is not null)
-                properties.Expiration = message.Properties.Expiration;
-
-            return properties;
         }
     }
 }
