@@ -7,7 +7,7 @@ using Byndyusoft.Messaging.RabbitMq.Utils;
 
 namespace Byndyusoft.Messaging.RabbitMq
 {
-    public class RabbitMqConsumer : Disposable, IRabbitMqConsumer
+    public class RabbitMqConsumer : Disposable, IRabbitMqConsumer, IAsyncDisposable
     {
         private readonly List<(BeforeRabbitQueueConsumerStartDelegate Action, int Priority)>
             _beforeStartActions = new();
@@ -122,6 +122,12 @@ namespace Byndyusoft.Messaging.RabbitMq
 
             _consumer?.Dispose();
             _consumer = null;
+        }
+
+        public ValueTask DisposeAsync()
+        {
+            Dispose();
+            return new ValueTask();
         }
 
         private async Task InvokeBeforeStartActionsAsync(CancellationToken cancellationToken)
