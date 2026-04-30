@@ -22,11 +22,6 @@ namespace Byndyusoft.Net.RabbitMq
                     .AddService("Byndyusoft.Net.RabbitMq"))
                 .SetSampler(new AlwaysOnSampler())
                 .AddSource(ActivitySource.Name)
-                .AddJaegerExporter(jaeger =>
-                {
-                    jaeger.AgentHost = "localhost";
-                    jaeger.AgentPort = 6831;
-                })
                 .AddRabbitMqClientInstrumentation()
                 .Build();
 
@@ -49,23 +44,23 @@ namespace Byndyusoft.Net.RabbitMq
                     //services.AddRpcService<MathRpcService>();
 
                     //services.AddHostedService<PullingExample>();
-                    //services.AddHostedService<RetryAndErrorExample>();
+                    services.AddHostedService<RetryAndErrorExample>();
                     //services.AddHostedService<RpcExample>();
 
                     //services.AddHostedService<SubscribeAsMessagePackExample>();
 
                     //services.AddHostedService<RpcServerExample>();
                     //services.AddHostedService<SubscribeAsExample>();
-                    services.AddHostedService<SubscribeAsJsonExample>();
+                    //services.AddHostedService<SubscribeAsJsonExample>();
                     //services.AddHostedService<SubscribeExchangeExample>();
                     //services.AddHostedService<ClientFactoryExample>();
 
                     //services.AddHostedService<QueueInstallerHostedService>();
 
-                    //services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
+                    services.AddRabbitMqClient("host=localhost;username=guest;password=guest");
 
                     //services.AddRabbitMqClient("client-factory", "host=localhost;username=guest;password=guest");
-                    services.AddInMemoryRabbitMqClient();
+                    //services.AddInMemoryRabbitMqClient();
 
                     services.BuildServiceProvider(new ServiceProviderOptions
                     {

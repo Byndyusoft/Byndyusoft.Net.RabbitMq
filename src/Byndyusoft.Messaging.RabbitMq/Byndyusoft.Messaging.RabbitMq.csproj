@@ -10,7 +10,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
-		<PackageReference Include="EasyNetQ" Version="8.1.1" />
+		<PackageReference Include="EasyNetQ" Version="8.1.4" />
 	</ItemGroup>
 
 	<ItemGroup Condition="$(TargetFramework) == 'netstandard2.0'">
