@@ -21,7 +21,6 @@ namespace Byndyusoft.Messaging.RabbitMq.Internal
             {
                 timestamp = new DateTimeOffset(message.Properties.Timestamp.Value).ToUnixTimeMilliseconds();
             }
-
             return new MessageProperties
             {
                 Type = message.Properties.Type,

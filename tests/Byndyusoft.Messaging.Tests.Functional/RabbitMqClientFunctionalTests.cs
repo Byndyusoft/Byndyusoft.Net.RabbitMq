@@ -22,7 +22,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 {
     public class RabbitMqClientFunctionalTests : IDisposable
     {
-        private readonly IBus _bus;
+        private readonly CancellationToken _cancellationToken = TestContext.Current.CancellationToken;
         private readonly IRabbitMqClient _client;
         private readonly RabbitMqClientOptions _options;
         private readonly IAdvancedBus _rabbit;
@@ -38,8 +38,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
                 .GetRequiredService<IRabbitMqClientFactory>()
                 .CreateClient();
 
-            _bus = CreateBus(connectionString);
-            _rabbit = _bus.Advanced;
+            _rabbit = CreateBus(connectionString).Advanced;
         }
 
         private IBus CreateBus(string connectionString)
@@ -67,38 +66,36 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var data = new Message {Content = "content"};
 
             // act
-            await using var message = new RabbitMqMessage
+            await using var message = new RabbitMqMessage();
+            message.Mandatory = true;
+            message.Persistent = true;
+            message.Exchange = null;
+            message.RoutingKey = queueName;
+            message.Content = JsonContent.Create(data, options: serializationOptions);
+            message.Properties = new RabbitMqMessageProperties
             {
-                Mandatory = true,
-                Persistent = true,
-                Exchange = null,
-                RoutingKey = queueName,
-                Content = JsonContent.Create(data, options: serializationOptions),
-                Properties = new RabbitMqMessageProperties
-                {
-                    ContentType = "type/subtype",
-                    Priority = 1,
-                    Type = "type",
-                    ContentEncoding = "contentEncoding",
-                    CorrelationId = "correlationId",
-                    Expiration = TimeSpan.FromMinutes(1),
-                    AppId = "appId",
-                    MessageId = "messageId",
-                    ReplyTo = "replyTo",
-                    Timestamp = DateTime.UtcNow,
-                    UserId = "guest"
-                },
-                Headers = new RabbitMqMessageHeaders
-                {
-                    {"key", "value"}
-                }
+                ContentType = "type/subtype",
+                Priority = 1,
+                Type = "type",
+                ContentEncoding = "contentEncoding",
+                CorrelationId = "correlationId",
+                Expiration = TimeSpan.FromMinutes(1),
+                AppId = "appId",
+                MessageId = "messageId",
+                ReplyTo = "replyTo",
+                Timestamp = DateTime.UtcNow,
+                UserId = "guest"
             };
-            await _client.PublishMessageAsync(message);
+            message.Headers = new RabbitMqMessageHeaders
+            {
+                {"key", "value"}
+            };
+            await _client.PublishMessageAsync(message, _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // assert
             await using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
+            var pullingResult = await consumer.PullAsync(_cancellationToken);
 
             pullingResult.IsAvailable.Should().BeTrue();
             JsonSerializer.Deserialize<Message>(pullingResult.Body.ToArray()).Should().BeEquivalentTo(data);
@@ -125,38 +122,36 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var data = new Message {Content = "content"};
 
             // act
-            await using var message = new RabbitMqMessage
+            await using var message = new RabbitMqMessage();
+            message.Mandatory = true;
+            message.Persistent = true;
+            message.Exchange = exchangeName;
+            message.RoutingKey = routingKey;
+            message.Content = JsonContent.Create(data, options: serializationOptions);
+            message.Properties = new RabbitMqMessageProperties
             {
-                Mandatory = true,
-                Persistent = true,
-                Exchange = exchangeName,
-                RoutingKey = routingKey,
-                Content = JsonContent.Create(data, options: serializationOptions),
-                Properties = new RabbitMqMessageProperties
-                {
-                    ContentType = "type/subtype",
-                    Priority = 1,
-                    Type = "type",
-                    ContentEncoding = "contentEncoding",
-                    CorrelationId = "correlationId",
-                    Expiration = TimeSpan.FromMinutes(1),
-                    AppId = "appId",
-                    MessageId = "messageId",
-                    ReplyTo = "replyTo",
-                    Timestamp = DateTime.UtcNow,
-                    UserId = "guest"
-                },
-                Headers = new RabbitMqMessageHeaders
-                {
-                    {"key", "value"}
-                }
+                ContentType = "type/subtype",
+                Priority = 1,
+                Type = "type",
+                ContentEncoding = "contentEncoding",
+                CorrelationId = "correlationId",
+                Expiration = TimeSpan.FromMinutes(1),
+                AppId = "appId",
+                MessageId = "messageId",
+                ReplyTo = "replyTo",
+                Timestamp = DateTime.UtcNow,
+                UserId = "guest"
             };
-            await _client.PublishMessageAsync(message);
+            message.Headers = new RabbitMqMessageHeaders
+            {
+                {"key", "value"}
+            };
+            await _client.PublishMessageAsync(message, _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // assert
             await using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
+            var pullingResult = await consumer.PullAsync(_cancellationToken);
 
             pullingResult.IsAvailable.Should().BeTrue();
 
@@ -188,7 +183,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             // act
-            await using var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
             // assert
             message.Should().BeNull();
@@ -222,14 +217,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
             };
 
             var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(data));
-            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body, cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
-            await using var message = await _client.GetMessageAsync(queueName);
+            await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
             message.Should().NotBeNull();
-            var json = await message!.Content.ReadFromJsonAsync<Message>();
+            var json = await message.Content.ReadFromJsonAsync<Message>(cancellationToken: _cancellationToken);
             json.Should().BeEquivalentTo(data);
             message.Headers["key"].Should().Be("value");
 
@@ -244,18 +239,18 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
+                Array.Empty<byte>(), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             {
-                await using var message = await _client.GetMessageAsync(queueName);
+                await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
                 // act
-                await _client.CompleteMessageAsync(message!, ConsumeResult.Ack);
+                await _client.CompleteMessageAsync(message!, ConsumeResult.Ack, _cancellationToken);
             }
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(queueName);
+            var stats = await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -267,18 +262,18 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
+                Array.Empty<byte>(), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             {
-                await using var message = await _client.GetMessageAsync(queueName);
+                await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
                 // act
-                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue);
+                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithoutRequeue, _cancellationToken);
             }
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(queueName);
+            var stats = await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -291,25 +286,25 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             var body = new byte[] {1, 2, 3};
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, new ReadOnlyMemory<byte>(body));
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, new ReadOnlyMemory<byte>(body), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             {
-                await using var message = await _client.GetMessageAsync(queueName);
+                await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
                 // act
-                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue);
+                await _client.CompleteMessageAsync(message!, ConsumeResult.RejectWithRequeue, _cancellationToken);
             }
 
             // assert
             await using var consumer = _rabbit.CreatePullingConsumer(new Queue(queueName));
-            var pullingResult = await consumer.PullAsync();
+            var pullingResult = await consumer.PullAsync(_cancellationToken);
 
             pullingResult.IsAvailable.Should().BeTrue();
             pullingResult.Body.ToArray().Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
 
-            (await _rabbit.GetQueueStatsAsync(queueName)).MessagesCount.Should().Be(0);
+            (await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken)).MessagesCount.Should().Be(0);
         }
 
         [Fact]
@@ -322,27 +317,27 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             var body = new byte[] {1, 2, 3};
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body);
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, body, cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             {
-                await using var message = await _client.GetMessageAsync(queueName);
+                await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
                 // act
-                await _client.CompleteMessageAsync(message!, ConsumeResult.Error());
+                await _client.CompleteMessageAsync(message!, ConsumeResult.Error(), _cancellationToken);
             }
 
             await WaitForMessageAsync(errorQueueName, TimeSpan.FromSeconds(5));
 
             // assert
             await using var consumer = _rabbit.CreatePullingConsumer(new Queue(errorQueueName));
-            var pullingResult = await consumer.PullAsync();
+            var pullingResult = await consumer.PullAsync(_cancellationToken);
 
             pullingResult.IsAvailable.Should().BeTrue();
             pullingResult.Body.ToArray().Should().BeEquivalentTo(body);
             pullingResult.Properties.MessageId.Should().Be(properties.MessageId);
 
-            (await _rabbit.GetQueueStatsAsync(queueName)).MessagesCount.Should().Be(0);
+            (await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken)).MessagesCount.Should().Be(0);
         }
 
         [Fact]
@@ -352,14 +347,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(CreateQueue_Test)}.queue";
 
             // act
-            await _client.CreateQueueAsync(queueName, QueueOptions.Default);
+            await _client.CreateQueueAsync(queueName, QueueOptions.Default, _cancellationToken);
 
             // assert
             using var scope = new AssertionScope();
             (await QueueExistsAsync(queueName)).Should().BeTrue();
 
             // cleanup
-            await _rabbit.QueueDeleteAsync(queueName);
+            await _rabbit.QueueDeleteAsync(queueName, cancellationToken: _cancellationToken);
         }
 
         [Fact]
@@ -370,7 +365,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             // act
-            var result = await _client.QueueExistsAsync(queueName);
+            var result = await _client.QueueExistsAsync(queueName, _cancellationToken);
 
             // assert
             result.Should().BeTrue();
@@ -383,7 +378,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(QueueExists_False_Test)}.queue";
 
             // act
-            var result = await _client.QueueExistsAsync(queueName);
+            var result = await _client.QueueExistsAsync(queueName, _cancellationToken);
 
             // assert
             result.Should().BeFalse();
@@ -397,7 +392,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var queue = await QueueDeclareAsync(queueName);
 
             // act
-            await _client.DeleteQueueAsync(queueName);
+            await _client.DeleteQueueAsync(queueName, cancellationToken: _cancellationToken);
 
             // assert
             (await QueueExistsAsync(queueName)).Should().BeFalse();
@@ -410,14 +405,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(PurgeQueue_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
+                Array.Empty<byte>(), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
-            await _client.PurgeQueueAsync(queueName);
+            await _client.PurgeQueueAsync(queueName, _cancellationToken);
 
             // assert
-            var stats = await _rabbit.GetQueueStatsAsync(queueName);
+            var stats = await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken);
             stats.MessagesCount.Should().Be(0);
         }
 
@@ -428,11 +423,11 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var queueName = $"{nameof(GetQueueMessageCount_Test)}.queue";
             await using var queue = await QueueDeclareAsync(queueName);
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
+                Array.Empty<byte>(), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
             // act
-            var messageCount = await _client.GetQueueMessageCountAsync(queueName);
+            var messageCount = await _client.GetQueueMessageCountAsync(queueName, _cancellationToken);
 
             // assert
             messageCount.Should().Be(1);
@@ -445,14 +440,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var exchangeName = $"{nameof(CreateExchange_Test)}.exchange";
 
             // act
-            await _client.CreateExchangeAsync(exchangeName, ExchangeOptions.Default);
+            await _client.CreateExchangeAsync(exchangeName, ExchangeOptions.Default, _cancellationToken);
 
             // assert
             using var scope = new AssertionScope();
             (await ExchangeExistsAsync(exchangeName)).Should().BeTrue();
 
             // cleanup
-            await _rabbit.ExchangeDeleteAsync(new Exchange(exchangeName));
+            await _rabbit.ExchangeDeleteAsync(new Exchange(exchangeName), cancellationToken: _cancellationToken);
         }
 
         [Fact]
@@ -463,7 +458,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var exchange = await ExchangeDeclareAsync(exchangeName);
 
             // act
-            var result = await _client.ExchangeExistsAsync(exchangeName);
+            var result = await _client.ExchangeExistsAsync(exchangeName, _cancellationToken);
 
             // assert
             result.Should().BeTrue();
@@ -476,7 +471,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             var exchangeName = $"{nameof(ExchangeExists_False_Test)}.exchange";
 
             // act
-            var result = await _client.ExchangeExistsAsync(exchangeName);
+            var result = await _client.ExchangeExistsAsync(exchangeName, _cancellationToken);
 
             // assert
             result.Should().BeFalse();
@@ -490,7 +485,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var exchange = await ExchangeDeclareAsync(exchangeName);
 
             // act
-            await _client.DeleteExchangeAsync(exchangeName);
+            await _client.DeleteExchangeAsync(exchangeName, cancellationToken: _cancellationToken);
 
             // assert
             (await ExchangeExistsAsync(exchangeName)).Should().BeFalse();
@@ -507,14 +502,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var exchange = await ExchangeDeclareAsync(exchangeName);
 
             // act
-            await _client.BindQueueAsync(exchangeName, routingKey, queueName);
+            await _client.BindQueueAsync(exchangeName, routingKey, queueName, _cancellationToken);
 
             // assert
             await _rabbit.PublishAsync(Exchange.Default, queueName, true, new MessageProperties(),
-                Array.Empty<byte>());
+                Array.Empty<byte>(), cancellationToken: _cancellationToken);
             await WaitForMessageAsync(queueName, TimeSpan.FromSeconds(5));
 
-            (await _rabbit.GetQueueStatsAsync(queueName)).MessagesCount.Should().Be(1);
+            (await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken)).MessagesCount.Should().Be(1);
         }
 
         [Fact]
@@ -534,7 +529,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
             // act
             var properties = new MessageProperties {MessageId = "id"};
-            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, Array.Empty<byte>());
+            await _rabbit.PublishAsync(Exchange.Default, queueName, true, properties, Array.Empty<byte>(), cancellationToken: _cancellationToken);
 
             // assert
             await WaitForAsync(() => receivedMessage is not null, TimeSpan.FromSeconds(5));
@@ -546,7 +541,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
         {
             try
             {
-                await _rabbit.QueueDeclarePassiveAsync(queueName);
+                await _rabbit.QueueDeclarePassiveAsync(queueName, _cancellationToken);
                 return true;
             }
             catch (OperationInterruptedException e) when (e.ShutdownReason?.ReplyCode == 404)
@@ -559,7 +554,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
         {
             try
             {
-               await _rabbit.ExchangeDeclarePassiveAsync(exchangeName);
+               await _rabbit.ExchangeDeclarePassiveAsync(exchangeName, _cancellationToken);
                 return true;
             }
             catch (OperationInterruptedException e) when (e.ShutdownReason?.ReplyCode == 404)
@@ -600,7 +595,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
         private Task WaitForMessageAsync(string queueName, TimeSpan timeout)
         {
-            return WaitForAsync(async () => (await _rabbit.GetQueueStatsAsync(queueName)).MessagesCount != 0, timeout);
+            return WaitForAsync(async () => (await _rabbit.GetQueueStatsAsync(queueName, _cancellationToken)).MessagesCount != 0, timeout);
         }
 
         private static async Task WaitForAsync(Func<Task<bool>> condition, TimeSpan timeout)
@@ -634,14 +629,14 @@ namespace Byndyusoft.Messaging.Tests.Functional
 
         private async Task<IAsyncDisposable> QueueDeclareAsync(string queueName)
         {
-            await _rabbit.QueueDeclareAsync(queueName, false, false, true);
-            await _rabbit.QueuePurgeAsync(queueName);
+            await _rabbit.QueueDeclareAsync(queueName, false, false, true, cancellationToken: _cancellationToken);
+            await _rabbit.QueuePurgeAsync(queueName, _cancellationToken);
 
             return new AsyncDisposable(async () =>
             {
-                await _rabbit.QueueDeleteAsync(queueName);
-                await _rabbit.QueueDeleteAsync(_options.NamingConventions.ErrorQueueName(queueName));
-                await _rabbit.QueueDeleteAsync(_options.NamingConventions.RetryQueueName(queueName));
+                await _rabbit.QueueDeleteAsync(queueName, cancellationToken: _cancellationToken);
+                await _rabbit.QueueDeleteAsync(_options.NamingConventions.ErrorQueueName(queueName), cancellationToken: _cancellationToken);
+                await _rabbit.QueueDeleteAsync(_options.NamingConventions.RetryQueueName(queueName), cancellationToken: _cancellationToken);
             });
         }
 

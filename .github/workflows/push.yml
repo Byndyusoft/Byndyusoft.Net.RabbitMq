@@ -16,7 +16,7 @@ jobs:
       - name: install dotnet
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: '8.0.x'
       
       - name: install packages
         run: dotnet restore
