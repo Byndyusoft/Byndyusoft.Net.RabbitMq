@@ -22,7 +22,7 @@ namespace Byndyusoft.Messaging.RabbitMq
 {
     public class RabbitMqClientHandler : Disposable, IRabbitMqClientHandler
     {
-        private static readonly ConnectionStringParser ConnectionStringParser = new();
+        private static readonly ConnectionStringParser _connectionStringParser = new();
         private readonly IBusFactory _busFactory;
         private readonly ConnectionConfiguration _connectionConfiguration;
         private readonly ILogger<RabbitMqClientHandler> _logger;
@@ -40,7 +40,7 @@ namespace Byndyusoft.Messaging.RabbitMq
             Preconditions.CheckNotNull(options.ConnectionString, nameof(RabbitMqClientOptions.ConnectionString));
             Preconditions.CheckNotNull(busFactory, nameof(busFactory));
 
-            _connectionConfiguration = ConnectionStringParser.Parse(options.ConnectionString);
+            _connectionConfiguration = _connectionStringParser.Parse(options.ConnectionString);
             _busFactory = busFactory ?? new BusFactory();
             _logger = logger ?? NullLogger<RabbitMqClientHandler>.Instance;
             Options = options;
@@ -507,26 +507,26 @@ namespace Byndyusoft.Messaging.RabbitMq
             }
         }
 
-        private void OnUnblocked(object sender, UnblockedEventArgs e)
+        private void OnUnblocked(object? sender, UnblockedEventArgs e)
         {
             Unblocked?.Invoke(this, e);
         }
 
-        private void OnBlocked(object sender, BlockedEventArgs e)
+        private void OnBlocked(object? sender, BlockedEventArgs e)
         {
             Blocked?.Invoke(sender, e);
         }
 
-        private async void OnMessageReturned(object sender, MessageReturnedEventArgs args)
+        private async void OnMessageReturned(object? sender, MessageReturnedEventArgs args)
         {
-            await using var returnedMessage =
-                ReceivedRabbitMqMessageFactory.CreateReturnedMessage(
-                    args.MessageBody,
-                    args.MessageProperties,
-                    args.MessageReturnedInfo);
-
             try
             {
+                await using var returnedMessage =
+                    ReceivedRabbitMqMessageFactory.CreateReturnedMessage(
+                        args.MessageBody,
+                        args.MessageProperties,
+                        args.MessageReturnedInfo);
+
                 var task = MessageReturned?.Invoke(returnedMessage, CancellationToken.None);
                 if (task is not null)
                     await task.Value;

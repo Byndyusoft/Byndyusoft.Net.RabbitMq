@@ -224,7 +224,7 @@ namespace Byndyusoft.Messaging.Tests.Functional
             await using var message = await _client.GetMessageAsync(queueName, _cancellationToken);
 
             message.Should().NotBeNull();
-            var json = await message.Content.ReadFromJsonAsync<Message>(cancellationToken: _cancellationToken);
+            var json = await message!.Content.ReadFromJsonAsync<Message>(cancellationToken: _cancellationToken);
             json.Should().BeEquivalentTo(data);
             message.Headers["key"].Should().Be("value");
 
